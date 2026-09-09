@@ -29,6 +29,10 @@ public static class ThemeService
             SetBrush(resources, "ButtonBorder", "#4B5563");
             SetBrush(resources, "ButtonHoverBackground", "#3A3F47");
             SetBrush(resources, "ButtonPressedBackground", "#4B5563");
+            SetBrush(resources, "ScrollBarTrackBackground", "#1A1D21");
+            SetBrush(resources, "ScrollBarThumbBackground", "#4B5563");
+            SetBrush(resources, "ScrollBarThumbHoverBackground", "#6B7280");
+            SetBrush(resources, "ScrollBarThumbPressedBackground", "#9CA3AF");
         }
         else
         {
@@ -49,6 +53,10 @@ public static class ThemeService
             SetBrush(resources, "ButtonBorder", "#CBD5E1");
             SetBrush(resources, "ButtonHoverBackground", "#F1F5F9");
             SetBrush(resources, "ButtonPressedBackground", "#E2E8F0");
+            SetBrush(resources, "ScrollBarTrackBackground", "#F1F5F9");
+            SetBrush(resources, "ScrollBarThumbBackground", "#CBD5E1");
+            SetBrush(resources, "ScrollBarThumbHoverBackground", "#94A3B8");
+            SetBrush(resources, "ScrollBarThumbPressedBackground", "#64748B");
         }
     }
 
