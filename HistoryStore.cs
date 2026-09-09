@@ -1,1 +1,1 @@
-FILE:///tmp/hs_content.txt
+@/workspace/fix_hs_mcp_args.json
