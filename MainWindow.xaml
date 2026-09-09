@@ -380,7 +380,7 @@
                         <TextBlock Text="✓"
                                    FontSize="26"
                                    HorizontalAlignment="Center"
-                                   Foreground="ForestGreen"/>
+                                   Foreground="{DynamicResource StatusOk}"/>
 
                         <TextBlock Text="Keine aktuellen Meldungen"
                                    FontSize="14"
