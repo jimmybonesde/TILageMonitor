@@ -20,6 +20,10 @@
         <SolidColorBrush x:Key="ButtonBorder" Color="#CBD5E1"/>
         <SolidColorBrush x:Key="ButtonHoverBackground" Color="#F1F5F9"/>
         <SolidColorBrush x:Key="ButtonPressedBackground" Color="#E2E8F0"/>
+        <SolidColorBrush x:Key="ScrollBarTrackBackground" Color="#F1F5F9"/>
+        <SolidColorBrush x:Key="ScrollBarThumbBackground" Color="#CBD5E1"/>
+        <SolidColorBrush x:Key="ScrollBarThumbHoverBackground" Color="#94A3B8"/>
+        <SolidColorBrush x:Key="ScrollBarThumbPressedBackground" Color="#64748B"/>
 
         <!-- Shared Fluent-ish button with hover/pressed -->
         <Style TargetType="Button">
@@ -105,8 +109,8 @@
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
-            <Setter Property="CornerRadius" Value="14"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="14"/>
             <Setter Property="Padding" Value="16"/>
             <Setter Property="Margin" Value="0,0,0,10"/>
         </Style>
@@ -156,5 +160,105 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Thin Fluent-style scrollbars (classic Track + Thumb) -->
+        <Style x:Key="FluentScrollBarThumb" TargetType="Thumb">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border x:Name="ThumbBorder"
+                                Background="{DynamicResource ScrollBarThumbBackground}"
+                                CornerRadius="5"
+                                Margin="1"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ThumbBorder" Property="Background" Value="{DynamicResource ScrollBarThumbHoverBackground}"/>
+                            </Trigger>
+                            <Trigger Property="IsDragging" Value="True">
+                                <Setter TargetName="ThumbBorder" Property="Background" Value="{DynamicResource ScrollBarThumbPressedBackground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FluentScrollBarPageButton" TargetType="RepeatButton">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Border Background="Transparent"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ScrollBar">
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Background" Value="{DynamicResource ScrollBarTrackBackground}"/>
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="MinWidth" Value="10"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="{TemplateBinding Background}">
+                            <Track x:Name="PART_Track"
+                                   IsDirectionReversed="True"
+                                   Focusable="False">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Style="{StaticResource FluentScrollBarPageButton}"
+                                                  Command="ScrollBar.PageUpCommand"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource FluentScrollBarThumb}"/>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Style="{StaticResource FluentScrollBarPageButton}"
+                                                  Command="ScrollBar.PageDownCommand"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Width" Value="Auto"/>
+                    <Setter Property="Height" Value="10"/>
+                    <Setter Property="MinHeight" Value="10"/>
+                    <Setter Property="MinWidth" Value="0"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ScrollBar">
+                                <Grid Background="{TemplateBinding Background}">
+                                    <Track x:Name="PART_Track"
+                                           IsDirectionReversed="False"
+                                           Focusable="False">
+                                        <Track.DecreaseRepeatButton>
+                                            <RepeatButton Style="{StaticResource FluentScrollBarPageButton}"
+                                                          Command="ScrollBar.PageLeftCommand"/>
+                                        </Track.DecreaseRepeatButton>
+                                        <Track.Thumb>
+                                            <Thumb Style="{StaticResource FluentScrollBarThumb}"/>
+                                        </Track.Thumb>
+                                        <Track.IncreaseRepeatButton>
+                                            <RepeatButton Style="{StaticResource FluentScrollBarPageButton}"
+                                                          Command="ScrollBar.PageRightCommand"/>
+                                        </Track.IncreaseRepeatButton>
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
     </Application.Resources>
 </Application>
