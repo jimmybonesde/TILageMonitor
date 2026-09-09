@@ -13,6 +13,7 @@ namespace TILageMonitor;
 
 public partial class MainWindow
 {
+
     // =============================================================
 
     private void Render(
@@ -68,10 +69,10 @@ public partial class MainWindow
 
             var statusBrush = currentStatus switch
             {
-                "full" => System.Windows.Media.Brushes.Firebrick,
-                "partial" => System.Windows.Media.Brushes.DarkOrange,
-                "maintenance" => System.Windows.Media.Brushes.DarkOrange,
-                _ => System.Windows.Media.Brushes.ForestGreen
+                "full" => ThemeBrush("StatusOutage"),
+                "partial" => ThemeBrush("StatusPartial"),
+                "maintenance" => ThemeBrush("StatusMaintenance"),
+                _ => ThemeBrush("StatusOk")
             };
 
             var detail = currentStatus switch
@@ -177,31 +178,35 @@ public partial class MainWindow
         if (hasFull)
         {
             OverallIcon.Text = "●";
-            OverallIcon.Foreground = System.Windows.Media.Brushes.Firebrick;
+            OverallIcon.Foreground = ThemeBrush("StatusOutage");
             OverallText.Text = "STÖRUNG";
-            OverallText.Foreground = System.Windows.Media.Brushes.Firebrick;
+            OverallText.Foreground = ThemeBrush("StatusOutage");
             if (!suppressTrayUpdate)
                 SetTrayStatus(_trayIconStoerung, "TI-Status: Störung");
         }
         else if (hasPartial || hasMaintenance)
         {
             OverallIcon.Text = "●";
-            OverallIcon.Foreground = System.Windows.Media.Brushes.DarkOrange;
+            var ampBrush = hasPartial
+                ? ThemeBrush("StatusPartial")
+                : ThemeBrush("StatusMaintenance");
+            OverallIcon.Foreground = ampBrush;
             OverallText.Text = hasPartial ? "EINSCHRÄNKUNG" : "WARTUNG";
-            OverallText.Foreground = System.Windows.Media.Brushes.DarkOrange;
+            OverallText.Foreground = ampBrush;
             if (!suppressTrayUpdate)
             {
+                // Teilausfall: amber (nicht rot wie Vollausfall)
                 SetTrayStatus(
-                    hasPartial ? _trayIconStoerung : _trayIconBeeintraechtigung,
-                    hasPartial ? "TI-Status: Störung" : "TI-Status: Beeinträchtigung");
+                    _trayIconBeeintraechtigung,
+                    hasPartial ? "TI-Status: Teilausfall" : "TI-Status: Beeinträchtigung");
             }
         }
         else
         {
             OverallIcon.Text = "●";
-            OverallIcon.Foreground = System.Windows.Media.Brushes.ForestGreen;
+            OverallIcon.Foreground = ThemeBrush("StatusOk");
             OverallText.Text = "NORMAL";
-            OverallText.Foreground = System.Windows.Media.Brushes.ForestGreen;
+            OverallText.Foreground = ThemeBrush("StatusOk");
             if (!suppressTrayUpdate)
                 SetTrayStatus(_trayIconOk, "TI-Status: OK");
         }
@@ -275,7 +280,7 @@ public partial class MainWindow
         if (fromCache)
         {
             ConnectionText.Text = "● Offline · letzter Stand";
-            ConnectionText.Foreground = System.Windows.Media.Brushes.DarkOrange;
+            ConnectionText.Foreground = ThemeBrush("StatusPartial");
             FooterText.Text = cacheTime.HasValue
                 ? $"Offline · Cache vom {cacheTime.Value:dd.MM.yyyy HH:mm:ss}"
                 : "Offline · Cache";
@@ -283,7 +288,7 @@ public partial class MainWindow
         else
         {
             ConnectionText.Text = "● API erreichbar";
-            ConnectionText.Foreground = System.Windows.Media.Brushes.ForestGreen;
+            ConnectionText.Foreground = ThemeBrush("StatusOk");
             FooterText.Text = $"Letzte Abfrage: {DateTime.Now:dd.MM.yyyy HH:mm:ss}";
         }
 
