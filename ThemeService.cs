@@ -33,6 +33,11 @@ public static class ThemeService
             SetBrush(resources, "ScrollBarThumbBackground", "#4B5563");
             SetBrush(resources, "ScrollBarThumbHoverBackground", "#6B7280");
             SetBrush(resources, "ScrollBarThumbPressedBackground", "#9CA3AF");
+            // Ampel / status (heatmap-aligned)
+            SetBrush(resources, "StatusOk", "#34D399");
+            SetBrush(resources, "StatusPartial", "#FBBF24");
+            SetBrush(resources, "StatusOutage", "#F87171");
+            SetBrush(resources, "StatusMaintenance", "#F59E0B");
         }
         else
         {
@@ -57,6 +62,11 @@ public static class ThemeService
             SetBrush(resources, "ScrollBarThumbBackground", "#CBD5E1");
             SetBrush(resources, "ScrollBarThumbHoverBackground", "#94A3B8");
             SetBrush(resources, "ScrollBarThumbPressedBackground", "#64748B");
+            // Ampel / status (heatmap-aligned)
+            SetBrush(resources, "StatusOk", "#228B22");
+            SetBrush(resources, "StatusPartial", "#FF8C00");
+            SetBrush(resources, "StatusOutage", "#B22222");
+            SetBrush(resources, "StatusMaintenance", "#FFA500");
         }
     }
 
