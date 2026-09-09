@@ -37,7 +37,7 @@ public static class ThemeService
             SetBrush(resources, "StatusOk", "#34D399");
             SetBrush(resources, "StatusPartial", "#FBBF24");
             SetBrush(resources, "StatusOutage", "#F87171");
-            SetBrush(resources, "StatusMaintenance", "#F59E0B");
+            SetBrush(resources, "StatusMaintenance", "#38BDF8");
         }
         else
         {
@@ -66,7 +66,7 @@ public static class ThemeService
             SetBrush(resources, "StatusOk", "#228B22");
             SetBrush(resources, "StatusPartial", "#FF8C00");
             SetBrush(resources, "StatusOutage", "#B22222");
-            SetBrush(resources, "StatusMaintenance", "#FFA500");
+            SetBrush(resources, "StatusMaintenance", "#0284C8");
         }
     }
 
