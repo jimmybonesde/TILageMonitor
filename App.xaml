@@ -25,6 +25,12 @@
         <SolidColorBrush x:Key="ScrollBarThumbHoverBackground" Color="#94A3B8"/>
         <SolidColorBrush x:Key="ScrollBarThumbPressedBackground" Color="#64748B"/>
 
+        <!-- Status / Ampel (ThemeService updates for light+dark; align with heatmap) -->
+        <SolidColorBrush x:Key="StatusOk" Color="#228B22"/>
+        <SolidColorBrush x:Key="StatusPartial" Color="#FF8C00"/>
+        <SolidColorBrush x:Key="StatusOutage" Color="#B22222"/>
+        <SolidColorBrush x:Key="StatusMaintenance" Color="#FFA500"/>
+
         <!-- Shared Fluent-ish button with hover/pressed -->
         <Style TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource ButtonBackground}"/>
