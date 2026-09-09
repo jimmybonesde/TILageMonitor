@@ -121,7 +121,7 @@ public partial class HistoryWindow : Window
         Focus();
     }
 
-    private void HistoryWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+    private void HistoryWindow_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key == Key.Escape && _zoomedDate is not null)
         {
