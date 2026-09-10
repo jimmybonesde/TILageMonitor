@@ -47,7 +47,9 @@ public partial class App : System.Windows.Application
         // Registry-Autostart mit gespeicherter Einstellung abgleichen
         AutostartService.SetEnabled(settings.AutoStart);
 
-        var startInTray = ShouldStartInTray(e.Args);
+        // --tray / -minimized remain recognized for Autostart compatibility,
+        // but every start (manual + Autostart) goes to the tray immediately.
+        _ = ShouldStartInTray(e.Args);
 
         // Unpackaged toast: stable AUMID + Start Menu shortcut + Toolkit warm-up
         ToastRegistration.EnsureRegistered();
@@ -67,18 +69,11 @@ public partial class App : System.Windows.Application
             }
         });
 
-        if (startInTray)
-        {
-            // Show() damit Loaded (und damit Refresh) feuert, dann in den Tray
-            _window.ShowInTaskbar = false;
-            _window.Show();
-            _window.Hide();
-        }
-        else
-        {
-            _window.ShowInTaskbar = true;
-            _window.Show();
-        }
+        // Always Show()+Hide so Loaded/Refresh fires, then stay in tray.
+        // ShowInTaskbar stays false until the user opens the window.
+        _window.ShowInTaskbar = false;
+        _window.Show();
+        _window.Hide();
     }
 
     private static bool ShouldStartInTray(string[] args)
