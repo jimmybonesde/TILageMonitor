@@ -31,6 +31,18 @@
         <SolidColorBrush x:Key="StatusOutage" Color="#B22222"/>
         <SolidColorBrush x:Key="StatusMaintenance" Color="#0284C8"/>
 
+        <!-- Hero status card surfaces (ThemeService updates for light+dark) -->
+        <SolidColorBrush x:Key="StatusOkSurface" Color="#ECFDF5"/>
+        <SolidColorBrush x:Key="StatusOkBorder" Color="#86EFAC"/>
+        <SolidColorBrush x:Key="StatusPartialSurface" Color="#FFF7ED"/>
+        <SolidColorBrush x:Key="StatusPartialBorder" Color="#FDBA74"/>
+        <SolidColorBrush x:Key="StatusOutageSurface" Color="#FEF2F2"/>
+        <SolidColorBrush x:Key="StatusOutageBorder" Color="#FECACA"/>
+        <SolidColorBrush x:Key="StatusMaintenanceSurface" Color="#F0F9FF"/>
+        <SolidColorBrush x:Key="StatusMaintenanceBorder" Color="#7DD3FC"/>
+        <SolidColorBrush x:Key="AppIconCircleBackground" Color="#DBEAFE"/>
+        <SolidColorBrush x:Key="AppIconForeground" Color="#1D4ED8"/>
+
         <!-- Shared Fluent-ish button with hover/pressed -->
         <Style TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource ButtonBackground}"/>

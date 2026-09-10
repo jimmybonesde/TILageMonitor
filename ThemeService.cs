@@ -98,7 +98,8 @@ public static class ThemeService
         var color = (System.Windows.Media.Color)
             System.Windows.Media.ColorConverter.ConvertFromString(hex)!;
 
-        if (resources[key] is System.Windows.Media.SolidColorBrush existing &&
+        if (resources.Contains(key) &&
+            resources[key] is System.Windows.Media.SolidColorBrush existing &&
             !existing.IsFrozen)
         {
             existing.Color = color;
