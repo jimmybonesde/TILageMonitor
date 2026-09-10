@@ -16,6 +16,7 @@ public partial class HistoryWindow : Window
     public HistoryWindow(MainWindow owner)
     {
         InitializeComponent();
+        WindowState = WindowState.Maximized;
         Owner = owner;
         HistoryList.ItemsSource = _history;
         ZoomList.ItemsSource = _zoomRows;
