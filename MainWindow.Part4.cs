@@ -188,4 +188,5 @@ public record AppRow(
 
 public record MessageRow(
     string Header,
-    string Body);
+    string Body,
+    string TimestampText);
