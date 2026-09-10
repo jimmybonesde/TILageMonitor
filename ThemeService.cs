@@ -38,6 +38,16 @@ public static class ThemeService
             SetBrush(resources, "StatusPartial", "#FBBF24");
             SetBrush(resources, "StatusOutage", "#F87171");
             SetBrush(resources, "StatusMaintenance", "#38BDF8");
+            SetBrush(resources, "StatusOkSurface", "#14261C");
+            SetBrush(resources, "StatusOkBorder", "#059669");
+            SetBrush(resources, "StatusPartialSurface", "#2A2114");
+            SetBrush(resources, "StatusPartialBorder", "#D97706");
+            SetBrush(resources, "StatusOutageSurface", "#2A1616");
+            SetBrush(resources, "StatusOutageBorder", "#DC2626");
+            SetBrush(resources, "StatusMaintenanceSurface", "#0F2433");
+            SetBrush(resources, "StatusMaintenanceBorder", "#0284C7");
+            SetBrush(resources, "AppIconCircleBackground", "#1E3A5F");
+            SetBrush(resources, "AppIconForeground", "#93C5FD");
         }
         else
         {
@@ -67,6 +77,16 @@ public static class ThemeService
             SetBrush(resources, "StatusPartial", "#FF8C00");
             SetBrush(resources, "StatusOutage", "#B22222");
             SetBrush(resources, "StatusMaintenance", "#0284C8");
+            SetBrush(resources, "StatusOkSurface", "#ECFDF5");
+            SetBrush(resources, "StatusOkBorder", "#86EFAC");
+            SetBrush(resources, "StatusPartialSurface", "#FFF7ED");
+            SetBrush(resources, "StatusPartialBorder", "#FDBA74");
+            SetBrush(resources, "StatusOutageSurface", "#FEF2F2");
+            SetBrush(resources, "StatusOutageBorder", "#FECACA");
+            SetBrush(resources, "StatusMaintenanceSurface", "#F0F9FF");
+            SetBrush(resources, "StatusMaintenanceBorder", "#7DD3FC");
+            SetBrush(resources, "AppIconCircleBackground", "#DBEAFE");
+            SetBrush(resources, "AppIconForeground", "#1D4ED8");
         }
     }
 
