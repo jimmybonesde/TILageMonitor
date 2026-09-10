@@ -35,6 +35,10 @@ public partial class MainWindow
         var statusChanges = new List<ServiceStatusChange>();
         var newIncidents = new List<(string Title, string Body, bool IsError, List<string> ServiceKeys)>();
 
+        // =========================================================
+        // TI-ANWENDUNGEN
+        // =========================================================
+
         foreach (var item in lage.AppStatus)
         {
             var serviceKey = item.Key;
@@ -93,14 +97,23 @@ public partial class MainWindow
             _apps.Add(new AppRow(icon, name, detail, statusBrush));
         }
 
+        // =========================================================
+        // URSACHEN
+        // =========================================================
+
         foreach (var cause in lage.Cause)
         {
             _messages.Add(
                 new MessageRow(
                     "Ursache · " +
                     (string.IsNullOrWhiteSpace(cause.Service) ? "TI-Komponente" : cause.Service),
-                    $"{cause.Organization} – {cause.Function} (CI: {cause.Ci})"));
+                    $"{cause.Organization} – {cause.Function} (CI: {cause.Ci})",
+                    FormatMessageTimestamp(lage.Timestamp)));
         }
+
+        // =========================================================
+        // INCIDENTS
+        // =========================================================
 
         foreach (var incident in incidents.Data
                      .Where(x => x.Status is 1 or 4)
@@ -117,10 +130,15 @@ public partial class MainWindow
                 ? string.Join(", ", affectedServices)
                 : "TI";
 
+            var incidentWhen = incident.CreatedAt;
+            if (latest is not null && latest.Timestamp > incidentWhen)
+                incidentWhen = latest.Timestamp;
+
             _messages.Add(
                 new MessageRow(
                     $"{(incident.Status == 1 ? "Störung" : "Einschränkung")} · {serviceText}",
-                    $"{incident.Title}\n{body}"));
+                    $"{incident.Title}\n{body}",
+                    FormatMessageTimestamp(incidentWhen)));
 
             if (!_firstLoad && _knownActiveIncidents.Add(incident.Id.ToString()))
             {
@@ -138,19 +156,30 @@ public partial class MainWindow
             }
         }
 
+        // =========================================================
+        // AUTOMATISCH ERKANNTE AUSFÄLLE
+        // =========================================================
+
         foreach (var outage in outages.Data.Take(10))
         {
             outage.Slots ??= new();
             var active = outage.Slots.Any(s => s.EndTimestamp == null);
             if (active)
             {
+                var activeSlots = outage.Slots.Where(s => s.EndTimestamp == null).ToList();
+                var outageWhen = activeSlots[0].StartTimestamp;
                 _messages.Add(
                     new MessageRow(
                         "Automatisch erkannte Einschränkung · " + outage.Service,
                         $"{outage.Provider}: " +
-                        $"{string.Join("; ", outage.Slots.Where(s => s.EndTimestamp == null).Select(s => s.Function))}"));
+                        $"{string.Join("; ", activeSlots.Select(s => s.Function))}",
+                        FormatMessageTimestamp(outageWhen)));
             }
         }
+
+        // =========================================================
+        // GESAMTSTATUS (immer ALLE Dienste – Filter nur für Toasts)
+        // =========================================================
 
         var hasFull = lage.AppStatus.Values.Any(
             x => (x.Outage ?? "").Equals("full", StringComparison.OrdinalIgnoreCase));
@@ -186,6 +215,7 @@ public partial class MainWindow
             }
             if (!suppressTrayUpdate)
             {
+                // Teilausfall: amber (nicht rot wie Vollausfall)
                 SetTrayStatus(
                     _trayIconBeeintraechtigung,
                     hasPartial ? "TI-Status: Teilausfall" : "TI-Status: Beeinträchtigung");
@@ -200,6 +230,10 @@ public partial class MainWindow
             if (!suppressTrayUpdate)
                 SetTrayStatus(_trayIconOk, "TI-Status: OK");
         }
+
+        // =========================================================
+        // "Alles wieder OK" Digest (nur Live, nicht erster Load)
+        // =========================================================
 
         var nowProblem = hasFull || hasPartial || hasMaintenance;
         var digestFired = false;
@@ -216,6 +250,10 @@ public partial class MainWindow
         if (!fromCache)
             _hadTiProblem = nowProblem;
 
+        // =========================================================
+        // BENACHRICHTIGUNGEN (gefiltert, gebündelt)
+        // =========================================================
+
         if (!_firstLoad && !fromCache)
         {
             var filteredChanges = statusChanges
@@ -231,12 +269,15 @@ public partial class MainWindow
 
             if (filteredChanges.Count > 0)
             {
+                // Nur Recoveries: CurrentStatus none, vorher Problem
                 var onlyRecoveries = filteredChanges.All(
                     x => x.CurrentStatus == "none" &&
                          x.PreviousStatus is "full" or "partial" or "maintenance");
 
+                // Digest bereits gezeigt → keine zweiten Recovery-Toasts
                 if (digestFired && onlyRecoveries)
                 {
+                    // skip ShowStatusChangeNotification
                 }
                 else
                 {
@@ -248,6 +289,10 @@ public partial class MainWindow
                 ShowIncidentNotification(filteredIncidents);
             }
         }
+
+        // =========================================================
+        // ZEITSTEMPEL
+        // =========================================================
 
         TimestampText.Text =
             $"Datenstand gematik: {lage.Timestamp.ToLocalTime():dd.MM.yyyy HH:mm:ss}";
@@ -271,4 +316,7 @@ public partial class MainWindow
             _messages.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    // =============================================================
+    // STATUS EINES DIENSTES
+    // =============================================================
 }
