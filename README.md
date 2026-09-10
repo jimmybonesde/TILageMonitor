@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/app-icon-128.png" alt="TI-Lage Monitor Icon" width="150" height="150">
+  <img src="docs/assets/app-icon-128.png" alt="TI-Lage Monitor Icon" width="180" height="180">
 </p>
 
 <h1 align="center">TI-Lage Monitor</h1>
