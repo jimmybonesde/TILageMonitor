@@ -190,7 +190,7 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Delay until the next gematik-style refresh slot (local minute % 5 == 1, second 0).
-    ///Slots: 01, 06, 11, 16, 21, 26, 31, 36, 41, 46, 51, 56.
+    /// Slots: 01, 06, 11, 16, 21, 26, 31, 36, 41, 46, 51, 56.
     /// </summary>
     private static TimeSpan GetDelayUntilNextGematikSlot(DateTime nowLocal)
     {
