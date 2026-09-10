@@ -2,10 +2,10 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="TI-Lage Monitor"
-        Width="920"
-        Height="780"
-        MinWidth="760"
-        MinHeight="640"
+        Width="1196"
+        Height="1014"
+        MinWidth="988"
+        MinHeight="832"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource WindowBackground}">
 
@@ -128,6 +128,7 @@
                                             </Border>
                                             <StackPanel Grid.Column="1" Margin="14,0,0,0">
                                                 <TextBlock Text="{Binding Header}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextMain}" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding TimestampText}" FontSize="11" Foreground="{DynamicResource TextMuted}" Opacity="0.85" Margin="0,2,0,0"/>
                                                 <TextBlock Text="{Binding Body}" FontSize="13" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Grid>
