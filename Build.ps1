@@ -16,8 +16,15 @@ dotnet publish -c Release -r win-x64 --self-contained true `
     -p:EnableCompressionInSingleFile=true `
     -o .\publish
 if ($LASTEXITCODE -ne 0) {
-        Write-Host "Build fehlgeschlagen." -ForegroundColor Red
+    Write-Host "Build fehlgeschlagen." -ForegroundColor Red
     exit $LASTEXITCODE
+}
+
+# Icon neben der EXE (Tray + Install.ps1)
+$IcoSrc = Join-Path $PWD 'TILageMonitor.ico'
+$IcoDst = Join-Path $PWD 'publish\TILageMonitor.ico'
+if (Test-Path -LiteralPath $IcoSrc) {
+    Copy-Item -LiteralPath $IcoSrc -Destination $IcoDst -Force
 }
 
 Write-Host ""

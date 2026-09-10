@@ -49,6 +49,9 @@ public partial class App : System.Windows.Application
 
         var startInTray = ShouldStartInTray(e.Args);
 
+        // Unpackaged toast: stable AUMID + Start Menu shortcut + Toolkit warm-up
+        ToastRegistration.EnsureRegistered();
+
         _window = new MainWindow();
 
         // Toast-Klick → Hauptfenster (single-instance friendly via Dispatcher)

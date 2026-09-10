@@ -34,9 +34,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TILageMonitor.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <!-- Embedded for pack:// URI (tray fallback when ico not on disk) -->
+    <Resource Include="TILageMonitor.ico" />
   </ItemGroup>
+
+  <!-- Beside exe for CreateStatusIcon file path + Install.ps1 -->
+  <Target Name="CopyIconBesideOutput" AfterTargets="Build">
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\TILageMonitor.ico"
+          DestinationFolder="$(OutputPath)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(MSBuildProjectDirectory)\TILageMonitor.ico')" />
+  </Target>
+  <Target Name="CopyIconToPublish" AfterTargets="Publish">
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\TILageMonitor.ico"
+          DestinationFolder="$(PublishDir)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(MSBuildProjectDirectory)\TILageMonitor.ico')" />
+  </Target>
 
 </Project>
