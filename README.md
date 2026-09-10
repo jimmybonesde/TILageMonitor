@@ -13,11 +13,11 @@
   <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><img src="https://img.shields.io/github/v/release/jimmybonesde/TILageMonitor?style=for-the-badge&label=Download&logo=github" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows">
   <img src="https://img.shields.io/badge/.NET-8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 8">
-  <img src="https://img.shields.io/badge/Lizenz-privat%2FCommunity-gray?style=for-the-badge" alt="Lizenz">
+  <img src="https://img.shields.io/badge/Lizenz-Community-gray?style=for-the-badge" alt="Lizenz">
 </p>
 
 <p align="center">
-  <a href="https://github.com/jimmybonesde/TILageMonitor/releases/download/v1.0.3/TILageMonitor.exe"><strong>⬇️ TILageMonitor.exe (v1.0.3)</strong></a>
+  <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><strong>⬇️ Neueste EXE herunterladen</strong></a>
   ·
   <a href="https://fachportal.gematik.de/ti-status#TI-Anschluss">gematik Fachportal</a>
 </p>
@@ -27,39 +27,48 @@
 
 ---
 
+## Screenshots
+
+| Hellmodus | Dunkelmodus |
+|:---:|:---:|
+| ![Hauptfenster Hell](docs/assets/screenshot-light.png) | ![Hauptfenster Dunkel](docs/assets/screenshot-dark.png) |
+
+Status auf einen Blick: Hero-Karte, Dienste als Pills, darunter aktuelle Meldungen — Hell- und Dunkelmodus.
+
+---
+
 ## Überblick
 
-TI-Lage Monitor hält den Zustand der Telematikinfrastruktur im Windows-Tray im Blick — mit Ampel-Icon, Toasts und einem lokalen 7-Tage-Verlauf.
+TI-Lage Monitor hält den Zustand der Telematikinfrastruktur im Windows-Tray im Blick — mit Ampel-Icon, Windows-Toasts und einem lokalen 7-Tage-Verlauf.
 
+---
 
 ## Features
 
 ### Status auf einen Blick
 - Überwacht **eRezept, ePA, KIM, WANDA, OGD, VSDM, TI-Anschluss**
-- Tray-Icon mit Ampel: **grün** (OK) · **amber** (Teilausfall/Beeinträchtigung) · **rot** (Vollausfall) · Wartung getrennt
+- Tray-Icon mit Schild + Ampel-Badge: **grün** (OK) · **amber** (Teilausfall) · **rot** (Vollausfall)
 - Tooltip mit Gesamtstatus · Linksklick blendet das Fenster ein/aus
 - Refresh im gematik-Rhythmus mit Offset (`:01`, `:06`, `:11`, …)
 - Parallele API-Abfragen (Lage + Incidents + Outages)
 - Nach **3** API-Fehlern: dauerhafter „API down“-Zustand
 
 ### Benachrichtigungen
-- Klickbare **Windows-Toasts** (Störung, Änderung, API down, „Alles wieder OK“)
-- Balloon-Fallback, wenn Toasts nicht gehen
+- Klickbare **Windows-Toasts** (Teilausfall, Störung, API down, „Alles wieder OK“)
+- Balloon-Fallback, wenn Toasts nicht verfügbar sind
 - Filter **pro Dienst** in den Einstellungen
 
 ### Darstellung & Desktop
-- Fluent-UI, Hell-/Dunkelmodus, themige Ampel- und Scrollbalken-Farben
-- Einstellungen-Fenster · Autostart mit `--tray` · Einzelinstanz
+- Fluent-UI, Hell-/Dunkelmodus
+- Einstellungen · Autostart mit `--tray` · Einzelinstanz
 - Fachportal-Link direkt aus Tray/UI
 
 ### 7-Tage-Verlauf (lokal)
 Die öffentlichen APIs liefern keine lange Zeitreihe — die App speichert stündliche Snapshots unter `%AppData%\TILageMonitor\history.json`.
 
 - Heatmap **7×24**, Tages-Zoom, **Esc** zurück
-- Wochentags-Köpfe (`Mo 09.09`), Stundenachse `0 / 6 / 12 / 18`
-- Abdeckung z. B. `96 / 168 Stunden erfasst`
-- Legende: OK · Einschränkung · Störung · **Wartung** · keine Daten
-- Atomares Speichern von `history.json`
+- Wochentags-Köpfe, Stundenachse, Abdeckung `N / 168 Stunden`
+- Legende: OK · Einschränkung · Störung · Wartung · keine Daten
 
 ---
 
@@ -68,8 +77,14 @@ Die öffentlichen APIs liefern keine lange Zeitreihe — die App speichert stün
 ### Fertige EXE (empfohlen)
 
 1. Neueste Version: [Releases](https://github.com/jimmybonesde/TILageMonitor/releases/latest)
-2. `TILageMonitor.exe` speichern und starten  
-   oder nach `%LocalAppData%\TILageMonitor\` legen (wie `Install.ps1`)
+2. `TILageMonitor.exe` starten — oder mit dem Installer ablegen:
+
+```powershell
+.\Install.ps1
+.\Install.ps1 -DesktopShortcut -EnableAutostart
+```
+
+`Install.ps1` legt die App unter `%LocalAppData%\TILageMonitor\` ab und setzt die Startmenü-Verknüpfung (wichtig für Windows-Toasts / AUMID).
 
 > [!WARNING]
 > Build ist **unsigniert** — SmartScreen kann warnen („Weitere Informationen“ → trotzdem ausführen). Siehe [SIGNING.md](SIGNING.md).
@@ -82,11 +97,8 @@ Voraussetzungen: Windows 10/11 x64, [.NET 8 SDK](https://dotnet.microsoft.com/do
 git clone https://github.com/jimmybonesde/TILageMonitor.git
 cd TILageMonitor
 .\Build.ps1
-.\Install.ps1                    # optional
-.\Install.ps1 -DesktopShortcut -EnableAutostart
+.\Install.ps1
 ```
-
-Ergebnis: `publish\TILageMonitor.exe` → Installation nach `%LocalAppData%\TILageMonitor\`.
 
 ---
 
@@ -95,10 +107,10 @@ Ergebnis: `publish\TILageMonitor.exe` → Installation nach `%LocalAppData%\TILa
 | Aktion | Wirkung |
 |--------|---------|
 | Linksklick Tray | Fenster ein-/ausblenden |
-| Jetzt aktualisieren | Sofortiger Refresh |
-| gematik TI-Status | Fachportal im Browser |
-| Einstellungen / Verlauf | Eigene Fenster |
-| Autostart | Start mit Windows (`--tray`) |
+| Aktualisieren | Sofortiger Refresh |
+| Verlauf | 7-Tage-Heatmap |
+| Einstellungen | Theme, Autostart, Notify-Filter |
+| gematik | Fachportal im Browser |
 | Beenden | App schließen |
 
 ---
@@ -130,7 +142,7 @@ Ergebnis: `publish\TILageMonitor.exe` → Installation nach `%LocalAppData%\TILa
 | API | `ApiClient.cs`, `Models.cs` |
 | Persistenz | `SettingsStore`, `CacheStore`, `HistoryStore` |
 | Fenster | `SettingsWindow`, `HistoryWindow` |
-| System | `ToastService`, `ThemeService`, `AutostartService` |
+| System | `ToastService`, `ToastRegistration`, `ThemeService`, `AutostartService` |
 | Build | `Build.ps1`, `Install.ps1`, `.github/workflows/release.yml` |
 
 Technik: WPF + WinForms-Tray, TFM `net8.0-windows10.0.17763.0`, `Microsoft.Toolkit.Uwp.Notifications`.
@@ -139,7 +151,7 @@ Technik: WPF + WinForms-Tray, TFM `net8.0-windows10.0.17763.0`, `Microsoft.Toolk
 
 ## Bekannte Grenzen
 
-- Verlauf baut sich nur auf, **solange die App läuft** (kein Server-Backfill)
+- Verlauf baut sich nur auf, **solange die App läuft**
 - Unsignierte EXE → mögliche SmartScreen-Warnung
 - Nur Windows x64
 
