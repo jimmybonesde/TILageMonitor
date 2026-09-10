@@ -13,6 +13,13 @@ public sealed class AppSettings
     public bool AutoStart { get; set; }
 
     /// <summary>
+    /// Globale Benachrichtigungen (Toasts/Balloons). Default: true.
+    /// Tray-Menü kann dies umschalten; pro-Dienst Filter gilt nur wenn aktiv.
+    /// </summary>
+    [JsonPropertyName("notificationsEnabled")]
+    public bool NotificationsEnabled { get; set; } = true;
+
+    /// <summary>
     /// Pro-Dienst Benachrichtigungen. Fehlende Keys = aktiviert.
     /// Keys: erezept, epa, kim, wanda, ogd, vsdm, tianschluss
     /// </summary>
