@@ -21,6 +21,18 @@ public static class ToastService
     private static Forms.NotifyIcon? _fallbackTray;
     private static Action? _onActivated;
     private static bool _activationRegistered;
+    private static Func<bool>? _notificationsEnabled;
+
+    /// <summary>
+    /// Optional gate for global notifications (settings.json notificationsEnabled).
+    /// When unset, notifications are allowed. When set and returns false, Show is a no-op.
+    /// </summary>
+    public static void SetNotificationsEnabledProvider(Func<bool> provider) =>
+        _notificationsEnabled = provider;
+
+    /// <summary>True when toasts/balloons may be shown (default true if no provider).</summary>
+    public static bool AreNotificationsEnabled =>
+        _notificationsEnabled?.Invoke() ?? true;
 
     /// <summary>
     /// Registers toast click activation (show main window) and optional balloon fallback.
@@ -73,6 +85,9 @@ public static class ToastService
 
     public static void Show(string title, string body, ToastUrgency urgency = ToastUrgency.Info)
     {
+        if (!AreNotificationsEnabled)
+            return;
+
         var toastOk = false;
 
         // Prefer toast when registration succeeded; still attempt if uncertain.
