@@ -1,4 +1,3 @@
-using System.Xml.Linq;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Windows.UI.Notifications;
 using Forms = System.Windows.Forms;
@@ -74,6 +73,33 @@ public static class ToastService
 
     public static void Show(string title, string body, ToastUrgency urgency = ToastUrgency.Info)
     {
+        var toastOk = false;
+
+        // Prefer toast when registration succeeded; still attempt if uncertain.
+        if (ToastRegistration.IsRegistered || urgency == ToastUrgency.Info)
+        {
+            toastOk = TryShowToast(title, body, urgency);
+        }
+        else
+        {
+            // Registration failed — still try once, then always balloon for alerts.
+            toastOk = TryShowToast(title, body, urgency);
+        }
+
+        // Guaranteed balloon when toast failed.
+        // For Warning/Error: also balloon when registration is uncertain so the user
+        // never gets silence (toast may "succeed" without a visible popup).
+        var needBalloon =
+            !toastOk ||
+            (!ToastRegistration.IsRegistered &&
+             urgency is ToastUrgency.Warning or ToastUrgency.Error);
+
+        if (needBalloon)
+            ShowBalloonFallback(title, body, urgency);
+    }
+
+    private static bool TryShowToast(string title, string body, ToastUrgency urgency)
+    {
         try
         {
             var builder = new ToastContentBuilder()
@@ -94,7 +120,6 @@ public static class ToastService
                     break;
             }
 
-            // Prefer Toolkit Show() extension (desktop); fall back to notifier API.
             try
             {
                 builder.Show();
@@ -105,10 +130,12 @@ public static class ToastService
                 var toast = new ToastNotification(xml);
                 ToastNotificationManagerCompat.CreateToastNotifier().Show(toast);
             }
+
+            return true;
         }
         catch
         {
-            ShowBalloonFallback(title, body, urgency);
+            return false;
         }
     }
 
@@ -133,6 +160,12 @@ public static class ToastService
                 ToastUrgency.Warning => 5000,
                 _ => 4000
             };
+
+            // Balloon tip title/body have length limits
+            if (title.Length > 63)
+                title = title[..63];
+            if (body.Length > 255)
+                body = body[..255];
 
             tray.ShowBalloonTip(timeout, title, body, icon);
         }
