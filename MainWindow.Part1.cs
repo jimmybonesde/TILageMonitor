@@ -219,10 +219,10 @@ public partial class MainWindow
             }
             else
             {
-                OverallIcon.Text = "●";
-                OverallIcon.Foreground = ThemeBrush("StatusOutage");
-                OverallText.Text = "API nicht erreichbar";
-                OverallText.Foreground = ThemeBrush("StatusOutage");
+                ApplyOverallStatusVisual(
+                    "outage",
+                    "API nicht erreichbar",
+                    "Die gematik API antwortet nicht. Bitte später erneut versuchen.");
                 ConnectionText.Text = "● Keine Verbindung";
                 ConnectionText.Foreground = ThemeBrush("StatusOutage");
                 FooterText.Text = ex.Message;
@@ -261,10 +261,10 @@ public partial class MainWindow
                 SetTrayStatus(_trayIconStoerung, "TI-Status: API down");
                 if (cache is null)
                 {
-                    OverallIcon.Text = "●";
-                    OverallIcon.Foreground = ThemeBrush("StatusOutage");
-                    OverallText.Text = "API nicht erreichbar";
-                    OverallText.Foreground = ThemeBrush("StatusOutage");
+                    ApplyOverallStatusVisual(
+                        "outage",
+                        "API nicht erreichbar",
+                        "Die gematik API ist wiederholt nicht erreichbar.");
                 }
             }
 
@@ -293,6 +293,41 @@ public partial class MainWindow
             _historyWindow.RefreshView(history, outages);
     }
 
+
+
+    private void ApplyOverallStatusVisual(string kind, string title, string subtitle)
+    {
+        var accentKey = kind switch
+        {
+            "ok" => "StatusOk",
+            "partial" => "StatusPartial",
+            "maintenance" => "StatusMaintenance",
+            _ => "StatusOutage"
+        };
+        var surfaceKey = kind switch
+        {
+            "ok" => "StatusOkSurface",
+            "partial" => "StatusPartialSurface",
+            "maintenance" => "StatusMaintenanceSurface",
+            _ => "StatusOutageSurface"
+        };
+        var borderKey = kind switch
+        {
+            "ok" => "StatusOkBorder",
+            "partial" => "StatusPartialBorder",
+            "maintenance" => "StatusMaintenanceBorder",
+            _ => "StatusOutageBorder"
+        };
+
+        OverallStatusCard.Background = ThemeBrush(surfaceKey);
+        OverallStatusCard.BorderBrush = ThemeBrush(borderKey);
+        OverallIconCircle.Background = ThemeBrush(accentKey);
+        OverallIcon.Text = kind == "ok" ? "✓" : "!";
+        OverallIcon.Foreground = System.Windows.Media.Brushes.White;
+        OverallText.Text = title;
+        OverallText.Foreground = ThemeBrush(accentKey);
+        OverallSubtitle.Text = subtitle;
+    }
 
     private static System.Windows.Media.Brush ThemeBrush(string key) =>
         (System.Windows.Media.Brush)System.Windows.Application.Current.Resources[key];
