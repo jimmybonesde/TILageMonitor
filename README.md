@@ -31,19 +31,6 @@
 
 TI-Lage Monitor hält den Zustand der Telematikinfrastruktur im Windows-Tray im Blick — mit Ampel-Icon, Toasts und einem lokalen 7-Tage-Verlauf.
 
-| | |
-|:---:|:---:|
-| ![Hauptfenster](docs/assets/main-window-light.png) | ![Verlauf](docs/assets/history-dark.png) |
-| *Hauptfenster (Mockup, Hell)* | *7-Tage-Verlauf (Mockup, Dunkel)* |
-
-<p align="center">
-  <img src="docs/assets/tray-toast.png" alt="Tray und Toast" width="820"><br>
-  <em>Tray-Ampel und Windows-Toast (Mockup)</em>
-</p>
-
-> Die UI-Bilder sind **Mockups** (Optik angelehnt an die App). Echte Screenshots folgen, sobald vom Desktop aufgenommen.
-
----
 
 ## Features
 
