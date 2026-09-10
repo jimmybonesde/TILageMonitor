@@ -63,10 +63,7 @@ public partial class MainWindow
 
     private void ShowAbout()
     {
-        var version = Assembly.GetExecutingAssembly().GetName().Version;
-        var versionText = version is null
-            ? "1.0"
-            : $"{version.Major}.{version.Minor}";
+        var versionText = GetDisplayVersion();
 
         var dark = ThemeService.IsDark ? "an" : "aus";
         var auto = _settings.AutoStart ? "an" : "aus";
@@ -87,6 +84,45 @@ public partial class MainWindow
             "Über TI-Lage Monitor",
             System.Windows.MessageBoxButton.OK,
             System.Windows.MessageBoxImage.Information);
+    }
+
+    private static string GetDisplayVersion()
+    {
+        var asm = Assembly.GetExecutingAssembly();
+        var informational = asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (!string.IsNullOrWhiteSpace(informational))
+        {
+            var plus = informational.IndexOf('+');
+            return plus >= 0 ? informational[..plus] : informational;
+        }
+
+        try
+        {
+            var path = asm.Location;
+            if (!string.IsNullOrEmpty(path))
+            {
+                var fvi = FileVersionInfo.GetVersionInfo(path);
+                var product = fvi.ProductVersion;
+                if (!string.IsNullOrWhiteSpace(product))
+                {
+                    var plus = product.IndexOf('+');
+                    return plus >= 0 ? product[..plus] : product;
+                }
+                if (!string.IsNullOrWhiteSpace(fvi.FileVersion))
+                    return fvi.FileVersion!;
+            }
+        }
+        catch
+        {
+            // fall through
+        }
+
+        return "1.0.6";
+    }
+
+    private static string FormatMessageTimestamp(DateTime value)
+    {
+        return value.ToLocalTime().ToString("dd.MM.yyyy HH:mm", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
     }
 
     // =============================================================
@@ -338,4 +374,7 @@ public partial class MainWindow
     private static System.Windows.Media.Brush ThemeBrush(string key) =>
         (System.Windows.Media.Brush)System.Windows.Application.Current.Resources[key];
 
+    // =============================================================
+    // DATEN DARSTELLEN
+    // =============================================================
 }
