@@ -13,7 +13,6 @@ namespace TILageMonitor;
 
 public partial class MainWindow
 {
-    // =============================================================
 
     private static string GetServiceStatus(AppStatus status)
     {
@@ -65,9 +64,14 @@ public partial class MainWindow
             title = "TI-Status: Störung";
             urgency = ToastUrgency.Error;
         }
-        else if (hasPartial || hasMaintenance)
+        else if (hasPartial)
         {
-            title = "TI-Status: Änderung";
+            title = "TI-Status: Teilausfall";
+            urgency = ToastUrgency.Warning;
+        }
+        else if (hasMaintenance)
+        {
+            title = "TI-Status: Beeinträchtigung";
             urgency = ToastUrgency.Warning;
         }
         else if (allRecovered)
@@ -85,7 +89,17 @@ public partial class MainWindow
         if (changes.Count == 1)
         {
             var c = changes[0];
-            body = $"{c.ServiceName}: {FormatStatusShort(c.CurrentStatus)}";
+            var statusLabel = FormatStatusShort(c.CurrentStatus);
+            // Mockup-style: "eRezept · Teilausfall · …"
+            var hint = c.CurrentStatus switch
+            {
+                "full" => "gematik meldet Ausfall",
+                "partial" => "gematik meldet Teilausfall",
+                "maintenance" => "Wartung gemeldet",
+                "none" => "Dienst wieder verfügbar",
+                _ => statusLabel
+            };
+            body = $"{c.ServiceName} · {statusLabel} · {hint}";
         }
         else
         {
@@ -245,89 +259,5 @@ public partial class MainWindow
         if (text.Length > 63)
             text = text[..63];
         _tray.Text = text;
-    }
-
-    private static Drawing.Icon CreateStatusIcon(Drawing.Color badge)
-    {
-        using var bmp = new Drawing.Bitmap(16, 16);
-        using (var g = Drawing.Graphics.FromImage(bmp))
-        {
-            g.SmoothingMode = Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.InterpolationMode = Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-            g.Clear(Drawing.Color.Transparent);
-
-            var baseDrawn = TryDrawBaseTrayIcon(g);
-
-            if (!baseDrawn)
-            {
-                // Fallback: plain colored circle if TILageMonitor.ico is missing.
-                using var brush = new Drawing.SolidBrush(badge);
-                g.FillEllipse(brush, 1, 1, 13, 13);
-            }
-            else
-            {
-                // Status badge bottom-right with thin dark outline for contrast.
-                const int badgeSize = 7;
-                int bx = 16 - badgeSize - 1;
-                int by = 16 - badgeSize - 1;
-                using (var brush = new Drawing.SolidBrush(badge))
-                    g.FillEllipse(brush, bx, by, badgeSize, badgeSize);
-                using (var pen = new Drawing.Pen(Drawing.Color.FromArgb(40, 40, 40), 1f))
-                    g.DrawEllipse(pen, bx, by, badgeSize, badgeSize);
-            }
-        }
-
-        var handle = bmp.GetHicon();
-        try
-        {
-            using var temp = Drawing.Icon.FromHandle(handle);
-            return (Drawing.Icon)temp.Clone();
-        }
-        finally
-        {
-            DestroyIcon(handle);
-        }
-    }
-
-    /// <summary>
-    /// Draws the app icon (TILageMonitor.ico) into a 16×16 graphics context.
-    /// Tries BaseDirectory next to the exe, then a pack URI resource.
-    /// </summary>
-    private static bool TryDrawBaseTrayIcon(Drawing.Graphics g)
-    {
-        try
-        {
-            var icoPath = Path.Combine(AppContext.BaseDirectory, "TILageMonitor.ico");
-            if (File.Exists(icoPath))
-            {
-                using var baseIcon = new Drawing.Icon(icoPath, 32, 32);
-                using var src = baseIcon.ToBitmap();
-                g.DrawImage(src, 0, 0, 16, 16);
-                return true;
-            }
-        }
-        catch
-        {
-            // fall through to pack URI / fallback
-        }
-
-        try
-        {
-            var streamInfo = System.Windows.Application.GetResourceStream(
-                new Uri("pack://application:,,,/TILageMonitor.ico", UriKind.Absolute));
-            if (streamInfo?.Stream != null)
-            {
-                using var baseIcon = new Drawing.Icon(streamInfo.Stream, 32, 32);
-                using var src = baseIcon.ToBitmap();
-                g.DrawImage(src, 0, 0, 16, 16);
-                return true;
-            }
-        }
-        catch
-        {
-            // missing resource — caller uses circle fallback
-        }
-
-        return false;
     }
 }
