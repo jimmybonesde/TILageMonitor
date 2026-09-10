@@ -1,183 +1,169 @@
-# TI-Lage Monitor
+<p align="center">
+  <img src="docs/assets/app-icon-128.png" alt="TI-Lage Monitor Icon" width="96" height="96">
+</p>
 
-![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows&logoColor=white) ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)
+<h1 align="center">TI-Lage Monitor</h1>
 
-**Eine schlanke Windows-Tray-App, die den Zustand der Telematikinfrastruktur über die öffentlichen TI-Status-APIs der gematik im Blick behält.**
+<p align="center">
+  <strong>Windows-Tray-App für den aktuellen TI-Status der gematik</strong><br>
+  Schlank · lokal · ohne Login
+</p>
+
+<p align="center">
+  <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><img src="https://img.shields.io/github/v/release/jimmybonesde/TILageMonitor?style=for-the-badge&label=Download&logo=github" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows">
+  <img src="https://img.shields.io/badge/.NET-8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 8">
+  <img src="https://img.shields.io/badge/Lizenz-privat%2FCommunity-gray?style=for-the-badge" alt="Lizenz">
+</p>
+
+<p align="center">
+  <a href="https://github.com/jimmybonesde/TILageMonitor/releases/download/v1.0.3/TILageMonitor.exe"><strong>⬇️ TILageMonitor.exe (v1.0.3)</strong></a>
+  ·
+  <a href="https://fachportal.gematik.de/ti-status#TI-Anschluss">gematik Fachportal</a>
+</p>
 
 > [!IMPORTANT]
-> TI-Lage Monitor ist ein privates Community-Projekt und **kein offizielles Produkt der gematik**. Die angezeigten Informationen stammen aus den öffentlichen gematik-Endpunkten; maßgeblich ist das [gematik Fachportal](https://fachportal.gematik.de/ti-status#TI-Anschluss).
+> **Kein offizielles gematik-Produkt.** Community-App von Randy Carter (R.C.). Maßgeblich bleibt das [Fachportal TI-Status](https://fachportal.gematik.de/ti-status#TI-Anschluss).
 
-## Funktionen
+---
+
+## Überblick
+
+TI-Lage Monitor hält den Zustand der Telematikinfrastruktur im Windows-Tray im Blick — mit Ampel-Icon, Toasts und einem lokalen 7-Tage-Verlauf.
+
+| | |
+|:---:|:---:|
+| ![Hauptfenster](docs/assets/main-window-light.png) | ![Verlauf](docs/assets/history-dark.png) |
+| *Hauptfenster (Mockup, Hell)* | *7-Tage-Verlauf (Mockup, Dunkel)* |
+
+<p align="center">
+  <img src="docs/assets/tray-toast.png" alt="Tray und Toast" width="820"><br>
+  <em>Tray-Ampel und Windows-Toast (Mockup)</em>
+</p>
+
+> Die UI-Bilder sind **Mockups** (Optik angelehnt an die App). Echte Screenshots folgen, sobald vom Desktop aufgenommen.
+
+---
+
+## Features
 
 ### Status auf einen Blick
+- Überwacht **eRezept, ePA, KIM, WANDA, OGD, VSDM, TI-Anschluss**
+- Tray-Icon mit Ampel: **grün** (OK) · **amber** (Teilausfall/Beeinträchtigung) · **rot** (Vollausfall) · Wartung getrennt
+- Tooltip mit Gesamtstatus · Linksklick blendet das Fenster ein/aus
+- Refresh im gematik-Rhythmus mit Offset (`:01`, `:06`, `:11`, …)
+- Parallele API-Abfragen (Lage + Incidents + Outages)
+- Nach **3** API-Fehlern: dauerhafter „API down“-Zustand
 
-- Überwacht eRezept, ePA, KIM, WANDA, OGD, VSDM und TI-Anschluss.
-- App-Icon mit Status-Badge: **grün**, **orange** oder **rot**.
-- Tooltip mit dem aktuellen Gesamtstatus.
-- Ein Klick auf das Tray-Icon blendet das Hauptfenster ein oder aus.
-- Aktualisierung im gematik-Rhythmus mit leichtem Offset (`:01`, `:06`, `:11`, …).
-- Nach drei aufeinanderfolgenden Fehlern wird ein eigener API-down-Zustand angezeigt.
+### Benachrichtigungen
+- Klickbare **Windows-Toasts** (Störung, Änderung, API down, „Alles wieder OK“)
+- Balloon-Fallback, wenn Toasts nicht gehen
+- Filter **pro Dienst** in den Einstellungen
 
-### Benachrichtigungen und Wiederherstellung
+### Darstellung & Desktop
+- Fluent-UI, Hell-/Dunkelmodus, themige Ampel- und Scrollbalken-Farben
+- Einstellungen-Fenster · Autostart mit `--tray` · Einzelinstanz
+- Fachportal-Link direkt aus Tray/UI
 
-- Klickbare Windows-Toasts bei Statusänderungen, Incidents und API-Ausfällen; ein Klick öffnet das Hauptfenster.
-- NotifyIcon-Ballons dienen als Fallback, wenn Toasts nicht verfügbar sind.
-- Benachrichtigungen lassen sich in den Einstellungen pro Dienst filtern.
-- Nach einer Erholung fasst ein „Alles wieder OK“-Digest die Rückkehr zum Normalzustand zusammen.
-- Der letzte erfolgreiche Stand bleibt bei Verbindungsproblemen über einen Offline-Cache sichtbar.
+### 7-Tage-Verlauf (lokal)
+Die öffentlichen APIs liefern keine lange Zeitreihe — die App speichert stündliche Snapshots unter `%AppData%\TILageMonitor\history.json`.
 
-### Desktop-Integration und Darstellung
+- Heatmap **7×24**, Tages-Zoom, **Esc** zurück
+- Wochentags-Köpfe (`Mo 09.09`), Stundenachse `0 / 6 / 12 / 18`
+- Abdeckung z. B. `96 / 168 Stunden erfasst`
+- Legende: OK · Einschränkung · Störung · **Wartung** · keine Daten
+- Atomares Speichern von `history.json`
 
-- Persistenter Hell-/Dunkelmodus.
-- Windows-Autostart direkt in den Tray.
-- Einzelinstanz: Ein zweiter Start aktiviert die bereits laufende App.
-- Eigene Fenster für **Einstellungen** und **Verlauf**.
-- Direkter Link zum TI-Status im gematik Fachportal.
+---
 
-### Lokaler 7-Tage-Verlauf
+## Download & Installation
 
-Die öffentlichen APIs liefern keinen vollständigen mehrtägigen Zeitreihenverlauf. Daher speichert die App lokal stündliche Snapshots und zeigt sieben Kalendertage mit Tages-Zoom an. Pro Dienst bleibt für jede Stunde der schlechteste beobachtete Zustand erhalten; Stunden ohne Datenpunkt werden entsprechend markiert.
+### Fertige EXE (empfohlen)
 
-Der Verlauf entsteht erst während der Nutzung und füllt sich nur, solange die App regelmäßig läuft.
-
-## Voraussetzungen
-
-- Windows 10 oder Windows 11 (x64)
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) zum Bauen
-- PowerShell 5.1 oder neuer
+1. Neueste Version: [Releases](https://github.com/jimmybonesde/TILageMonitor/releases/latest)
+2. `TILageMonitor.exe` speichern und starten  
+   oder nach `%LocalAppData%\TILageMonitor\` legen (wie `Install.ps1`)
 
 > [!WARNING]
-> **Build-Voraussetzung:** `TILageMonitor.csproj` referenziert `TILageMonitor.ico`. Diese Binärdatei fehlt derzeit im Repository und muss vor dem Build im Projektstamm ergänzt werden.
+> Build ist **unsigniert** — SmartScreen kann warnen („Weitere Informationen“ → trotzdem ausführen). Siehe [SIGNING.md](SIGNING.md).
 
-## Schnellstart: Bauen
+### Aus dem Quellcode bauen
 
-Repository klonen, PowerShell im Projektverzeichnis öffnen und ausführen:
+Voraussetzungen: Windows 10/11 x64, [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0), PowerShell 5.1+
 
 ```powershell
+git clone https://github.com/jimmybonesde/TILageMonitor.git
+cd TILageMonitor
 .\Build.ps1
-```
-
-Das Skript stellt die Pakete wieder her und erzeugt eine selbstenthaltende Single-File-Anwendung unter:
-
-```text
-publish\TILageMonitor.exe
-```
-
-### Manueller Publish
-
-```powershell
-dotnet restore
-dotnet publish -c Release -r win-x64 --self-contained true `
-  -p:PublishSingleFile=true `
-  -p:IncludeNativeLibrariesForSelfExtract=true `
-  -p:EnableCompressionInSingleFile=true `
-  -o .\publish
-```
-
-Technische Basis: `net8.0-windows10.0.17763.0` und `Microsoft.Toolkit.Uwp.Notifications` 7.1.3.
-
-## Installation
-
-Nach einem erfolgreichen Build:
-
-```powershell
-.\Install.ps1
-```
-
-Optional mit Desktop-Verknüpfung und sofort aktiviertem Autostart:
-
-```powershell
+.\Install.ps1                    # optional
 .\Install.ps1 -DesktopShortcut -EnableAutostart
 ```
 
-Die Anwendung wird nach `%LocalAppData%\TILageMonitor\` kopiert. Das Skript legt eine Startmenü-Verknüpfung an; Desktop-Verknüpfung und Autostart sind optional. Alternativ lässt sich der Autostart später in der App aktivieren.
+Ergebnis: `publish\TILageMonitor.exe` → Installation nach `%LocalAppData%\TILageMonitor\`.
+
+---
 
 ## Bedienung
 
-### Tray
+| Aktion | Wirkung |
+|--------|---------|
+| Linksklick Tray | Fenster ein-/ausblenden |
+| Jetzt aktualisieren | Sofortiger Refresh |
+| gematik TI-Status | Fachportal im Browser |
+| Einstellungen / Verlauf | Eigene Fenster |
+| Autostart | Start mit Windows (`--tray`) |
+| Beenden | App schließen |
 
-- **Linksklick auf das Icon:** Hauptfenster ein-/ausblenden
-- **TI-Lage anzeigen:** Hauptfenster öffnen
-- **Jetzt aktualisieren:** Status sofort neu abrufen
-- **gematik TI-Status öffnen:** Fachportal im Browser öffnen
-- **Einstellungen / Verlauf:** die jeweiligen Fenster öffnen
-- **Autostart:** Start mit Windows ein-/ausschalten
-- **Beenden:** Anwendung vollständig schließen
+---
 
-Der Autostart verwendet `--tray`, damit das Hauptfenster beim Systemstart zunächst verborgen bleibt.
+## Daten & Datenschutz
 
-### Einstellungen
+- Nur öffentliche gematik-APIs — **kein** Login, **kein** API-Key
+- Alles lokal unter `%AppData%\TILageMonitor\`
 
-Hier lassen sich Darstellung, Autostart und Benachrichtigungsfilter je Dienst konfigurieren. Änderungen werden lokal gespeichert und bleiben nach einem Neustart erhalten.
+| Datei | Inhalt |
+|-------|--------|
+| `settings.json` | Theme, Autostart, Notify-Filter |
+| `last-lage.json` | Offline-Cache letzter Stand |
+| `history.json` | Stündlicher 7-Tage-Verlauf |
 
-### Verlauf
-
-Das Verlaufsfenster zeigt die lokal gesammelten stündlichen Zustände der letzten sieben Tage. Über den Tages-Zoom lässt sich ein einzelner Kalendertag genauer betrachten.
-
-## Daten und Datenschutz
-
-- Die App verwendet ausschließlich öffentliche API-Endpunkte; ein Login oder API-Key ist nicht erforderlich.
-- Es werden keine Zugangsdaten gespeichert.
-- Einstellungen, Cache und Verlauf bleiben lokal unter `%AppData%\TILageMonitor\`.
-- Beim Öffnen des Fachportal-Links wird der Standardbrowser verwendet.
-
-| Lokale Datei | Zweck |
-|---|---|
-| `%AppData%\TILageMonitor\settings.json` | Darstellung, Autostart und Benachrichtigungsfilter |
-| `%AppData%\TILageMonitor\last-lage.json` | letzter erfolgreich geladener Status |
-| `%AppData%\TILageMonitor\history.json` | stündlicher lokaler 7-Tage-Verlauf |
-
-## Verwendete API-Endpunkte
+### API-Endpunkte
 
 - `https://ti-lage.prod.ccs.gematik.solutions/lageapi/v2/tilage`
 - `https://ti-lage.prod.ccs.gematik.solutions/lageapi/v1/tistatus/incident`
 - `https://ti-lage.prod.ccs.gematik.solutions/lageapi/v1/tistatus/outage`
 
-## Architektur und Projektstruktur
+---
 
-Die Anwendung ist eine klassische WPF-Desktop-App auf .NET 8. Für das Tray-Icon und den Balloon-Fallback wird Windows Forms eingebunden; Toast-Benachrichtigungen laufen über `Microsoft.Toolkit.Uwp.Notifications`.
+## Projektstruktur
 
-| Bereich | Zentrale Dateien |
-|---|---|
-| Anwendung und Lifecycle | `App.xaml(.cs)` |
-| Hauptoberfläche und Tray-Steuerung | `MainWindow.xaml(.cs)`, `MainWindow.Part*.cs` |
-| API und Datenmodelle | `ApiClient.cs`, `Models.cs` |
-| Persistenz | `SettingsStore.cs`, `CacheStore.cs`, `HistoryStore.cs` |
-| Einstellungen und Verlauf | `SettingsWindow.xaml(.cs)`, `HistoryWindow.xaml(.cs)` |
-| Systemintegration | `ToastService.cs`, `AutostartService.cs`, `ThemeService.cs` |
-| Build und Installation | `Build.ps1`, `Install.ps1` |
+| Bereich | Dateien |
+|---------|---------|
+| UI / Tray | `MainWindow.*`, `App.xaml(.cs)` |
+| API | `ApiClient.cs`, `Models.cs` |
+| Persistenz | `SettingsStore`, `CacheStore`, `HistoryStore` |
+| Fenster | `SettingsWindow`, `HistoryWindow` |
+| System | `ToastService`, `ThemeService`, `AutostartService` |
+| Build | `Build.ps1`, `Install.ps1`, `.github/workflows/release.yml` |
 
-## Bekannte Einschränkungen
+Technik: WPF + WinForms-Tray, TFM `net8.0-windows10.0.17763.0`, `Microsoft.Toolkit.Uwp.Notifications`.
 
-- Der 7-Tage-Verlauf wird ausschließlich clientseitig aufgebaut und enthält anfangs noch keine historischen Daten.
-- Nicht signierte Builds können eine Windows-SmartScreen-Warnung auslösen; Hinweise dazu stehen in [`SIGNING.md`](SIGNING.md).
-- Die Anwendung ist ausschließlich für Windows vorgesehen.
-- `TILageMonitor.ico` muss vor dem Build manuell im Projektstamm vorhanden sein, solange die Datei nicht im Repository enthalten ist.
+---
 
-## Fehlerbehebung
+## Bekannte Grenzen
 
-### Build schlägt wegen `TILageMonitor.ico` fehl
+- Verlauf baut sich nur auf, **solange die App läuft** (kein Server-Backfill)
+- Unsignierte EXE → mögliche SmartScreen-Warnung
+- Nur Windows x64
 
-Die Projektdatei erwartet `TILageMonitor.ico` im Repository-Stamm. Lege dort eine gültige Windows-ICO-Datei ab und starte `Build.ps1` erneut.
-
-### `dotnet` wird nicht gefunden
-
-Installiere das .NET 8 SDK, öffne PowerShell neu und prüfe anschließend:
-
-```powershell
-dotnet --info
-```
-
-### `Install.ps1` findet die EXE nicht
-
-Führe zuerst `Build.ps1` aus. Die Installation erwartet `publish\TILageMonitor.exe`.
-
-### Benachrichtigungen erscheinen nicht
-
-- Prüfe unter Windows, ob Benachrichtigungen und „Nicht stören“ passend konfiguriert sind.
-- Prüfe in den App-Einstellungen den Benachrichtigungsfilter des betroffenen Dienstes.
-- Wenn Windows-Toasts nicht verfügbar sind, versucht die App automatisch einen Balloon-Hinweis im Tray.
+---
 
 ## Autor
 
-**Randy Carter** · R.C.
+**Randy Carter** · R.C. · © 2026
+
+---
+
+<p align="center">
+  <sub>Made for Praxen & IT, die den TI-Status im Blick behalten wollen — ohne Portal-Tab offen zu lassen.</sub>
+</p>
