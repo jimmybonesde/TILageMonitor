@@ -6,6 +6,7 @@
   Height="560"
   MinWidth="720"
   MinHeight="420"
+  WindowState="Maximized"
   WindowStartupLocation="CenterOwner"
   ResizeMode="CanResizeWithGrip"
   Background="{DynamicResource WindowBackground}"
