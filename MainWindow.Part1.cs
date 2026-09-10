@@ -319,13 +319,19 @@ public partial class MainWindow
             _ => "StatusOutageBorder"
         };
 
-        OverallStatusCard.Background = ThemeBrush(surfaceKey);
-        OverallStatusCard.BorderBrush = ThemeBrush(borderKey);
-        OverallIconCircle.Background = ThemeBrush(accentKey);
+        // DynamicResource so ThemeService brush replacements track after theme toggle
+        // (local ThemeBrush assignment would keep the old frozen/dark instance).
+        OverallStatusCard.SetResourceReference(
+            System.Windows.Controls.Border.BackgroundProperty, surfaceKey);
+        OverallStatusCard.SetResourceReference(
+            System.Windows.Controls.Border.BorderBrushProperty, borderKey);
+        OverallIconCircle.SetResourceReference(
+            System.Windows.Controls.Border.BackgroundProperty, accentKey);
         OverallIcon.Text = kind == "ok" ? "✓" : "!";
         OverallIcon.Foreground = System.Windows.Media.Brushes.White;
         OverallText.Text = title;
-        OverallText.Foreground = ThemeBrush(accentKey);
+        OverallText.SetResourceReference(
+            System.Windows.Controls.TextBlock.ForegroundProperty, accentKey);
         OverallSubtitle.Text = subtitle;
     }
 
