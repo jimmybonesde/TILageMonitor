@@ -57,36 +57,38 @@ public partial class MainWindow
         _autostartMenuItem.Text = on ? "Autostart: an" : "Autostart: aus";
     }
 
+    private void ToggleNotificationsFromMenu()
+    {
+        _settings.NotificationsEnabled = !_settings.NotificationsEnabled;
+        SettingsStore.Save(_settings);
+        SyncNotificationsMenuItem();
+        _settingsWindow?.SyncFrom(_settings);
+    }
+
+    private void SyncNotificationsMenuItem()
+    {
+        if (_notificationsMenuItem is null)
+            return;
+
+        var on = _settings.NotificationsEnabled;
+        _notificationsMenuItem.Checked = on;
+        _notificationsMenuItem.Text = on ? "Benachrichtigungen: an" : "Benachrichtigungen: aus";
+    }
+
     // =============================================================
     // ÜBER / EINSTELLUNGEN
     // =============================================================
 
     private void ShowAbout()
     {
-        var versionText = GetDisplayVersion();
-
-        var dark = ThemeService.IsDark ? "an" : "aus";
-        var auto = _settings.AutoStart ? "an" : "aus";
-
-        System.Windows.MessageBox.Show(
-            "TI-Lage Monitor\n" +
-            "Live-Überwachung der gematik TI-Lage\n\n" +
-            "• Ampel-Status im Infobereich\n" +
-            "• Windows-Toasts bei Störungen\n" +
-            "• 7-Tage-Verlauf (lokal)\n" +
-            "• Offline-Cache bei API-Ausfall\n" +
-            "• Einstellungen (Darstellung, Autostart, Filter)\n\n" +
-            $"Datenquelle: öffentliche gematik TI-Lage-API\n" +
-            $"Version {versionText}\n" +
-            "Autor: Randy Carter\n\n" +
-            $"Dunkelmodus: {dark} · Autostart: {auto}\n\n" +
-            $"Einstellungen:\n{SettingsStore.SettingsPath}",
-            "Über TI-Lage Monitor",
-            System.Windows.MessageBoxButton.OK,
-            System.Windows.MessageBoxImage.Information);
+        var about = new AboutWindow
+        {
+            Owner = IsVisible ? this : null
+        };
+        about.ShowDialog();
     }
 
-    private static string GetDisplayVersion()
+    public static string GetDisplayVersion()
     {
         var asm = Assembly.GetExecutingAssembly();
         var informational = asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
@@ -117,7 +119,7 @@ public partial class MainWindow
             // fall through
         }
 
-        return "1.0.6";
+        return "1.0.7";
     }
 
     private static string FormatMessageTimestamp(DateTime value)
