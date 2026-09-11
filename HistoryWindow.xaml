@@ -1,7 +1,7 @@
 <Window x:Class="TILageMonitor.HistoryWindow"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  Title="TI-Status · 7 Tage"
+  Title="TI-Status · 14 Tage"
   Width="960"
   Height="560"
   MinWidth="720"
@@ -62,7 +62,7 @@
          Foreground="{DynamicResource TextMuted}"
          VerticalAlignment="Bottom"
          Margin="12,0,0,2"/>
-    <TextBlock Text="TI-Status · 7 Tage"
+    <TextBlock Text="TI-Status · 14 Tage"
          FontSize="24"
          FontWeight="SemiBold"
          Foreground="{DynamicResource TextMain}"/>
@@ -80,50 +80,6 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto"
             HorizontalScrollBarVisibility="Auto">
         <StackPanel MinWidth="880">
-      <!-- Subtle hour marks 0 / 6 / 12 / 18 per day column -->
-      <Border x:Name="OverviewHourAxisCard"
-        Style="{StaticResource HistoryCardStyle}"
-        Padding="14,6"
-        Margin="0,0,0,4"
-        Visibility="Collapsed">
-          <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="110"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <TextBlock Text="Stunde"
-             FontSize="10"
-             Foreground="{DynamicResource TextMuted}"
-             VerticalAlignment="Center"/>
-        <ItemsControl x:Name="OverviewHourAxis" Grid.Column="1">
-            <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-              <UniformGrid Rows="1" Columns="7"/>
-          </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-          <DataTemplate>
-              <ItemsControl ItemsSource="{Binding}" Margin="3,0">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-              <UniformGrid Rows="1" Columns="24"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-              <TextBlock Text="{Binding}"
-                   FontSize="9"
-                   Foreground="{DynamicResource TextMuted}"
-                   HorizontalAlignment="Center"
-                   Opacity="0.85"/>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-              </ItemsControl>
-          </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-          </Grid>
-      </Border>
       <ItemsControl x:Name="HistoryList" Margin="0,0,0,4" Visibility="Collapsed">
           <ItemsControl.ItemTemplate>
         <DataTemplate>
@@ -145,7 +101,7 @@
                 HorizontalAlignment="Stretch">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-              <UniformGrid Rows="1" Columns="7"/>
+              <UniformGrid Rows="1" Columns="14"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
@@ -201,7 +157,7 @@
              Foreground="{DynamicResource TextMain}"
              HorizontalAlignment="Center"
              Margin="0,0,0,8"/>
-        <TextBlock Text="Der 7-Tage-Verlauf baut sich auf, sobald die App läuft und Statusdaten erfasst. Es gibt noch keine gespeicherten Stunden."
+        <TextBlock Text="Der 14-Tage-Verlauf baut sich auf, sobald die App läuft und Statusdaten erfasst. Es gibt noch keine gespeicherten Stunden."
              FontSize="13"
              Foreground="{DynamicResource TextMuted}"
              TextWrapping="Wrap"
@@ -218,7 +174,7 @@
             HorizontalScrollBarVisibility="Auto">
         <StackPanel MinWidth="880">
       <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-          <Button Content="← Alle 7 Tage"
+          <Button Content="← Alle 14 Tage"
             Click="ExitZoom_Click"
             Padding="12,6"
             MinWidth="120"

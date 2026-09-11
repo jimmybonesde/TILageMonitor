@@ -6,7 +6,7 @@ namespace TILageMonitor;
 
 /// <summary>
 /// Stündlicher Client-Snapshot: schlechtester Status je Dienst für eine lokale Stunde.
-/// Der 7-Tage-Verlauf (7×24) baut sich auf, solange die App läuft und erfolgreich aktualisiert.
+/// Der 14-Tage-Verlauf (14×24) baut sich auf, solange die App läuft und erfolgreich aktualisiert.
 /// </summary>
 public sealed class HistoryHourSnapshot
 {
@@ -40,7 +40,7 @@ public sealed class LegacyHistoryDaySnapshot
 
 public static class HistoryStore
 {
-    private const int KeepDays = 7;
+    private const int KeepDays = 14;
     private const int HoursPerDay = 24;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -130,7 +130,7 @@ public static class HistoryStore
     /// <summary>
     /// Schreibt/aktualisiert den Snapshot für die aktuelle lokale Stunde mit dem
     /// schlechtesten bekannten Status je Dienst (Upsert: nur verschlechtern oder neu setzen).
-    /// Behält Stunden ab Beginn von (Today − 6 Tage) 00:00.
+    /// Behält Stunden ab Beginn von (Today − 13 Tage) 00:00.
     /// </summary>
     public static HistoryFile UpsertNow(LageV2 lage)
     {
@@ -195,7 +195,7 @@ public static class HistoryStore
     private static void Prune(HistoryFile file, DateTime todayLocal)
     {
         file.Hours ??= new List<HistoryHourSnapshot>();
-        var cutoff = todayLocal.AddDays(-(KeepDays - 1)); // start of (Today - 6 days)
+        var cutoff = todayLocal.AddDays(-(KeepDays - 1)); // start of (Today - 13 days)
         file.Hours = file.Hours
             .Where(h => TryParseHourKey(h.HourKey, out var dt) && dt.Date >= cutoff)
             .OrderBy(h => h.HourKey)
@@ -244,7 +244,7 @@ public static class HistoryStore
     };
 
     /// <summary>
-    /// Anzahl eindeutiger Stunden-Keys im aktuellen 7-Tage-Fenster (max. 168).
+    /// Anzahl eindeutiger Stunden-Keys im aktuellen 14-Tage-Fenster (max. 336).
     /// </summary>
     public static int CountCoveredHours(HistoryFile file)
     {
@@ -260,10 +260,11 @@ public static class HistoryStore
     public static int ExpectedHoursInWindow => KeepDays * HoursPerDay;
 
     /// <summary>
-    /// Liefert für jeden bekannten Dienst 7 Tagesgruppen à 24 Stunden (ältester → heute).
+    /// Liefert für jeden bekannten Dienst 14 Tagesgruppen à 24 Stunden (ältester → heute).
     /// </summary>
     public static List<HistoryServiceRow> BuildRows(
         HistoryFile file,
+        IncidentResponse? incidents = null,
         OutageResponse? outages = null)
     {
         file.Hours ??= new List<HistoryHourSnapshot>();
@@ -277,6 +278,7 @@ public static class HistoryStore
             .GroupBy(h => h.HourKey)
             .ToDictionary(g => g.Key, g => g.Last(), StringComparer.Ordinal);
 
+        var incidentByServiceHour = BuildIncidentOverlaps(incidents, dayDates);
         var outageByServiceHour = BuildOutageOverlaps(outages, dayDates);
 
         var rows = new List<HistoryServiceRow>();
@@ -300,10 +302,16 @@ public static class HistoryStore
                         status = LookupService(snap.Services, key);
                     }
 
-                    if (outageByServiceHour.TryGetValue((key, hourKey), out var fromOutage))
+                    if (incidentByServiceHour.TryGetValue((key, hourKey), out var fromIncident) &&
+                        (status is null || StatusSeverity(fromIncident) > StatusSeverity(status)))
                     {
-                        if (status is null || StatusSeverity(fromOutage) > StatusSeverity(status))
-                            status = fromOutage;
+                        status = fromIncident;
+                    }
+
+                    if (outageByServiceHour.TryGetValue((key, hourKey), out var fromOutage) &&
+                        (status is null || StatusSeverity(fromOutage) > StatusSeverity(status)))
+                    {
+                        status = fromOutage;
                     }
 
                     hours.Add(HistoryDayCell.From(date, h, status));
@@ -330,6 +338,92 @@ public static class HistoryStore
         return null;
     }
 
+    /// <summary>
+    /// Maps the official TI-Status incident timeline onto the local 14-day hour grid.
+    /// The endpoint retains incidents and their individual status transitions for 14 days.
+    /// </summary>
+    private static Dictionary<(string Service, string HourKey), string> BuildIncidentOverlaps(
+        IncidentResponse? incidents,
+        List<DateTime> dayDates)
+    {
+        var result = new Dictionary<(string, string), string>();
+        if (incidents?.Data is null || incidents.Data.Count == 0)
+            return result;
+
+        foreach (var incident in incidents.Data)
+        {
+            var services = (incident.App ?? Enumerable.Empty<string>())
+                .Select(MapServiceKey)
+                .Where(key => key is not null)
+                .Select(key => key!)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (services.Count == 0)
+                continue;
+
+            var steps = (incident.Steps ?? Enumerable.Empty<IncidentStep>())
+                .OrderBy(step => step.Timestamp)
+                .ToList();
+
+            for (var i = 0; i < steps.Count; i++)
+            {
+                var severity = IncidentSeverity(steps[i]);
+                if (severity is null)
+                    continue;
+
+                var startLocal = steps[i].Timestamp.ToLocalTime();
+                var endUtc = i + 1 < steps.Count
+                    ? steps[i + 1].Timestamp
+                    : incident.ClosedAt ?? DateTime.UtcNow;
+                var endLocal = endUtc.ToLocalTime();
+
+                if (endLocal <= startLocal)
+                    continue;
+
+                foreach (var service in services)
+                    AddOverlappingHours(result, service, severity, startLocal, endLocal, dayDates);
+            }
+        }
+
+        return result;
+    }
+
+    private static string? IncidentSeverity(IncidentStep step) => step.Status switch
+    {
+        1 => "full",
+        4 => "partial",
+        _ => null
+    };
+
+    private static void AddOverlappingHours(
+        Dictionary<(string Service, string HourKey), string> result,
+        string service,
+        string severity,
+        DateTime startLocal,
+        DateTime endLocal,
+        List<DateTime> dayDates)
+    {
+        foreach (var date in dayDates)
+        {
+            for (var h = 0; h < HoursPerDay; h++)
+            {
+                var hourStart = date.AddHours(h);
+                var hourEnd = hourStart.AddHours(1);
+                if (hourEnd <= startLocal || hourStart >= endLocal)
+                    continue;
+
+                var hourKey = $"{date:yyyy-MM-dd}-{h:D2}";
+                var key = (service, hourKey);
+                if (!result.TryGetValue(key, out var previous) ||
+                    StatusSeverity(severity) > StatusSeverity(previous))
+                {
+                    result[key] = severity;
+                }
+            }
+        }
+    }
+
     private static Dictionary<(string Service, string HourKey), string> BuildOutageOverlaps(
         OutageResponse? outages,
         List<DateTime> dayDates)
@@ -349,26 +443,13 @@ public static class HistoryStore
                 var startLocal = slot.StartTimestamp.ToLocalTime();
                 var endLocal = (slot.EndTimestamp ?? DateTime.Now).ToLocalTime();
 
-                foreach (var date in dayDates)
-                {
-                    for (var h = 0; h < HoursPerDay; h++)
-                    {
-                        var hourStart = date.AddHours(h);
-                        var hourEnd = hourStart.AddHours(1);
-                        // overlap: [hourStart, hourEnd) with [startLocal, endLocal]
-                        if (hourEnd <= startLocal || hourStart > endLocal)
-                            continue;
-
-                        var hourKey = $"{date:yyyy-MM-dd}-{h:D2}";
-                        const string severity = "partial";
-                        var key = (serviceKey, hourKey);
-                        if (!result.TryGetValue(key, out var prev) ||
-                            StatusSeverity(severity) > StatusSeverity(prev))
-                        {
-                            result[key] = severity;
-                        }
-                    }
-                }
+                AddOverlappingHours(
+                    result,
+                    serviceKey,
+                    "partial",
+                    startLocal,
+                    endLocal,
+                    dayDates);
             }
         }
 
@@ -380,17 +461,18 @@ public static class HistoryStore
         if (string.IsNullOrWhiteSpace(service))
             return null;
 
+        var normalizedService = NormalizeServiceName(service);
         foreach (var key in AppSettings.ServiceKeys)
         {
-            if (string.Equals(key, service, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(NormalizeServiceName(key), normalizedService, StringComparison.Ordinal))
                 return key;
         }
 
         foreach (var kv in AppSettings.ServiceDisplayNames)
         {
-            if (string.Equals(kv.Value, service, StringComparison.OrdinalIgnoreCase) ||
-                service.Contains(kv.Value, StringComparison.OrdinalIgnoreCase) ||
-                service.Contains(kv.Key, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(NormalizeServiceName(kv.Value), normalizedService, StringComparison.Ordinal) ||
+                normalizedService.Contains(NormalizeServiceName(kv.Value), StringComparison.Ordinal) ||
+                normalizedService.Contains(NormalizeServiceName(kv.Key), StringComparison.Ordinal))
             {
                 return kv.Key;
             }
@@ -398,13 +480,22 @@ public static class HistoryStore
 
         return null;
     }
+
+    private static string NormalizeServiceName(string value) =>
+        new string(value
+            .ToLowerInvariant()
+            .Replace('ä', 'a')
+            .Replace('ö', 'o')
+            .Replace('ü', 'u')
+            .Where(char.IsLetterOrDigit)
+            .ToArray());
 }
 
 public sealed class HistoryServiceRow
 {
     public string ServiceName { get; }
     public string ServiceKey { get; }
-    /// <summary>7 day groups (oldest → today), each with 24 hour cells.</summary>
+    /// <summary>14 day groups (oldest → today), each with 24 hour cells.</summary>
     public List<HistoryDayGroup> Days { get; }
 
     public HistoryServiceRow(string serviceName, string serviceKey, List<HistoryDayGroup> days)

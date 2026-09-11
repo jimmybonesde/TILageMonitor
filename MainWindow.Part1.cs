@@ -21,7 +21,7 @@ public partial class MainWindow
     {
         if (_historyWindow is not null)
         {
-            _historyWindow.RefreshView(_lastHistory, _lastOutages);
+            _historyWindow.RefreshView(_lastHistory, _lastIncidents, _lastOutages);
             if (!_historyWindow.IsVisible)
                 _historyWindow.Show();
             _historyWindow.Activate();
@@ -30,7 +30,7 @@ public partial class MainWindow
 
         _historyWindow = new HistoryWindow(this);
         _historyWindow.Closed += (_, _) => _historyWindow = null;
-        _historyWindow.RefreshView(_lastHistory, _lastOutages);
+        _historyWindow.RefreshView(_lastHistory, _lastIncidents, _lastOutages);
         _historyWindow.Show();
     }
 
@@ -228,7 +228,7 @@ public partial class MainWindow
             _apiDownBalloonShown = false;
 
             Render(lage, incidents, outages, fromCache: false);
-            RenderHistory(history, outages);
+            RenderHistory(history, incidents, outages);
 
             _firstLoad = false;
         }
@@ -247,7 +247,7 @@ public partial class MainWindow
                     fromCache: true,
                     cache.SavedAt,
                     suppressTrayUpdate: _consecutiveApiFailures >= 3);
-                RenderHistory(HistoryStore.Load(), cache.Outages);
+                RenderHistory(HistoryStore.Load(), cache.Incidents, cache.Outages);
 
                 ConnectionText.Text = "● Offline · letzter Stand";
                 ConnectionText.Foreground = ThemeBrush("StatusPartial");
@@ -319,16 +319,23 @@ public partial class MainWindow
     // VERLAUF DARSTELLEN
     // =============================================================
 
-    private void RenderHistory(HistoryFile history, OutageResponse? outages) =>
-        NotifyHistoryUpdated(history, outages);
+    private void RenderHistory(
+        HistoryFile history,
+        IncidentResponse? incidents,
+        OutageResponse? outages) =>
+        NotifyHistoryUpdated(history, incidents, outages);
 
-    private void NotifyHistoryUpdated(HistoryFile history, OutageResponse? outages)
+    private void NotifyHistoryUpdated(
+        HistoryFile history,
+        IncidentResponse? incidents,
+        OutageResponse? outages)
     {
         _lastHistory = history;
+        _lastIncidents = incidents;
         _lastOutages = outages;
 
         if (_historyWindow is not null && _historyWindow.IsVisible)
-            _historyWindow.RefreshView(history, outages);
+            _historyWindow.RefreshView(history, incidents, outages);
     }
 
 

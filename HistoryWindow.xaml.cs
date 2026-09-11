@@ -21,13 +21,6 @@ public partial class HistoryWindow : Window
         HistoryList.ItemsSource = _history;
         ZoomList.ItemsSource = _zoomRows;
         ZoomHourAxis.ItemsSource = Enumerable.Range(0, 24).Select(h => h.ToString()).ToList();
-        // Subtle overview marks: 7 day columns × 24 slots, labels only at 0 / 6 / 12 / 18
-        var hourMarks = Enumerable.Range(0, 24)
-            .Select(h => h is 0 or 6 or 12 or 18 ? h.ToString() : "")
-            .ToList();
-        OverviewHourAxis.ItemsSource = Enumerable.Range(0, 7)
-            .Select(_ => hourMarks)
-            .ToList();
         UpdateLegendColors();
         Focusable = true;
         PreviewKeyDown += HistoryWindow_PreviewKeyDown;
@@ -38,13 +31,18 @@ public partial class HistoryWindow : Window
         };
     }
 
-    public void RefreshView(HistoryFile history, OutageResponse? outages = null)
+    public void RefreshView(
+        HistoryFile history,
+        IncidentResponse? incidents = null,
+        OutageResponse? outages = null)
     {
         history.Hours ??= new List<HistoryHourSnapshot>();
         history.Days = null; // ignore legacy shape in UI path
 
         _history.Clear();
-        var hasAnyData = history.Hours.Count > 0;
+        var hasAnyData = history.Hours.Count > 0 ||
+                         incidents?.Data?.Count > 0 ||
+                         outages?.Data?.Count > 0;
 
         NoHistoryBorder.Visibility = hasAnyData
             ? Visibility.Collapsed
@@ -52,24 +50,21 @@ public partial class HistoryWindow : Window
         HistoryList.Visibility = hasAnyData
             ? Visibility.Visible
             : Visibility.Collapsed;
-        OverviewHourAxisCard.Visibility = hasAnyData
-            ? Visibility.Visible
-            : Visibility.Collapsed;
         LegendPanel.Visibility = hasAnyData
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        // Build heatmap only when there is data — avoid fake full grey 7×24 grid
+        // Build heatmap only when there is data — avoid fake full grey 14×24 grid
         if (hasAnyData)
         {
-            var rows = HistoryStore.BuildRows(history, outages);
+            var rows = HistoryStore.BuildRows(history, incidents, outages);
             foreach (var row in rows)
                 _history.Add(row);
         }
 
         var covered = HistoryStore.CountCoveredHours(history);
         var expected = HistoryStore.ExpectedHoursInWindow;
-        CoverageHint.Text = $"{covered} / {expected} Stunden erfasst";
+        CoverageHint.Text = $"{covered} / {expected} Stunden lokal erfasst · Ausfälle zusätzlich aus der gematik-API";
 
         UpdateLegendColors();
         UpdateHeaderHint();
@@ -82,12 +77,12 @@ public partial class HistoryWindow : Window
     {
         if (_zoomedDate is not null)
         {
-            HeaderHint.Text = "Vergrößerte Tagesansicht — Esc oder Zurück kehrt zur 7-Tage-Übersicht.";
+            HeaderHint.Text = "Vergrößerte Tagesansicht — Esc oder Zurück kehrt zur 14-Tage-Übersicht.";
         }
         else
         {
             HeaderHint.Text =
-                "Stündliche Auflösung über die letzten 7 lokalen Kalendertage (baut sich mit der Laufzeit auf). Tag anklicken zum Zoomen.";
+                "Stündliche Übersicht der letzten 14 Tage: lokale Verfügbarkeit plus gematik-Ausfälle aus der API. Tag anklicken zum Zoomen.";
         }
     }
 

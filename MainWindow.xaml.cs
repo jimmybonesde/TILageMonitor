@@ -44,6 +44,7 @@ public partial class MainWindow : Window
     private SettingsWindow? _settingsWindow;
     private HistoryWindow? _historyWindow;
     private HistoryFile _lastHistory = new();
+    private IncidentResponse? _lastIncidents;
     private OutageResponse? _lastOutages;
 
 
@@ -117,7 +118,7 @@ public partial class MainWindow : Window
         menu.Items.Add(new Forms.ToolStripSeparator());
 
         menu.Items.Add("Über TI-Lage Monitor…", null, (_, _) => ShowAbout());
-        menu.Items.Add("TI-Status · 7 Tage…", null, (_, _) => Dispatcher.Invoke(OpenHistoryWindow));
+        menu.Items.Add("TI-Status · 14 Tage…", null, (_, _) => Dispatcher.Invoke(OpenHistoryWindow));
         menu.Items.Add("Einstellungen…", null, (_, _) => Dispatcher.Invoke(OpenSettingsWindow));
 
         _autostartMenuItem = new Forms.ToolStripMenuItem("Autostart: aus")
@@ -183,7 +184,7 @@ public partial class MainWindow : Window
         Loaded += async (_, _) =>
         {
             // Verlauf aus lokalem Cache anzeigen (auch vor erstem API-Call)
-            RenderHistory(HistoryStore.Load(), null);
+            RenderHistory(HistoryStore.Load(), null, null);
 
             await RefreshAsync(false);
             ScheduleNextRefresh();
@@ -302,7 +303,7 @@ public partial class MainWindow : Window
         SyncAutostartMenuItem();
         SyncNotificationsMenuItem();
         if (themeChanged)
-            NotifyHistoryUpdated(_lastHistory, _lastOutages);
+            NotifyHistoryUpdated(_lastHistory, _lastIncidents, _lastOutages);
         _settingsWindow?.SyncFrom(_settings);
     }
 
