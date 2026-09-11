@@ -14,27 +14,17 @@ namespace TILageMonitor;
 public partial class MainWindow
 {
 
-    private static string GetServiceStatus(AppStatus status)
-    {
-        var outage = status.Outage ?? "none";
-        if (outage.Equals("full", StringComparison.OrdinalIgnoreCase))
-            return "full";
-        if (outage.Equals("partial", StringComparison.OrdinalIgnoreCase))
-            return "partial";
-        if (status.HasMaintenance || status.HasSubComponentMaintenance)
-            return "maintenance";
-        return "none";
-    }
+    private static string GetServiceStatus(AppStatus status) =>
+        TiStatusClassifier.Classify(status);
 
     private static string GetAffectedFunctionText(AppStatus status)
     {
         var functions = (status.AffectedFunctions ?? new())
             .Where(x => !string.IsNullOrWhiteSpace(x.Function))
             .Take(3)
-            .Select(x =>
-                string.IsNullOrWhiteSpace(x.ImpactDesc)
-                    ? x.Function
-                    : $"{x.Function}: {x.ImpactDesc}")
+            .Select(x => string.IsNullOrWhiteSpace(x.ImpactDesc)
+                ? x.Function
+                : $"{x.Function}: {x.ImpactDesc}")
             .ToList();
 
         return functions.Count == 0 ? "" : string.Join("\n", functions);

@@ -223,7 +223,7 @@ public partial class MainWindow : Window
     private void ScheduleNextRefresh()
     {
         _timer.Stop();
-        _timer.Interval = GetDelayUntilNextGematikSlot(DateTime.Now);
+        _timer.Interval = GematikRefreshSchedule.GetDelayUntilNextSlot(DateTime.Now);
         _timer.Start();
     }
 

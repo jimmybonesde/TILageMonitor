@@ -21,7 +21,6 @@ public partial class App : System.Windows.Application
 
         if (!createdNew)
         {
-            // Bestehende Instanz zum Anzeigen auffordern
             try
             {
                 using var showEvent = EventWaitHandle.OpenExisting(ShowWindowEventName);
@@ -29,34 +28,23 @@ public partial class App : System.Windows.Application
             }
             catch
             {
-                // Event existiert noch nicht – ignorieren
+                // The primary instance may still be initializing.
             }
 
             Shutdown();
             return;
         }
 
-        // Settings zuerst laden und Theme setzen, bevor MainWindow entsteht
         var settings = SettingsStore.Load();
         ThemeService.ApplyTheme(settings.DarkMode);
 
-        // Defaults anlegen, falls die Datei noch fehlt
         if (!SettingsStore.Exists)
             SettingsStore.Save(settings);
 
-        // Registry-Autostart mit gespeicherter Einstellung abgleichen
         AutostartService.SetEnabled(settings.AutoStart);
-
-        // --tray / -minimized remain recognized for Autostart compatibility,
-        // but every start (manual + Autostart) goes to the tray immediately.
-        _ = ShouldStartInTray(e.Args);
-
-        // Unpackaged toast: stable AUMID + Start Menu shortcut + Toolkit warm-up
-        ToastRegistration.EnsureRegistered();
 
         _window = new MainWindow();
 
-        // Toast-Klick → Hauptfenster (single-instance friendly via Dispatcher)
         ToastService.Initialize(() =>
         {
             try
@@ -65,35 +53,19 @@ public partial class App : System.Windows.Application
             }
             catch
             {
-                // ignore
+                // Window activation is best-effort.
             }
         });
 
-        // Always Show()+Hide so Loaded/Refresh fires, then stay in tray.
-        // ShowInTaskbar stays false until the user opens the window.
         _window.ShowInTaskbar = false;
         _window.Show();
         _window.Hide();
     }
 
-    private static bool ShouldStartInTray(string[] args)
-    {
-        foreach (var arg in args)
-        {
-            if (arg.Equals("--tray", StringComparison.OrdinalIgnoreCase) ||
-                arg.Equals("-minimized", StringComparison.OrdinalIgnoreCase) ||
-                arg.Equals("/tray", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     protected override void OnExit(ExitEventArgs e)
     {
         _window?.Dispose();
+        ToastRegistration.Unregister();
 
         if (_ownsMutex && _singleInstanceMutex is not null)
         {
