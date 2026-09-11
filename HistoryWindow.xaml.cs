@@ -80,12 +80,12 @@ public partial class HistoryWindow : Window
     {
         if (_zoomedDate is not null)
         {
-            HeaderHint.Text = "Vergrößerte Tagesansicht — Esc oder Zurück kehrt zur 7-Tage-Übersicht.";
+            HeaderHint.Text = "Vergrößerte Tagesansicht — Esc oder Zurück kehrt zur 14-Tage-Übersicht.";
         }
         else
         {
             HeaderHint.Text =
-                "Stündliche Übersicht der letzten 7 Tage: lokale Verfügbarkeit plus gematik-Ausfälle aus der API. Tag anklicken zum Zoomen.";
+                "Stündliche Übersicht der letzten 14 Tage: lokale Verfügbarkeit plus gematik-Ausfälle aus der API. Tag anklicken zum Zoomen.";
         }
     }
 
