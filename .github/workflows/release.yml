@@ -71,6 +71,7 @@ jobs:
       - name: Create release package and checksums
         shell: pwsh
         run: |
+          $version = "${{ steps.version.outputs.number }}"
           Copy-Item Install.ps1 publish/Install.ps1 -Force
           $zip = "TILageMonitor-${{ steps.version.outputs.tag }}-win-x64.zip"
           Compress-Archive -Path publish/TILageMonitor.exe, publish/TILageMonitor.ico, publish/Install.ps1 -DestinationPath $zip -Force
