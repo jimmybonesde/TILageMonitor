@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Einstellungen"
         Width="510"
-        Height="650"
+        Height="720"
         MinWidth="440"
-        MinHeight="552"
+        MinHeight="600"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
         Background="{DynamicResource WindowBackground}"
@@ -46,7 +46,7 @@
                        FontSize="24"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextMain}"/>
-            <TextBlock Text="Darstellung, Startverhalten und Benachrichtigungen"
+            <TextBlock Text="Darstellung, Startverhalten, Updates und Benachrichtigungen"
                        FontSize="13"
                        Foreground="{DynamicResource TextMuted}"
                        Margin="0,4,0,0"
@@ -80,6 +80,24 @@
                               Style="{DynamicResource ToggleSwitchStyle}"
                               Checked="AutoStartToggle_Changed"
                               Unchecked="AutoStartToggle_Changed"/>
+                </Border>
+
+                <!-- Updates -->
+                <TextBlock Text="Updates" Style="{StaticResource SectionHeaderStyle}"/>
+                <TextBlock Text="Beim Start wird automatisch nach einer neuen Version gesucht."
+                           Style="{StaticResource SectionHintStyle}"/>
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <StackPanel>
+                        <TextBlock x:Name="UpdateStatusText"
+                                   Text="Aktuelle Version wird beim Start automatisch geprüft."
+                                   Style="{StaticResource SectionHintStyle}"
+                                   Margin="0,0,0,10"/>
+                        <Button x:Name="CheckForUpdatesButton"
+                                Content="Nach Updates suchen"
+                                HorizontalAlignment="Left"
+                                Padding="16,9"
+                                Click="CheckForUpdates_Click"/>
+                    </StackPanel>
                 </Border>
 
                 <!-- Benachrichtigungen -->
