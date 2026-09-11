@@ -11,8 +11,8 @@ public static class GematikRefreshSchedule
         var minuteModulo = next.Minute % 5;
         if (minuteModulo == 1)
         {
-            if (nowLocal > next)
-                next = next.AddMinutes(5);
+            // A refresh is already due at this slot; schedule the following slot.
+            next = next.AddMinutes(5);
         }
         else
         {
