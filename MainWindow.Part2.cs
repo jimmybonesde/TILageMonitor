@@ -181,12 +181,10 @@ public partial class MainWindow
         // GESAMTSTATUS (immer ALLE Dienste – Filter nur für Toasts)
         // =========================================================
 
-        var hasFull = lage.AppStatus.Values.Any(
-            x => (x.Outage ?? "").Equals("full", StringComparison.OrdinalIgnoreCase));
-        var hasPartial = lage.AppStatus.Values.Any(
-            x => (x.Outage ?? "").Equals("partial", StringComparison.OrdinalIgnoreCase));
-        var hasMaintenance = lage.AppStatus.Values.Any(
-            x => x.HasMaintenance || x.HasSubComponentMaintenance);
+        var overallStatus = TiStatusClassifier.ClassifyOverall(lage.AppStatus.Values);
+        var hasFull = overallStatus == TiOverallStatus.Full;
+        var hasPartial = overallStatus == TiOverallStatus.Partial;
+        var hasMaintenance = overallStatus == TiOverallStatus.Maintenance;
 
         if (hasFull)
         {
