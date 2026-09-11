@@ -80,50 +80,6 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto"
             HorizontalScrollBarVisibility="Auto">
         <StackPanel MinWidth="880">
-      <!-- Subtle hour marks 0 / 6 / 12 / 18 per day column -->
-      <Border x:Name="OverviewHourAxisCard"
-        Style="{StaticResource HistoryCardStyle}"
-        Padding="14,6"
-        Margin="0,0,0,4"
-        Visibility="Collapsed">
-          <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="110"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <TextBlock Text="Stunde"
-             FontSize="10"
-             Foreground="{DynamicResource TextMuted}"
-             VerticalAlignment="Center"/>
-        <ItemsControl x:Name="OverviewHourAxis" Grid.Column="1">
-            <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-              <UniformGrid Rows="1" Columns="7"/>
-          </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-          <DataTemplate>
-              <ItemsControl ItemsSource="{Binding}" Margin="3,0">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-              <UniformGrid Rows="1" Columns="24"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-              <TextBlock Text="{Binding}"
-                   FontSize="9"
-                   Foreground="{DynamicResource TextMuted}"
-                   HorizontalAlignment="Center"
-                   Opacity="0.85"/>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-              </ItemsControl>
-          </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-          </Grid>
-      </Border>
       <ItemsControl x:Name="HistoryList" Margin="0,0,0,4" Visibility="Collapsed">
           <ItemsControl.ItemTemplate>
         <DataTemplate>
