@@ -29,12 +29,17 @@ $ErrorActionPreference = 'Stop'
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $PublishExe = Join-Path $ScriptDir 'publish\TILageMonitor.exe'
+$ReleaseExe = Join-Path $ScriptDir 'TILageMonitor.exe'
 $PublishIco = Join-Path $ScriptDir 'TILageMonitor.ico'
 $AppUserModelId = 'RandyCarter.TILageMonitor'
 
 if (-not (Test-Path -LiteralPath $PublishExe)) {
+    $PublishExe = $ReleaseExe
+}
+
+if (-not (Test-Path -LiteralPath $PublishExe)) {
     Write-Host "Nicht gefunden: $PublishExe" -ForegroundColor Red
-    Write-Host "Bitte zuerst Build.ps1 ausführen (dotnet publish → .\publish)." -ForegroundColor Yellow
+    Write-Host "Bitte entweder Build.ps1 ausführen oder das Release-ZIP vollständig entpacken." -ForegroundColor Yellow
     exit 1
 }
 
