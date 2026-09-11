@@ -40,7 +40,7 @@ public sealed class LegacyHistoryDaySnapshot
 
 public static class HistoryStore
 {
-    private const int KeepDays = 7;
+    private const int KeepDays = 14;
     private const int HoursPerDay = 24;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -244,7 +244,7 @@ public static class HistoryStore
     };
 
     /// <summary>
-    /// Anzahl eindeutiger Stunden-Keys im aktuellen 7-Tage-Fenster (max. 168).
+    /// Anzahl eindeutiger Stunden-Keys im aktuellen 14-Tage-Fenster (max. 336).
     /// </summary>
     public static int CountCoveredHours(HistoryFile file)
     {
@@ -260,7 +260,7 @@ public static class HistoryStore
     public static int ExpectedHoursInWindow => KeepDays * HoursPerDay;
 
     /// <summary>
-    /// Liefert für jeden bekannten Dienst 7 Tagesgruppen à 24 Stunden (ältester → heute).
+    /// Liefert für jeden bekannten Dienst 14 Tagesgruppen à 24 Stunden (ältester → heute).
     /// </summary>
     public static List<HistoryServiceRow> BuildRows(
         HistoryFile file,
@@ -339,7 +339,7 @@ public static class HistoryStore
     }
 
     /// <summary>
-    /// Maps the official TI-Status incident timeline onto the local 7-day hour grid.
+    /// Maps the official TI-Status incident timeline onto the local 14-day hour grid.
     /// The endpoint retains incidents and their individual status transitions for 14 days.
     /// </summary>
     private static Dictionary<(string Service, string HourKey), string> BuildIncidentOverlaps(
