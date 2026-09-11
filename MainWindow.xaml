@@ -155,7 +155,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <TextBlock x:Name="FooterText" FontSize="11" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-            <TextBlock Grid.Column="1" Text="© 2026 R.C. · TI-Lage Monitor" FontSize="11" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.8"/>
+            <TextBlock x:Name="VersionFooterText" Grid.Column="1" Text="© 2026 R.C. · TI-Lage Monitor" FontSize="11" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.8"/>
             <Button Grid.Column="2" Content="gematik" Click="OpenGematik_Click" HorizontalAlignment="Right" Padding="10,5" FontSize="11" Opacity="0.85" ToolTip="gematik TI-Status öffnen"/>
         </Grid>
     </Grid>
