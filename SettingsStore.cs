@@ -136,8 +136,7 @@ public static class SettingsStore
         {
             settings.EnsureNotifyDefaults();
             Directory.CreateDirectory(SettingsDirectory);
-            var json = JsonSerializer.Serialize(settings, JsonOptions);
-            File.WriteAllText(SettingsPath, json);
+            AtomicJsonStore.Write(SettingsPath, settings, JsonOptions);
         }
         catch
         {
