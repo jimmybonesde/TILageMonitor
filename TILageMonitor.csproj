@@ -32,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="TILageMonitor.ico" />
+    <Resource Include="docs\assets\app-icon-128.png" />
     <Compile Remove="tests\**\*.cs" />
   </ItemGroup>
   <Target Name="CopyIconBesideOutput" AfterTargets="Build">
