@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace TILageMonitor.Tests;
 
 public sealed class StatusAndScheduleTests
