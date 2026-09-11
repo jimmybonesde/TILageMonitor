@@ -31,6 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="TILageMonitor.ico" />
+    <Compile Remove="tests\**\*.cs" />
   </ItemGroup>
   <Target Name="CopyIconBesideOutput" AfterTargets="Build">
     <Copy SourceFiles="$(MSBuildProjectDirectory)\TILageMonitor.ico"
