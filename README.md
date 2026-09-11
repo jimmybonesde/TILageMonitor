@@ -92,18 +92,6 @@ Jeder Tag lässt sich anklicken und zeigt dann die Stundenansicht. Die Stundenle
 
 > Graue Felder bedeuten: Für diese Stunde liegt weder ein lokaler Snapshot noch eine gemeldete API-Einschränkung vor.
 
-## 🧰 Installation für den Alltag
-
-### Installer verwenden
-
-Öffne PowerShell im heruntergeladenen Projektordner und führe aus:
-
-```powershell
-.\Install.ps1
-.\Install.ps1 -DesktopShortcut -EnableAutostart
-```
-
-Die Installation legt die App unter `%LocalAppData%\TILageMonitor\` ab und erstellt einen Startmenü-Eintrag.
 
 ### Aus dem Quellcode bauen
 
