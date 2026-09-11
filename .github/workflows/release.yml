@@ -70,7 +70,7 @@ jobs:
             ForEach-Object { "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)" } |
             Set-Content checksums.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: TILageMonitor-${{ steps.version.outputs.tag }}-win-x64
           path: |
