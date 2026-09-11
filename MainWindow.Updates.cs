@@ -13,7 +13,7 @@ public partial class MainWindow
         {
             if (userInitiated)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     result.ErrorMessage ?? "Die Update-Prüfung ist fehlgeschlagen.",
                     "Updates prüfen",
                     MessageBoxButton.OK,
@@ -27,7 +27,7 @@ public partial class MainWindow
         {
             if (userInitiated)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"TI-Lage Monitor ist aktuell (Version {result.CurrentVersion}).",
                     "Updates prüfen",
                     MessageBoxButton.OK,
@@ -49,7 +49,7 @@ public partial class MainWindow
             return result;
         }
 
-        var openDownload = MessageBox.Show(
+        var openDownload = System.Windows.MessageBox.Show(
             $"{message}\n\nJetzt den Setup-Installer herunterladen?",
             "Update verfügbar",
             MessageBoxButton.YesNo,
