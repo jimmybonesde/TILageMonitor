@@ -41,8 +41,8 @@ public sealed class StatusAndScheduleTests
 
     [Theory]
     [InlineData(10, 0, 60)]
-    [InlineData(10, 1, 300)]
-    [InlineData(10, 5, 60)]
+    [InlineData(11, 0, 300)]
+    [InlineData(10, 5, 55)]
     public void Refresh_schedule_targets_next_gematik_slot(
         int minute,
         int second,
