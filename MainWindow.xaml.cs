@@ -118,7 +118,7 @@ public partial class MainWindow : Window
         menu.Items.Add(new Forms.ToolStripSeparator());
 
         menu.Items.Add("Über TI-Lage Monitor…", null, (_, _) => ShowAbout());
-        menu.Items.Add("TI-Status · 7 Tage…", null, (_, _) => Dispatcher.Invoke(OpenHistoryWindow));
+        menu.Items.Add("TI-Status · 14 Tage…", null, (_, _) => Dispatcher.Invoke(OpenHistoryWindow));
         menu.Items.Add("Einstellungen…", null, (_, _) => Dispatcher.Invoke(OpenSettingsWindow));
 
         _autostartMenuItem = new Forms.ToolStripMenuItem("Autostart: aus")
