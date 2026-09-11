@@ -278,6 +278,10 @@ public static class HistoryStore
             .GroupBy(h => h.HourKey)
             .ToDictionary(g => g.Key, g => g.Last(), StringComparer.Ordinal);
 
+        // A successful incident response covers the full official 14-day window:
+        // intervals without a reported restriction are shown as available (green).
+        // If the API was unavailable, unknown local hours deliberately stay grey.
+        var hasHistoricalApiData = incidents?.Success == true;
         var incidentByServiceHour = BuildIncidentOverlaps(incidents, dayDates);
         var outageByServiceHour = BuildOutageOverlaps(outages, dayDates);
 
@@ -301,6 +305,9 @@ public static class HistoryStore
                     {
                         status = LookupService(snap.Services, key);
                     }
+
+                    if (status is null && hasHistoricalApiData)
+                        status = "none";
 
                     if (incidentByServiceHour.TryGetValue((key, hourKey), out var fromIncident) &&
                         (status is null || StatusSeverity(fromIncident) > StatusSeverity(status)))
