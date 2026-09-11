@@ -77,7 +77,7 @@ jobs:
             TILageMonitor-${{ steps.version.outputs.tag }}-win-x64.zip
             checksums.txt
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: TI-Lage Monitor ${{ steps.version.outputs.tag }}
