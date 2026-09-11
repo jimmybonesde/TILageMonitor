@@ -21,9 +21,6 @@ public partial class HistoryWindow : Window
         HistoryList.ItemsSource = _history;
         ZoomList.ItemsSource = _zoomRows;
         ZoomHourAxis.ItemsSource = Enumerable.Range(0, 24).Select(h => h.ToString()).ToList();
-        OverviewHourAxis.ItemsSource = Enumerable.Range(0, 7)
-            .Select(_ => hourMarks)
-            .ToList();
         UpdateLegendColors();
         Focusable = true;
         PreviewKeyDown += HistoryWindow_PreviewKeyDown;
@@ -57,7 +54,7 @@ public partial class HistoryWindow : Window
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        // Build heatmap only when there is data — avoid fake full grey 7×24 grid
+        // Build heatmap only when there is data — avoid fake full grey 14×24 grid
         if (hasAnyData)
         {
             var rows = HistoryStore.BuildRows(history, incidents, outages);
