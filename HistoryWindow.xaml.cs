@@ -64,7 +64,7 @@ public partial class HistoryWindow : Window
 
         var covered = HistoryStore.CountCoveredHours(history);
         var expected = HistoryStore.ExpectedHoursInWindow;
-        CoverageHint.Text = $"{covered} / {expected} Stunden lokal erfasst · Ausfälle zusätzlich aus der gematik-API";
+        CoverageHint.Text = $"14 Tage API-Verlauf · {covered} / {expected} Stunden zusätzlich lokal erfasst";
 
         UpdateLegendColors();
         UpdateHeaderHint();
@@ -82,7 +82,7 @@ public partial class HistoryWindow : Window
         else
         {
             HeaderHint.Text =
-                "Stündliche Übersicht der letzten 14 Tage: lokale Verfügbarkeit plus gematik-Ausfälle aus der API. Tag anklicken zum Zoomen.";
+                "Stündliche Übersicht der letzten 14 Tage aus der gematik-API; lokale Daten ergänzen die Anzeige. Tag anklicken zum Zoomen.";
         }
     }
 
