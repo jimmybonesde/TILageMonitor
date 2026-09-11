@@ -54,4 +54,36 @@ public sealed class StatusAndScheduleTests
             TimeSpan.FromSeconds(expectedSeconds),
             GematikRefreshSchedule.GetDelayUntilNextSlot(now));
     }
+    [Fact]
+    public void History_uses_incident_timeline_when_no_local_snapshot_exists()
+    {
+        var now = DateTime.Now;
+        var incident = new Incident
+        {
+            App = ["E-Rezept"],
+            Steps =
+            [
+                new IncidentStep
+                {
+                    Status = 4,
+                    Timestamp = now.Date.AddHours(10).ToUniversalTime()
+                },
+                new IncidentStep
+                {
+                    Status = 3,
+                    Timestamp = now.Date.AddHours(11).ToUniversalTime()
+                }
+            ]
+        };
+
+        var rows = HistoryStore.BuildRows(
+            new HistoryFile(),
+            new IncidentResponse { Data = [incident] });
+
+        var eRezept = Assert.Single(rows.Where(row => row.ServiceKey == "erezept"));
+        var today = Assert.Single(eRezept.Days.Where(day => day.Date == DateTime.Today));
+
+        Assert.Equal("partial", today.Hours[10].Status);
+        Assert.Null(today.Hours[11].Status);
+    }
 }
