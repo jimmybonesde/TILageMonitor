@@ -86,4 +86,17 @@ public sealed class StatusAndScheduleTests
         Assert.Equal("partial", today.Hours[10].Status);
         Assert.Null(today.Hours[11].Status);
     }
+
+    [Fact]
+    public void History_marks_unaffected_hours_ok_when_incident_api_is_available()
+    {
+        var rows = HistoryStore.BuildRows(
+            new HistoryFile(),
+            new IncidentResponse { Success = true });
+
+        var eRezept = Assert.Single(rows.Where(row => row.ServiceKey == "erezept"));
+        var today = Assert.Single(eRezept.Days.Where(day => day.Date == DateTime.Today));
+
+        Assert.All(today.Hours, hour => Assert.Equal("none", hour.Status));
+    }
 }
