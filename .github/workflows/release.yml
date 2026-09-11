@@ -53,6 +53,7 @@ jobs:
             -r win-x64 `
             --self-contained true `
             -p:PublishSingleFile=true `
+            -p:EnableCompressionInSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
             -p:Version=$version `
             -p:FileVersion="$version.0" `
@@ -60,13 +61,21 @@ jobs:
             -p:InformationalVersion="${{ steps.version.outputs.tag }}" `
             -o publish
 
+      - name: Create offline setup installer
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress --yes
+          $version = "${{ steps.version.outputs.number }}"
+          & "${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe" "/DMyAppVersion=$version" installer/TILageMonitor.iss
+
       - name: Create release package and checksums
         shell: pwsh
         run: |
           Copy-Item Install.ps1 publish/Install.ps1 -Force
           $zip = "TILageMonitor-${{ steps.version.outputs.tag }}-win-x64.zip"
           Compress-Archive -Path publish/TILageMonitor.exe, publish/TILageMonitor.ico, publish/Install.ps1 -DestinationPath $zip -Force
-          Get-FileHash $zip, publish/TILageMonitor.exe -Algorithm SHA256 |
+          $setup = "installer-out/TILageMonitor-$version-Setup.exe"
+          Get-FileHash $zip, publish/TILageMonitor.exe, $setup -Algorithm SHA256 |
             ForEach-Object { "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)" } |
             Set-Content checksums.txt
 
@@ -84,7 +93,9 @@ jobs:
           body: |
             ## TI-Lage Monitor ${{ steps.version.outputs.tag }}
 
-            Windows-x64-Paket mit EXE, Installer und SHA-256-Prüfsummen.
+            **Empfohlen:** `TILageMonitor-${{ steps.version.outputs.number }}-Setup.exe` — echter Windows-Installer ohne PowerShell.
+
+            Zusätzlich verfügbar: komprimierte portable EXE, ZIP-Paket und SHA-256-Prüfsummen.
 
             ### Hinweis
             - Windows 10/11
@@ -93,6 +104,7 @@ jobs:
           files: |
             TILageMonitor-${{ steps.version.outputs.tag }}-win-x64.zip
             publish/TILageMonitor.exe
+            installer-out/TILageMonitor-${{ steps.version.outputs.number }}-Setup.exe
             checksums.txt
           draft: false
           prerelease: false
