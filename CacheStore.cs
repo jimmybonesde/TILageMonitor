@@ -53,8 +53,7 @@ public static class CacheStore
                 Incidents = incidents,
                 Outages = outages
             };
-            var json = JsonSerializer.Serialize(snapshot, JsonOptions);
-            File.WriteAllText(CachePath, json);
+            AtomicJsonStore.Write(CachePath, snapshot, JsonOptions);
         }
         catch
         {
