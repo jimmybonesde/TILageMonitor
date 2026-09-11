@@ -112,5 +112,25 @@ public partial class SettingsWindow : Window
         _ownerMain.ApplySettings(_settings);
     }
 
+    private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        CheckForUpdatesButton.IsEnabled = false;
+        UpdateStatusText.Text = "Prüfe GitHub-Release …";
+
+        try
+        {
+            var result = await _ownerMain.CheckForUpdatesAsync(userInitiated: true);
+            UpdateStatusText.Text = result.IsSuccess
+                ? result.IsUpdateAvailable
+                    ? $"Update {result.LatestVersion} verfügbar."
+                    : $"Aktuell: Version {result.CurrentVersion}."
+                : result.ErrorMessage ?? "Update-Prüfung fehlgeschlagen.";
+        }
+        finally
+        {
+            CheckForUpdatesButton.IsEnabled = true;
+        }
+    }
+
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 }
