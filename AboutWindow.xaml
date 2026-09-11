@@ -42,12 +42,12 @@
                         Background="{DynamicResource AppIconCircleBackground}"
                         HorizontalAlignment="Center"
                         Margin="0,0,0,14">
-                    <Image Source="pack://application:,,,/TILageMonitor.ico"
-                           Width="72" Height="72"
+                    <Image Source="pack://application:,,,/docs/assets/app-icon-128.png"
+                           Width="80" Height="80"
                            Stretch="Uniform"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
-                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                           RenderOptions.BitmapScalingMode="Fant"/>
                 </Border>
                 <TextBlock Text="TI-Lage Monitor"
                            FontSize="22"
