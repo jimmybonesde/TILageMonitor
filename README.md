@@ -12,7 +12,7 @@
 <p align="center">
   <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><img src="https://img.shields.io/github/v/release/jimmybonesde/TILageMonitor?style=flat&label=Download&logo=github" alt="Aktueller Download"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat&logo=windows&logoColor=white" alt="Windows 10 und 11">
-  <img src="https://img.shields.io/badge/.NET-8-512BD4?style=flat&logo=dotnet&logoColor=white" alt=".NET 8">
+  <img src="https://img.shields.io/badge/.NET-10-512BD4?style=flat&logo=dotnet&logoColor=white" alt=".NET 10">
   <img src="https://img.shields.io/badge/Lizenz-Community-gray?style=flat" alt="Community-App">
 </p>
 
@@ -40,10 +40,10 @@ Die Hero-Karte fasst die Lage zusammen, Dienste erscheinen als Status-Pills, akt
 ## 🚀 In 60 Sekunden startklar
 
 1. [Neueste Version herunterladen](https://github.com/jimmybonesde/TILageMonitor/releases/latest).
-2. `TILageMonitor.exe` starten.
-3. Das neue Schildsymbol im Infobereich der Windows-Taskleiste beobachten.
+2. **Empfohlen:** `TILageMonitor-x.y.z-Setup.exe` starten.
+3. Installation abschließen — Startmenü-Eintrag und Desktop-Verknüpfung werden auf Wunsch erstellt.
 
-> 💡 Für zuverlässige Windows-Benachrichtigungen die App mit `Install.ps1` installieren. Das Script registriert den Startmenü-Eintrag und die AUMID.
+> 💡 Der Setup-Installer ist vollständig offline und enthält .NET 10 sowie die Windows App SDK. Für einen portablen Start gibt es zusätzlich die komprimierte `TILageMonitor.exe` und das ZIP-Paket.
 
 > [!WARNING]
 > Die EXE ist derzeit **unsigniert**. Windows SmartScreen kann deshalb warnen. Details stehen in [SIGNING.md](SIGNING.md).
@@ -106,7 +106,7 @@ Die Installation legt die App unter `%LocalAppData%\TILageMonitor\` ab und erste
 
 ### Aus dem Quellcode bauen
 
-Voraussetzungen: Windows 10/11 x64, [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) und PowerShell 5.1+.
+Voraussetzungen: Windows 10/11 x64, [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) und PowerShell 5.1+.
 
 ```powershell
 git clone https://github.com/jimmybonesde/TILageMonitor.git
@@ -151,7 +151,7 @@ Verwendete Endpunkte:
 | Systemdienste | `ToastService.cs`, `ToastRegistration.cs`, `ThemeService.cs`, `AutostartService.cs` |
 | Build & Release | `Build.ps1`, `Install.ps1`, `.github/workflows/release.yml` |
 
-Technik: WPF + WinForms-Tray · `net8.0-windows10.0.17763.0` · `Microsoft.Toolkit.Uwp.Notifications`
+Technik: WPF + WinForms-Tray · `net10.0-windows10.0.17763.0` · Windows App SDK App Notifications
 
 ## 👤 Autor
 
