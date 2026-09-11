@@ -68,23 +68,20 @@ jobs:
           $version = "${{ steps.version.outputs.number }}"
           & "${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe" "/DMyAppVersion=$version" installer/TILageMonitor.iss
 
-      - name: Create release package and checksums
+      - name: Create installer checksum
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.number }}"
-          Copy-Item Install.ps1 publish/Install.ps1 -Force
-          $zip = "TILageMonitor-${{ steps.version.outputs.tag }}-win-x64.zip"
-          Compress-Archive -Path publish/TILageMonitor.exe, publish/TILageMonitor.ico, publish/Install.ps1 -DestinationPath $zip -Force
           $setup = "installer-out/TILageMonitor-$version-Setup.exe"
-          Get-FileHash $zip, publish/TILageMonitor.exe, $setup -Algorithm SHA256 |
+          Get-FileHash $setup -Algorithm SHA256 |
             ForEach-Object { "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)" } |
             Set-Content checksums.txt
 
       - uses: actions/upload-artifact@v7
         with:
-          name: TILageMonitor-${{ steps.version.outputs.tag }}-win-x64
+          name: TILageMonitor-${{ steps.version.outputs.tag }}-installer
           path: |
-            TILageMonitor-${{ steps.version.outputs.tag }}-win-x64.zip
+            installer-out/TILageMonitor-${{ steps.version.outputs.number }}-Setup.exe
             checksums.txt
 
       - uses: softprops/action-gh-release@v3
@@ -96,15 +93,13 @@ jobs:
 
             **Empfohlen:** `TILageMonitor-${{ steps.version.outputs.number }}-Setup.exe` — echter Windows-Installer ohne PowerShell.
 
-            Zusätzlich verfügbar: komprimierte portable EXE, ZIP-Paket und SHA-256-Prüfsummen.
+            Enthält den Windows-Installer und eine SHA-256-Prüfsumme.
 
             ### Hinweis
             - Windows 10/11
             - Unsigniert — SmartScreen kann warnen
             - Kein offizielles gematik-Produkt
           files: |
-            TILageMonitor-${{ steps.version.outputs.tag }}-win-x64.zip
-            publish/TILageMonitor.exe
             installer-out/TILageMonitor-${{ steps.version.outputs.number }}-Setup.exe
             checksums.txt
           draft: false
