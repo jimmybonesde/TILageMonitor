@@ -5,7 +5,7 @@
 <h1 align="center">TI-Lage Monitor</h1>
 
 <p align="center">
-  <strong>Der TI-Status der gematik direkt im Windows-Tray.</strong><br>
+  <strong>Der TI-Status der gematik direkt im Windows-Tray – inklusive 14-Tage-Ausfallhistorie.</strong><br>
   Schlank · lokal · ohne Login
 </p>
 
@@ -43,7 +43,7 @@ Die Hero-Karte fasst die Lage zusammen, Dienste erscheinen als Status-Pills, akt
 2. **Empfohlen:** `TILageMonitor-x.y.z-Setup.exe` starten.
 3. Installation abschließen — Startmenü-Eintrag und Desktop-Verknüpfung werden auf Wunsch erstellt.
 
-> 💡 Der Setup-Installer ist vollständig offline und enthält .NET 10 sowie die Windows App SDK. Für einen portablen Start gibt es zusätzlich die komprimierte `TILageMonitor.exe` und das ZIP-Paket.
+> 💡 Der Setup-Installer ist vollständig offline und enthält .NET 10 sowie die Windows App SDK. Zusätzliche ZIP- oder Portable-Pakete werden nicht benötigt.
 
 > [!WARNING]
 > Die EXE ist derzeit **unsigniert**. Windows SmartScreen kann deshalb warnen. Details stehen in [SIGNING.md](SIGNING.md).
@@ -55,7 +55,7 @@ Die Hero-Karte fasst die Lage zusammen, Dienste erscheinen als Status-Pills, akt
 | 🛡️ | **TI-Lage im Tray** | Schild mit grünem, amberfarbenem oder rotem Status-Badge |
 | 🔎 | **Dienste im Blick** | eRezept, ePA, KIM, WANDA, OGD, VSDM und TI-Anschluss |
 | 🔔 | **Windows-Benachrichtigungen** | Klickbare Toasts bei Störung, Teilausfall, API-Ausfall und Entwarnung |
-| 🕒 | **7-Tage-Verlauf** | Lokale Heatmap mit Tages-Zoom und Abdeckung pro Stunde |
+| 🕒 | **14-Tage-Verlauf** | API-gestützte Ausfallhistorie mit Tages-Zoom; lokale Snapshots ergänzen die Verfügbarkeit |
 | 🎨 | **Desktop-tauglich** | Fluent UI, Hell-/Dunkelmodus, Autostart und Einzelinstanz |
 | ⚙️ | **Steuerbar** | Refresh, Fachportal-Link und Notify-Filter pro Dienst direkt aus der App |
 
@@ -76,20 +76,21 @@ Die App ruft Lage, Incidents und Outages parallel ab und folgt dem gematik-Rhyth
 | --- | --- |
 | Linksklick auf das Tray-Icon | Hauptfenster ein- oder ausblenden |
 | **Aktualisieren** | Status sofort neu laden |
-| **Verlauf** | Lokale 7-Tage-Heatmap öffnen |
+| **Verlauf** | 14-Tage-Historie mit API-Ausfällen öffnen |
 | **Einstellungen** | Theme, Autostart und Benachrichtigungsfilter ändern |
 | **gematik** | Fachportal im Browser öffnen |
 | **Beenden** | Anwendung schließen |
 
-## 📈 Lokaler 7-Tage-Verlauf
+## 📈 14-Tage-Verlauf
 
-Die öffentlichen gematik-APIs stellen keine lange Zeitreihe bereit. Deshalb legt die App stündlich einen lokalen Snapshot ab und bildet daraus eine **7 × 24-Heatmap**.
+Der Verlauf kombiniert zwei Datenquellen:
 
-- Tages-Zoom; mit `Esc` zurück zur Wochenansicht
-- Wochentags-Köpfe, Stundenachse und Abdeckungsanzeige `N / 168 Stunden`
-- Legende: OK · Einschränkung · Störung · Wartung · keine Daten
+- Die offizielle gematik-API liefert gemeldete Einschränkungen samt Statusschritten für die letzten **14 Tage** – auch wenn der PC ausgeschaltet war.
+- Lokale, stündliche Snapshots ergänzen die Verfügbarkeitsanzeige, solange die App läuft.
 
-> Der Verlauf füllt sich nur, während die App läuft.
+Jeder Tag lässt sich anklicken und zeigt dann die Stundenansicht. Die Stundenleiste erscheint bewusst nur dort; die 14-Tage-Übersicht bleibt kompakt.
+
+> Graue Felder bedeuten: Für diese Stunde liegt weder ein lokaler Snapshot noch eine gemeldete API-Einschränkung vor.
 
 ## 🧰 Installation für den Alltag
 
@@ -125,7 +126,7 @@ cd TILageMonitor
 | --- | --- |
 | `settings.json` | Theme, Autostart, Notify-Filter |
 | `last-lage.json` | Offline-Cache des letzten Stands |
-| `history.json` | Stündlicher 7-Tage-Verlauf |
+| `history.json` | Stündliche lokale Ergänzung zum 14-Tage-Verlauf |
 
 Verwendete Endpunkte:
 
@@ -137,7 +138,7 @@ Verwendete Endpunkte:
 
 - Nur für Windows x64
 - Eine unsignierte EXE kann SmartScreen-Warnungen auslösen
-- Der Verlauf entsteht erst, wenn die App läuft
+- Ausfälle stammen bis zu 14 Tage aus der API; vollständige OK-Verfügbarkeit wird zusätzlich lokal erfasst
 - Die App ergänzt das gematik Fachportal, ersetzt es aber nicht
 
 ## 🗂️ Für Entwickler
