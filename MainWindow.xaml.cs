@@ -62,6 +62,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        VersionFooterText.Text = $"© 2026 R.C. · TI-Lage Monitor · Version {GetDisplayVersion()}";
 
         AppsList.ItemsSource = _apps;
         MessagesList.ItemsSource = _messages;
@@ -176,6 +177,7 @@ public partial class MainWindow : Window
         {
             await RefreshAsync(false);
             ScheduleNextRefresh();
+            _ = CheckForUpdatesAsync(userInitiated: false);
         };
 
         Loaded += async (_, _) =>
