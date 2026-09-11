@@ -6,7 +6,7 @@ namespace TILageMonitor;
 
 /// <summary>
 /// Stündlicher Client-Snapshot: schlechtester Status je Dienst für eine lokale Stunde.
-/// Der 7-Tage-Verlauf (7×24) baut sich auf, solange die App läuft und erfolgreich aktualisiert.
+/// Der 14-Tage-Verlauf (14×24) baut sich auf, solange die App läuft und erfolgreich aktualisiert.
 /// </summary>
 public sealed class HistoryHourSnapshot
 {
@@ -130,7 +130,7 @@ public static class HistoryStore
     /// <summary>
     /// Schreibt/aktualisiert den Snapshot für die aktuelle lokale Stunde mit dem
     /// schlechtesten bekannten Status je Dienst (Upsert: nur verschlechtern oder neu setzen).
-    /// Behält Stunden ab Beginn von (Today − 6 Tage) 00:00.
+    /// Behält Stunden ab Beginn von (Today − 13 Tage) 00:00.
     /// </summary>
     public static HistoryFile UpsertNow(LageV2 lage)
     {
@@ -195,7 +195,7 @@ public static class HistoryStore
     private static void Prune(HistoryFile file, DateTime todayLocal)
     {
         file.Hours ??= new List<HistoryHourSnapshot>();
-        var cutoff = todayLocal.AddDays(-(KeepDays - 1)); // start of (Today - 6 days)
+        var cutoff = todayLocal.AddDays(-(KeepDays - 1)); // start of (Today - 13 days)
         file.Hours = file.Hours
             .Where(h => TryParseHourKey(h.HourKey, out var dt) && dt.Date >= cutoff)
             .OrderBy(h => h.HourKey)
@@ -495,7 +495,7 @@ public sealed class HistoryServiceRow
 {
     public string ServiceName { get; }
     public string ServiceKey { get; }
-    /// <summary>7 day groups (oldest → today), each with 24 hour cells.</summary>
+    /// <summary>14 day groups (oldest → today), each with 24 hour cells.</summary>
     public List<HistoryDayGroup> Days { get; }
 
     public HistoryServiceRow(string serviceName, string serviceKey, List<HistoryDayGroup> days)
