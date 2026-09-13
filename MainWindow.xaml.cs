@@ -305,8 +305,9 @@ public partial class MainWindow : Window
         SyncNotificationsMenuItem();
         if (themeChanged && _historyWindow is not null)
         {
-            _historyWindow.ApplyThemeRefresh();
+            // Rebuild brushes/rows first, then soft-shadows/chips (visual tree must exist)
             NotifyHistoryUpdated(_lastHistory, _lastIncidents, _lastOutages);
+            _historyWindow.ApplyThemeRefresh();
         }
         _settingsWindow?.SyncFrom(_settings);
     }

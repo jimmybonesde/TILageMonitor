@@ -97,13 +97,15 @@ public partial class HistoryWindow : Window
         CoverageHint.Text = $"14 Tage API-Verlauf · {covered} / {expected} Stunden zusätzlich lokal erfasst";
 
         UpdateLegendColors();
-        SoftenShadowsForTheme();
         RefreshFilterChipStyles();
         UpdateHeaderHint();
         ApplyViewMode(animated: false);
 
         if (_viewMode == ViewMode.Hours)
             EnsureZoomDay();
+
+        // After layout/view switch so template DropShadows are in the visual tree
+        SoftenShadowsForTheme();
     }
 
     private void BuildServiceFilterChips()
