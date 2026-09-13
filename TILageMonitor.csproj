@@ -32,19 +32,19 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="TILageMonitor.ico" />
-    <Resource Include="docs\\assets\\app-icon-128.png" />
-    <Compile Remove="tests\\**\\*.cs" />
+    <Resource Include="docs\assets\app-icon-128.png" />
+    <Compile Remove="tests\**\*.cs" />
   </ItemGroup>
   <Target Name="CopyIconBesideOutput" AfterTargets="Build">
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\\TILageMonitor.ico"
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\TILageMonitor.ico"
           DestinationFolder="$(OutputPath)"
           SkipUnchangedFiles="true"
-          Condition="Exists('$(MSBuildProjectDirectory)\\TILageMonitor.ico')" />
+          Condition="Exists('$(MSBuildProjectDirectory)\TILageMonitor.ico')" />
   </Target>
   <Target Name="CopyIconToPublish" AfterTargets="Publish">
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\\TILageMonitor.ico"
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\TILageMonitor.ico"
           DestinationFolder="$(PublishDir)"
           SkipUnchangedFiles="true"
-          Condition="Exists('$(MSBuildProjectDirectory)\\TILageMonitor.ico')" />
+          Condition="Exists('$(MSBuildProjectDirectory)\TILageMonitor.ico')" />
   </Target>
 </Project>
