@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using WpfButton = System.Windows.Controls.Button;
 
 namespace TILageMonitor;
 
@@ -87,9 +88,9 @@ public partial class HistoryWindow : Window
         RefreshFilterChipStyles();
     }
 
-    private Button CreateFilterChip(string label, string? serviceKey)
+    private WpfButton CreateFilterChip(string label, string? serviceKey)
     {
-        var button = new Button
+        var button = new WpfButton
         {
             Content = label,
             Tag = serviceKey ?? "",
@@ -104,7 +105,7 @@ public partial class HistoryWindow : Window
 
     private void ServiceFilterChip_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button button)
+        if (sender is not WpfButton button)
             return;
 
         var tag = button.Tag as string;
@@ -119,7 +120,7 @@ public partial class HistoryWindow : Window
     {
         foreach (var child in ServiceFilterPanel.Children)
         {
-            if (child is not Button button)
+            if (child is not WpfButton button)
                 continue;
 
             var key = button.Tag as string;
