@@ -303,8 +303,11 @@ public partial class MainWindow : Window
         _settings = settings;
         SyncAutostartMenuItem();
         SyncNotificationsMenuItem();
-        if (themeChanged)
+        if (themeChanged && _historyWindow is not null)
+        {
+            _historyWindow.ApplyThemeRefresh();
             NotifyHistoryUpdated(_lastHistory, _lastIncidents, _lastOutages);
+        }
         _settingsWindow?.SyncFrom(_settings);
     }
 

@@ -87,21 +87,27 @@ Die App ruft Lage, Incidents und Outages parallel ab und folgt dem gematik-Rhyth
 
 ## 📈 14-Tage-Verlauf
 
-Ab **v1.0.15** ist der Verlauf bewusst ruhiger und lesbarer aufgebaut — statt einer überladenen Stunden-Heatmap für alle Dienste gleichzeitig.
+Der 14-Tage-Verlauf ist in **2.0** fest integriert (gereift über 1.0.15–1.0.17): ruhige KPI-Übersicht, Fokus-Layout und klare Timelines statt einer überladenen Stunden-Heatmap für alle Dienste gleichzeitig.
 
 ### So ist die Ansicht aufgebaut
 
-1. **Tages-Übersicht (Kalender-Kacheln)**  
-   Pro Dienst eine Zeile mit **14 Tages-Kacheln**. Farbe = schlechtester Status des Tages (OK, Einschränkung, Wartung, Störung oder keine Daten). Wochentag und Datum stehen auf der Kachel.
+1. **KPI-Header**  
+   Drei Karten oben: **Heute** (schlechtester Status), **14 Tage** (auffällige Tage mit Einschränkung, Störung oder Wartung) und **Verfügbarkeit %** (Anteil bekannter Stunden mit Status OK).
 
-2. **Stunden-Zoom**  
-   Klick auf einen Tag öffnet die **24-Stunden-Ansicht** nur für diesen Tag. Esc oder „Zurück zur Übersicht“ kehrt zurück.
+2. **Segmentierte Ansicht**  
+   Umschalter **Übersicht | Stunden | Ereignisse** — dieselbe Datenbasis, drei Lesarten.
 
-3. **Ereignisse-Timeline**  
-   Unter der Übersicht listet die Karte **Ereignisse** gemeldete Incidents und Outages lesbar auf, z. B. `eRezept · Teilausfall · Di 10:00–12:00`. Klick auf einen Eintrag springt in den Zoom des betreffenden Tages.
+3. **Fokus-Layout (Standard)**  
+   Beim ersten Dienst (typisch **eRezept**) links große **Tages-Kacheln**, rechts die **Ereignisse-Timeline**. Über die Filter-Chips lassen sich andere Dienste wählen; **Alle Dienste** zeigt kompakte Zeilen und die Timeline darunter.
 
-4. **Dienst-Fokus**  
-   Standardmäßig ist **eRezept** vorausgewählt, damit die Ansicht klar bleibt. Über die Filter-Chips lassen sich andere Dienste oder **Alle** wählen.
+4. **Timeline-Karten**  
+   Einträge mit farbigem linken Status-Balken (z. B. `eRezept · Teilausfall · Di 10:00–12:00`). Klick springt in den **Stunden-Zoom** des betreffenden Tages.
+
+5. **Stabil / Alles ruhig**  
+   Wenn für den Fokus keine Auffälligkeiten vorliegen, erscheint ein beruhigender Leer-/OK-Zustand statt einer leeren Liste.
+
+6. **Mikro-Details**  
+   Ausgewählter Tag mit Akzent-Rahmen, Tooltips an Kacheln und Ereignissen, weiche Ein-/Ausblendungen der Panels beim Segmentwechsel. Hell- und Dunkelmodus aktualisieren Farben, Schatten und Chips live.
 
 ### Datenquellen
 

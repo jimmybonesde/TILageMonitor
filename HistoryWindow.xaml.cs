@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Effects;
 using WpfButton = System.Windows.Controls.Button;
 using MediaBrush = System.Windows.Media.Brush;
 using MediaBrushes = System.Windows.Media.Brushes;
@@ -97,6 +98,7 @@ public partial class HistoryWindow : Window
 
         UpdateLegendColors();
         SoftenShadowsForTheme();
+        RefreshFilterChipStyles();
         UpdateHeaderHint();
         ApplyViewMode(animated: false);
 
@@ -629,12 +631,9 @@ public partial class HistoryWindow : Window
 
     private void EnsureZoomDay()
     {
-        if (_zoomedDate is null && _selectedDay is null)
-            _zoomedDate = DateTime.Today;
-        else
-            _zoomedDate ??= _selectedDay;
-
-        SelectDay(_zoomedDate.Value, flash: false);
+        var day = _zoomedDate ?? _selectedDay ?? DateTime.Today;
+        _zoomedDate = day.Date;
+        SelectDay(day.Date, flash: false);
         RefreshZoom();
         ZoomHintBorder.Visibility = Visibility.Collapsed;
     }
@@ -744,12 +743,44 @@ public partial class HistoryWindow : Window
         LegendEmpty.Background = HistoryDayCell.BrushForStatus(null);
     }
 
+    /// <summary>
+    /// Re-apply theme-dependent chrome after Hell/Dunkel toggle without requiring a full data rebuild.
+    /// </summary>
+    public void ApplyThemeRefresh()
+    {
+        SoftenShadowsForTheme();
+        RefreshFilterChipStyles();
+        UpdateLegendColors();
+        UpdateSegmentStyles();
+        UpdateKpis();
+    }
+
     private void SoftenShadowsForTheme()
     {
         var opacity = ThemeService.IsDark ? 0.16 : 0.10;
-        // Named shadow on first KPI; others are fine with XAML defaults
+        // Named KPI shadow first (no NRE if missing / not yet connected)
         if (KpiShadow1 is not null)
             KpiShadow1.Opacity = opacity;
+
+        ApplyShadowOpacityWalk(this, opacity);
+    }
+
+    private static void ApplyShadowOpacityWalk(DependencyObject? root, double opacity)
+    {
+        if (root is null)
+            return;
+
+        if (root is UIElement ue && ue.Effect is DropShadowEffect shadow)
+        {
+            // Slightly softer for compact card/timeline shadows
+            shadow.Opacity = shadow.BlurRadius <= 12
+                ? Math.Max(0.06, opacity - 0.04)
+                : opacity;
+        }
+
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+            ApplyShadowOpacityWalk(VisualTreeHelper.GetChild(root, i), opacity);
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
