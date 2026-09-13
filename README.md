@@ -99,7 +99,7 @@ Der 14-Tage-Verlauf ist in **2.0** fest integriert (gereift über 1.0.15–1.0.1
    Umschalter **Übersicht | Stunden | Ereignisse** — dieselbe Datenbasis, drei Lesarten.
 
 3. **Fokus-Layout (Standard)**  
-   Beim ersten Dienst (typisch **eRezept**) links große **Tages-Kacheln**, rechts die **Ereignisse-Timeline**. Über die Filter-Chips lassen sich andere Dienste wählen; **Alle Dienste** zeigt kompakte Zeilen und die Timeline darunter.
+   Standardfilter ist **Alle Dienste** (kompakte Zeilen + Timeline). Ein Dienst-Chip fokussiert links große **Tages-Kacheln** und rechts die **Ereignisse-Timeline**.
 
 4. **Timeline-Karten**  
    Einträge mit farbigem linken Status-Balken (z. B. `eRezept · Teilausfall · Di 10:00–12:00`). Klick springt in den **Stunden-Zoom** des betreffenden Tages.
@@ -119,7 +119,7 @@ Der Verlauf kombiniert zwei Quellen:
 | **gematik-API** (Incidents / Outages) | Gemeldete Einschränkungen und Statusschritte der letzten **14 Tage** — auch wenn der PC aus war |
 | **Lokale Stunden-Snapshots** (`history.json`) | Ergänzen die Verfügbarkeit (grüne Online-Stunden), solange die App läuft |
 
-> Graue Kacheln / Stunden bedeuten: Für diesen Zeitraum liegt weder ein lokaler Snapshot noch eine gemeldete API-Einschränkung vor. Wenn die Incident-API erreichbar ist, werden Stunden ohne gemeldete Störung als verfügbar (grün) dargestellt.
+> Graue Kacheln / Stunden bedeuten: Für diesen Zeitraum liegt weder ein lokaler Snapshot noch eine gemeldete API-Einschränkung vor — **zukünftige Stunden bleiben grau**. Wenn die Incident-API erreichbar ist, werden bereits begonnene Stunden ohne gemeldete Störung als verfügbar (grün) dargestellt. Das Verlaufsfenster bleibt in der Taskleiste nutzbar, auch wenn das Hauptfenster im Tray liegt.
 
 ### Kurzbedienung im Verlauf
 

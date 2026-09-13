@@ -23,8 +23,8 @@ public partial class HistoryWindow : Window
 
     private static readonly CultureInfo DeCulture = CultureInfo.GetCultureInfo("de-DE");
 
-    /// <summary>In-session remembered filter; default = first service (eRezept).</summary>
-    private static string? s_sessionFilterKey = AppSettings.ServiceKeys[0];
+    /// <summary>In-session remembered filter; default = Alle (null). Sticky after chip pick.</summary>
+    private static string? s_sessionFilterKey = null;
 
     private readonly ObservableCollection<HistoryServiceRow> _history = new();
     private readonly ObservableCollection<HistoryServiceRow> _focusHistory = new();
@@ -39,12 +39,16 @@ public partial class HistoryWindow : Window
     private ViewMode _viewMode = ViewMode.Overview;
     private IncidentResponse? _incidents;
     private OutageResponse? _outages;
+    private HistoryFile _localHistory = new();
+    private readonly Dictionary<UIElement, int> _panelAnimTokens = new();
 
     public HistoryWindow(MainWindow owner)
     {
         InitializeComponent();
         WindowState = WindowState.Maximized;
-        Owner = owner;
+        // Independent window: stay usable when Main is hidden to tray (no Owner).
+        _ = owner;
+        Owner = null;
         HistoryList.ItemsSource = _history;
         FocusHistoryList.ItemsSource = _focusHistory;
         ZoomList.ItemsSource = _zoomRows;
@@ -74,6 +78,7 @@ public partial class HistoryWindow : Window
         history.Hours ??= new List<HistoryHourSnapshot>();
         history.Days = null; // ignore legacy shape in UI path
 
+        _localHistory = history;
         _incidents = incidents;
         _outages = outages;
 
@@ -438,7 +443,16 @@ public partial class HistoryWindow : Window
             : $"{degradedDays} auffällige Tage";
         KpiDaysHint.Text = "Tage mit Einschränkung, Störung oder Wartung";
 
-        if (knownHours == 0)
+        // Prefer availability from local snapshots when present; else row cells (API-fill).
+        // Future hours are null from BuildRows and already skipped above.
+        var (localKnown, localOk) = HistoryStore.CountLocalAvailability(_localHistory, _selectedServiceKey);
+        if (localKnown > 0)
+        {
+            var pct = Math.Round(100.0 * localOk / localKnown, 1);
+            KpiAvailValue.Text = pct.ToString("0.#", DeCulture) + " %";
+            KpiAvailHint.Text = $"OK-Stunden: {localOk} von {localKnown} · nur lokal erfasste Stunden";
+        }
+        else if (knownHours == 0)
         {
             KpiAvailValue.Text = "—";
             KpiAvailHint.Text = "Noch keine bekannten Stunden für die Berechnung";
@@ -447,7 +461,7 @@ public partial class HistoryWindow : Window
         {
             var pct = Math.Round(100.0 * okHours / knownHours, 1);
             KpiAvailValue.Text = pct.ToString("0.#", DeCulture) + " %";
-            KpiAvailHint.Text = $"OK-Stunden: {okHours} von {knownHours} bekannten";
+            KpiAvailHint.Text = $"OK-Stunden: {okHours} von {knownHours} · inkl. API-gefüllte (ohne Zukunft)";
         }
     }
 
@@ -570,10 +584,15 @@ public partial class HistoryWindow : Window
             RefreshZoom();
     }
 
-    private static void SetPanelVisible(UIElement panel, bool visible, bool animated)
+    private void SetPanelVisible(UIElement panel, bool visible, bool animated)
     {
+        _panelAnimTokens.TryGetValue(panel, out var prev);
+        var token = prev + 1;
+        _panelAnimTokens[panel] = token;
+
         if (!animated)
         {
+            panel.BeginAnimation(UIElement.OpacityProperty, null);
             panel.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
             panel.Opacity = visible ? 1.0 : 0.0;
             return;
@@ -593,6 +612,9 @@ public partial class HistoryWindow : Window
             var fade = new DoubleAnimation(panel.Opacity, 0.0, TimeSpan.FromMilliseconds(120));
             fade.Completed += (_, _) =>
             {
+                // Ignore stale Completed from a superseded fade (panel race).
+                if (!_panelAnimTokens.TryGetValue(panel, out var current) || current != token)
+                    return;
                 if (panel.Opacity <= 0.01)
                     panel.Visibility = Visibility.Collapsed;
             };
@@ -604,7 +626,8 @@ public partial class HistoryWindow : Window
     {
         if (sender is FrameworkElement { DataContext: HistoryDayGroup day })
         {
-            SelectDay(day.Date, flash: true);
+            // Skip flash — EnterHours fades Overview immediately (avoids flash vs zoom race).
+            SelectDay(day.Date, flash: false);
             EnterHoursForDay(day.Date);
             e.Handled = true;
         }

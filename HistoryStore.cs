@@ -244,6 +244,52 @@ public static class HistoryStore
     };
 
     /// <summary>
+    /// Counts known/OK hours from local snapshots only (excludes future local hours).
+    /// Used by HistoryWindow availability KPI when local data exists.
+    /// </summary>
+    public static (int Known, int Ok) CountLocalAvailability(HistoryFile file, string? serviceKey = null)
+    {
+        file.Hours ??= new List<HistoryHourSnapshot>();
+        var now = DateTime.Now;
+        var cutoff = DateTime.Today.AddDays(-(KeepDays - 1));
+        var known = 0;
+        var ok = 0;
+
+        foreach (var hour in file.Hours)
+        {
+            if (!TryParseHourKey(hour.HourKey, out var hourStart) || hourStart.Date < cutoff)
+                continue;
+            if (hourStart > now)
+                continue;
+
+            hour.Services ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            IEnumerable<KeyValuePair<string, string>> entries = hour.Services;
+            if (!string.IsNullOrWhiteSpace(serviceKey))
+            {
+                var match = LookupService(hour.Services, serviceKey);
+                if (match is null)
+                    continue;
+                entries = [new KeyValuePair<string, string>(serviceKey, match)];
+            }
+            else
+            {
+                // Alle: count each known service cell in the snapshot
+                entries = hour.Services.Where(kv =>
+                    AppSettings.ServiceKeys.Contains(kv.Key, StringComparer.OrdinalIgnoreCase));
+            }
+
+            foreach (var kv in entries)
+            {
+                known++;
+                if (string.Equals(kv.Value, "none", StringComparison.OrdinalIgnoreCase))
+                    ok++;
+            }
+        }
+
+        return (known, ok);
+    }
+
+    /// <summary>
     /// Anzahl eindeutiger Stunden-Keys im aktuellen 14-Tage-Fenster (max. 336).
     /// </summary>
     public static int CountCoveredHours(HistoryFile file)
@@ -323,8 +369,13 @@ public static class HistoryStore
                         status = LookupService(snap.Services, key);
                     }
 
+                    // Green-fill only for hours that have already started locally — future stays grey.
                     if (status is null && hasHistoricalApiData)
-                        status = "none";
+                    {
+                        var hourStart = date.AddHours(h);
+                        if (hourStart <= DateTime.Now)
+                            status = "none";
+                    }
 
                     if (incidentByServiceHour.TryGetValue((key, hourKey), out var fromIncident) &&
                         (status is null || StatusSeverity(fromIncident) > StatusSeverity(status)))
@@ -390,11 +441,25 @@ public static class HistoryStore
                 .OrderBy(step => step.Timestamp)
                 .ToList();
 
+            // Carry last known severity across status=2 update steps so green-fill
+            // does not wipe hours inside an open incident span.
+            string? lastKnownSeverity = null;
             for (var i = 0; i < steps.Count; i++)
             {
                 var severity = IncidentSeverity(steps[i]);
-                if (severity is null)
+                if (severity is not null)
+                {
+                    lastKnownSeverity = severity;
+                }
+                else if (steps[i].Status == 2 && lastKnownSeverity is not null)
+                {
+                    severity = lastKnownSeverity;
+                }
+                else
+                {
+                    lastKnownSeverity = null;
                     continue;
+                }
 
                 var startLocal = steps[i].Timestamp.ToLocalTime();
                 var endUtc = i + 1 < steps.Count
@@ -415,14 +480,13 @@ public static class HistoryStore
 
     private static string? IncidentSeverity(IncidentStep step)
     {
-        // Align with HistoryTimelineBuilder.KindFromIncidentStep
-        if (step.HasMaintenance)
-            return "maintenance";
+        // Align with live classifier + HistoryTimelineBuilder: outage before maintenance.
+        // Do NOT let HasMaintenance override status 1/4.
         return step.Status switch
         {
             1 => "full",
             4 => "partial",
-            _ => null
+            _ => step.HasMaintenance ? "maintenance" : null
         };
     }
 

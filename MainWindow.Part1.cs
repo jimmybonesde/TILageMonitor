@@ -159,7 +159,8 @@ public partial class MainWindow
     }
 
 
-    private async Task<IncidentResponse> GetIncidentsSoftAsync(CancellationToken ct)
+    /// <summary>Returns null on soft-fail so callers can keep last-good overlays.</summary>
+    private async Task<IncidentResponse?> GetIncidentsSoftAsync(CancellationToken ct)
     {
         try
         {
@@ -167,11 +168,12 @@ public partial class MainWindow
         }
         catch
         {
-            return new IncidentResponse();
+            return null;
         }
     }
 
-    private async Task<OutageResponse> GetOutagesSoftAsync(CancellationToken ct)
+    /// <summary>Returns null on soft-fail so callers can keep last-good overlays.</summary>
+    private async Task<OutageResponse?> GetOutagesSoftAsync(CancellationToken ct)
     {
         try
         {
@@ -179,7 +181,7 @@ public partial class MainWindow
         }
         catch
         {
-            return new OutageResponse();
+            return null;
         }
     }
 
@@ -207,11 +209,15 @@ public partial class MainWindow
             // WhenAny(lage) wirft nicht — Original-Exception bleibt an lageTask
             await Task.WhenAll(incidentsTask, outagesTask, Task.WhenAny(lageTask));
 
-            var incidents = await incidentsTask;
-            var outages = await outagesTask;
+            var incidentsFresh = await incidentsTask;
+            var outagesFresh = await outagesTask;
             var lage = await lageTask;
 
-            // Last-known-good Cache speichern
+            // Soft-fail: keep previous incidents/outages so History overlays & cache stay intact.
+            var incidents = CacheStore.ResolveIncidents(incidentsFresh, _lastIncidents);
+            var outages = CacheStore.ResolveOutages(outagesFresh, _lastOutages);
+
+            // Last-known-good Cache speichern (Save also guards empty soft-fail halves)
             CacheStore.Save(lage, incidents, outages);
 
             // Client-seitigen 14-Tage-Verlauf upserten
@@ -230,6 +236,7 @@ public partial class MainWindow
             _apiDownBalloonShown = false;
 
             Render(lage, incidents, outages, fromCache: false);
+            // RenderHistory / NotifyHistoryUpdated stores last-good incidents & outages
             RenderHistory(history, incidents, outages);
 
             _firstLoad = false;

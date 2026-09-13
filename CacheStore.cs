@@ -41,11 +41,32 @@ public static class CacheStore
 
     public static bool Exists => File.Exists(CachePath);
 
+    /// <summary>
+    /// Soft-fail: when a refresh gets Lage but incidents/outages failed, keep the
+    /// previous last-good incidents/outages instead of poisoning the cache with empties.
+    /// </summary>
+    public static IncidentResponse ResolveIncidents(IncidentResponse? fresh, IncidentResponse? lastGood) =>
+        fresh ?? lastGood ?? new IncidentResponse();
+
+    public static OutageResponse ResolveOutages(OutageResponse? fresh, OutageResponse? lastGood) =>
+        fresh ?? lastGood ?? new OutageResponse();
+
     public static void Save(LageV2 lage, IncidentResponse incidents, OutageResponse outages)
     {
         try
         {
             Directory.CreateDirectory(CacheDirectory);
+
+            // Guard: never overwrite a good incidents/outages half with an empty soft-fail shell.
+            var existing = Load();
+            if (existing is not null)
+            {
+                if (IsEmptyFailure(incidents) && !IsEmptyFailure(existing.Incidents))
+                    incidents = existing.Incidents;
+                if (IsEmptyFailure(outages) && !IsEmptyFailure(existing.Outages))
+                    outages = existing.Outages;
+            }
+
             var snapshot = new LageCacheSnapshot
             {
                 SavedAt = DateTime.Now,
@@ -60,6 +81,14 @@ public static class CacheStore
             // Cache ist optional
         }
     }
+
+    private static bool IsEmptyFailure(IncidentResponse? response) =>
+        response is null ||
+        (!response.Success && (response.Data is null || response.Data.Count == 0));
+
+    private static bool IsEmptyFailure(OutageResponse? response) =>
+        response is null ||
+        (!response.Success && (response.Data is null || response.Data.Count == 0));
 
     public static LageCacheSnapshot? Load()
     {

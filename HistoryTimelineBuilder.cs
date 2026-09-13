@@ -114,11 +114,23 @@ public static class HistoryTimelineBuilder
                     .OrderBy(step => step.Timestamp)
                     .ToList();
 
+                string? lastKind = null;
                 for (var i = 0; i < steps.Count; i++)
                 {
                     var kind = KindFromIncidentStep(steps[i]);
-                    if (kind is null)
+                    if (kind is not null)
+                    {
+                        lastKind = kind;
+                    }
+                    else if (steps[i].Status == 2 && lastKind is not null)
+                    {
+                        kind = lastKind;
+                    }
+                    else
+                    {
+                        lastKind = null;
                         continue;
+                    }
 
                     var startLocal = steps[i].Timestamp.ToLocalTime();
                     var endUtc = i + 1 < steps.Count
@@ -178,7 +190,7 @@ public static class HistoryTimelineBuilder
             }
         }
 
-        return events
+        return DedupeOverlapping(events)
             .OrderByDescending(e => e.StartLocal)
             .ThenBy(e => e.ServiceName, StringComparer.Create(De, ignoreCase: true))
             .Take(Math.Max(1, maxEvents))
@@ -187,13 +199,35 @@ public static class HistoryTimelineBuilder
 
     private static string? KindFromIncidentStep(IncidentStep step)
     {
-        if (step.HasMaintenance)
-            return "Wartung";
+        // Align with HistoryStore.IncidentSeverity / live classifier: outage before maintenance.
         return step.Status switch
         {
             1 => "Störung",
             4 => "Teilausfall",
-            _ => null
+            _ => step.HasMaintenance ? "Wartung" : null
         };
+    }
+
+    /// <summary>
+    /// Drop outage Teilausfall entries that overlap an incident event for the same service.
+    /// </summary>
+    private static List<HistoryTimelineEvent> DedupeOverlapping(List<HistoryTimelineEvent> events)
+    {
+        var kept = new List<HistoryTimelineEvent>();
+        foreach (var ev in events
+                     .OrderByDescending(e => HistoryStore.StatusSeverity(e.StatusCode ?? "none"))
+                     .ThenByDescending(e => e.StartLocal))
+        {
+            var redundantOutage = string.Equals(ev.KindLabel, "Teilausfall", StringComparison.Ordinal) &&
+                kept.Any(k =>
+                    !string.Equals(k.KindLabel, "Teilausfall", StringComparison.Ordinal) &&
+                    string.Equals(k.ServiceKey, ev.ServiceKey, StringComparison.OrdinalIgnoreCase) &&
+                    k.StartLocal < ev.EndLocal && ev.StartLocal < k.EndLocal);
+            if (redundantOutage)
+                continue;
+            kept.Add(ev);
+        }
+
+        return kept;
     }
 }
