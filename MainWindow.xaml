@@ -49,7 +49,7 @@
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button x:Name="RefreshButton" Content="↻  Aktualisieren" Click="Refresh_Click" Margin="0,0,8,0" ToolTip="Jetzt aktualisieren"/>
-                    <Button x:Name="HistoryButton" Content="📈  Verlauf" Click="History_Click" Margin="0,0,8,0" ToolTip="TI-Status · 7 Tage"/>
+                    <Button x:Name="HistoryButton" Content="📈  Verlauf" Click="History_Click" Margin="0,0,8,0" ToolTip="TI-Status · 14 Tage"/>
                     <Button x:Name="SettingsButton" Content="⚙  Einstellungen" Click="Settings_Click" ToolTip="Einstellungen öffnen"/>
                 </StackPanel>
             </Grid>
@@ -136,11 +136,13 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <Border x:Name="NoMessagesBorder" Background="{DynamicResource ChipBackground}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="22" Visibility="Collapsed">
-                            <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="✓" FontSize="26" HorizontalAlignment="Center" Foreground="{DynamicResource StatusOk}"/>
-                                <TextBlock Text="Keine aktuellen Meldungen" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextMain}" Margin="0,6,0,0"/>
-                                <TextBlock Text="Aktuell liegen keine Störungen oder Einschränkungen vor." FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                        <Border x:Name="NoMessagesBorder" Background="{DynamicResource ChipBackground}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="14" Padding="28,32" Visibility="Collapsed">
+                            <StackPanel HorizontalAlignment="Center" MaxWidth="420">
+                                <Border Width="56" Height="56" CornerRadius="28" Background="{DynamicResource StatusOkSurface}" HorizontalAlignment="Center" Margin="0,0,0,12">
+                                    <TextBlock Text="✓" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource StatusOk}" Margin="0,-2,0,0"/>
+                                </Border>
+                                <TextBlock Text="Keine aktuellen Meldungen" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{DynamicResource TextMain}"/>
+                                <TextBlock Text="Aktuell liegen keine Störungen, Ursachen oder Einschränkungen vor. Der Status aktualisiert sich automatisch." FontSize="13" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,6,0,0"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>

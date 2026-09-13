@@ -46,6 +46,7 @@ public partial class MainWindow : Window
     private HistoryFile _lastHistory = new();
     private IncidentResponse? _lastIncidents;
     private OutageResponse? _lastOutages;
+    private string? _pendingToastFocusKey;
 
 
     private static readonly Dictionary<string, string> ServiceNames =
@@ -103,7 +104,7 @@ public partial class MainWindow : Window
         // Fallback: Klick auf Balloon (wenn Toast-API fehlschlägt) öffnet das Fenster
         _tray.BalloonTipClicked += (_, _) =>
         {
-            Dispatcher.Invoke(ShowWindow);
+            Dispatcher.Invoke(() => HandleToastActivation(ToastService.LastFocusKey));
         };
 
         var menu = new Forms.ContextMenuStrip();
@@ -308,6 +309,103 @@ public partial class MainWindow : Window
     }
 
     public void ShowWindowPublic() => ShowWindow();
+
+    public void HandleToastActivation(string? focusKey)
+    {
+        _pendingToastFocusKey = string.IsNullOrWhiteSpace(focusKey) ? null : focusKey;
+        ShowWindow();
+        Dispatcher.BeginInvoke(
+            System.Windows.Threading.DispatcherPriority.Loaded,
+            new Action(ApplyPendingToastFocus));
+    }
+
+    private void ApplyPendingToastFocus()
+    {
+        var focus = _pendingToastFocusKey;
+        if (string.IsNullOrWhiteSpace(focus))
+            return;
+
+        _pendingToastFocusKey = null;
+
+        try
+        {
+            // Prefer matching message row by FocusKey / Header
+            MessageRow? message = null;
+            foreach (var row in _messages)
+            {
+                if ((!string.IsNullOrWhiteSpace(row.FocusKey) &&
+                     (string.Equals(row.FocusKey, focus, StringComparison.OrdinalIgnoreCase) ||
+                      row.FocusKey.Contains(focus, StringComparison.OrdinalIgnoreCase) ||
+                      focus.Contains(row.FocusKey, StringComparison.OrdinalIgnoreCase))) ||
+                    row.Header.Contains(focus, StringComparison.OrdinalIgnoreCase))
+                {
+                    message = row;
+                    break;
+                }
+            }
+
+            if (message is not null)
+            {
+                MessagesList.UpdateLayout();
+                var container = MessagesList.ItemContainerGenerator.ContainerFromItem(message)
+                    as System.Windows.FrameworkElement;
+                if (container is not null)
+                {
+                    container.BringIntoView();
+                    SoftHighlight(container);
+                    return;
+                }
+            }
+
+            AppRow? app = null;
+            foreach (var row in _apps)
+            {
+                if ((!string.IsNullOrWhiteSpace(row.ServiceKey) &&
+                     string.Equals(row.ServiceKey, focus, StringComparison.OrdinalIgnoreCase)) ||
+                    row.Name.Contains(focus, StringComparison.OrdinalIgnoreCase) ||
+                    focus.Contains(row.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    app = row;
+                    break;
+                }
+            }
+
+            if (app is not null)
+            {
+                AppsList.UpdateLayout();
+                var container = AppsList.ItemContainerGenerator.ContainerFromItem(app)
+                    as System.Windows.FrameworkElement;
+                if (container is not null)
+                {
+                    container.BringIntoView();
+                    SoftHighlight(container);
+                }
+            }
+        }
+        catch
+        {
+            // Focus scroll/highlight is best-effort.
+        }
+    }
+
+    private static async void SoftHighlight(System.Windows.FrameworkElement element)
+    {
+        try
+        {
+            var original = element.Opacity;
+            element.Opacity = 0.55;
+            await System.Threading.Tasks.Task.Delay(180);
+            element.Opacity = 1.0;
+            await System.Threading.Tasks.Task.Delay(180);
+            element.Opacity = 0.7;
+            await System.Threading.Tasks.Task.Delay(180);
+            element.Opacity = original;
+        }
+        catch
+        {
+            try { element.Opacity = 1.0; } catch { /* ignore */ }
+        }
+    }
 
     private void OpenSettingsWindow()
     {

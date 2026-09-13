@@ -28,7 +28,7 @@
             <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="CornerRadius" Value="16"/>
             <Setter Property="Padding" Value="18,16"/>
             <Setter Property="Margin" Value="0,0,0,14"/>
         </Style>
@@ -59,41 +59,55 @@
             <StackPanel>
 
                 <!-- Darstellung -->
-                <TextBlock Text="Darstellung" Style="{StaticResource SectionHeaderStyle}"/>
-                <TextBlock Text="Oberfläche der Anwendung"
-                           Style="{StaticResource SectionHintStyle}"/>
                 <Border Style="{StaticResource SettingsCardStyle}">
-                    <CheckBox x:Name="DarkModeToggle"
-                              Content="Dunkelmodus"
-                              Style="{DynamicResource ToggleSwitchStyle}"
-                              Checked="DarkModeToggle_Changed"
-                              Unchecked="DarkModeToggle_Changed"/>
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.11" Direction="270" Color="#000000"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Darstellung" Style="{StaticResource SectionHeaderStyle}"/>
+                        <TextBlock Text="Oberfläche der Anwendung"
+                                   Style="{StaticResource SectionHintStyle}"/>
+                        <CheckBox x:Name="DarkModeToggle"
+                                  Content="Dunkelmodus"
+                                  Style="{DynamicResource ToggleSwitchStyle}"
+                                  Checked="DarkModeToggle_Changed"
+                                  Unchecked="DarkModeToggle_Changed"/>
+                    </StackPanel>
                 </Border>
 
                 <!-- Start -->
-                <TextBlock Text="Start" Style="{StaticResource SectionHeaderStyle}"/>
-                <TextBlock Text="Beim Anmelden automatisch starten (mit --tray)"
-                           Style="{StaticResource SectionHintStyle}"/>
                 <Border Style="{StaticResource SettingsCardStyle}">
-                    <CheckBox x:Name="AutoStartToggle"
-                              Content="Autostart"
-                              Style="{DynamicResource ToggleSwitchStyle}"
-                              Checked="AutoStartToggle_Changed"
-                              Unchecked="AutoStartToggle_Changed"/>
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.11" Direction="270" Color="#000000"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Start" Style="{StaticResource SectionHeaderStyle}"/>
+                        <TextBlock Text="Beim Anmelden automatisch starten (mit --tray)"
+                                   Style="{StaticResource SectionHintStyle}"/>
+                        <CheckBox x:Name="AutoStartToggle"
+                                  Content="Autostart"
+                                  Style="{DynamicResource ToggleSwitchStyle}"
+                                  Checked="AutoStartToggle_Changed"
+                                  Unchecked="AutoStartToggle_Changed"/>
+                    </StackPanel>
                 </Border>
 
                 <!-- Updates -->
-                <TextBlock Text="Updates" Style="{StaticResource SectionHeaderStyle}"/>
-                <TextBlock Text="Beim Start wird automatisch nach einer neuen Version gesucht."
-                           Style="{StaticResource SectionHintStyle}"/>
                 <Border Style="{StaticResource SettingsCardStyle}">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="18" ShadowDepth="2" Opacity="0.12" Direction="270" Color="#000000"/>
+                    </Border.Effect>
                     <StackPanel>
+                        <TextBlock Text="Updates" Style="{StaticResource SectionHeaderStyle}"/>
+                        <TextBlock Text="Beim Start wird automatisch nach einer neuen Version gesucht."
+                                   Style="{StaticResource SectionHintStyle}"/>
                         <TextBlock x:Name="UpdateStatusText"
                                    Text="Aktuelle Version wird beim Start automatisch geprüft."
                                    Style="{StaticResource SectionHintStyle}"
                                    Margin="0,0,0,10"/>
                         <Button x:Name="CheckForUpdatesButton"
                                 Content="Nach Updates suchen"
+                                Style="{StaticResource AccentButtonStyle}"
                                 HorizontalAlignment="Left"
                                 Padding="16,9"
                                 Click="CheckForUpdates_Click"/>
@@ -101,11 +115,16 @@
                 </Border>
 
                 <!-- Benachrichtigungen -->
-                <TextBlock Text="Benachrichtigungen" Style="{StaticResource SectionHeaderStyle}"/>
-                <TextBlock Text="Toast-Meldungen pro Dienst (Tray-Icon-Farbe bleibt unverändert)"
-                           Style="{StaticResource SectionHintStyle}"/>
                 <Border Style="{StaticResource SettingsCardStyle}">
-                    <WrapPanel x:Name="NotifyServicesPanel" Orientation="Horizontal"/>
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.11" Direction="270" Color="#000000"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Benachrichtigungen" Style="{StaticResource SectionHeaderStyle}"/>
+                        <TextBlock Text="Toast-Meldungen pro Dienst (Tray-Icon-Farbe bleibt unverändert)"
+                                   Style="{StaticResource SectionHintStyle}"/>
+                        <WrapPanel x:Name="NotifyServicesPanel" Orientation="Horizontal"/>
+                    </StackPanel>
                 </Border>
 
             </StackPanel>

@@ -113,7 +113,7 @@ public partial class MainWindow
             // fall through
         }
 
-        return "1.0.13";
+        return "1.0.14";
     }
 
     private static string NormalizeDisplayVersion(string value)
@@ -121,7 +121,7 @@ public partial class MainWindow
         var version = value.Split('+')[0].Trim();
         if (version.Length > 0 && (version[0] == 'v' || version[0] == 'V'))
             version = version[1..].Trim();
-        return string.IsNullOrWhiteSpace(version) ? "1.0.13" : version;
+        return string.IsNullOrWhiteSpace(version) ? "1.0.14" : version;
     }
 
     private static string FormatMessageTimestamp(DateTime value)

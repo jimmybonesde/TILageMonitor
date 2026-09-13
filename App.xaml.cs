@@ -45,11 +45,11 @@ public partial class App : System.Windows.Application
 
         _window = new MainWindow();
 
-        ToastService.Initialize(() =>
+        ToastService.Initialize(focusKey =>
         {
             try
             {
-                _window?.ShowWindowPublic();
+                _window?.HandleToastActivation(focusKey);
             }
             catch
             {

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace TILageMonitor;
@@ -11,7 +12,11 @@ public partial class HistoryWindow : Window
 
     private readonly ObservableCollection<HistoryServiceRow> _history = new();
     private readonly ObservableCollection<ZoomServiceRow> _zoomRows = new();
+    private readonly List<HistoryServiceRow> _allRows = new();
     private DateTime? _zoomedDate;
+    private string? _selectedServiceKey;
+    private bool _hasAnyData;
+    private bool _chipsBuilt;
 
     public HistoryWindow(MainWindow owner)
     {
@@ -26,6 +31,7 @@ public partial class HistoryWindow : Window
         PreviewKeyDown += HistoryWindow_PreviewKeyDown;
         Loaded += (_, _) =>
         {
+            BuildServiceFilterChips();
             Activate();
             Focus();
         };
@@ -39,28 +45,18 @@ public partial class HistoryWindow : Window
         history.Hours ??= new List<HistoryHourSnapshot>();
         history.Days = null; // ignore legacy shape in UI path
 
-        _history.Clear();
-        var hasAnyData = history.Hours.Count > 0 ||
-                         incidents?.Data?.Count > 0 ||
-                         outages?.Data?.Count > 0;
+        _allRows.Clear();
+        _hasAnyData = history.Hours.Count > 0 ||
+                      incidents?.Data?.Count > 0 ||
+                      outages?.Data?.Count > 0;
 
-        NoHistoryBorder.Visibility = hasAnyData
-            ? Visibility.Collapsed
-            : Visibility.Visible;
-        HistoryList.Visibility = hasAnyData
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        LegendPanel.Visibility = hasAnyData
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-
-        // Build heatmap only when there is data — avoid fake full grey 14×24 grid
-        if (hasAnyData)
+        if (_hasAnyData)
         {
             var rows = HistoryStore.BuildRows(history, incidents, outages);
-            foreach (var row in rows)
-                _history.Add(row);
+            _allRows.AddRange(rows);
         }
+
+        ApplyServiceFilter();
 
         var covered = HistoryStore.CountCoveredHours(history);
         var expected = HistoryStore.ExpectedHoursInWindow;
@@ -71,6 +67,113 @@ public partial class HistoryWindow : Window
 
         if (_zoomedDate is DateTime)
             RefreshZoom();
+    }
+
+    private void BuildServiceFilterChips()
+    {
+        if (_chipsBuilt)
+            return;
+        _chipsBuilt = true;
+
+        ServiceFilterPanel.Children.Clear();
+        ServiceFilterPanel.Children.Add(CreateFilterChip("Alle", null));
+
+        foreach (var key in AppSettings.ServiceKeys)
+        {
+            var name = AppSettings.ServiceDisplayNames.TryGetValue(key, out var n) ? n : key;
+            ServiceFilterPanel.Children.Add(CreateFilterChip(name, key));
+        }
+
+        RefreshFilterChipStyles();
+    }
+
+    private Button CreateFilterChip(string label, string? serviceKey)
+    {
+        var button = new Button
+        {
+            Content = label,
+            Tag = serviceKey ?? "",
+            Margin = new Thickness(0, 0, 8, 8),
+            Padding = new Thickness(12, 6, 12, 6),
+            FontSize = 12,
+            Cursor = Cursors.Hand
+        };
+        button.Click += ServiceFilterChip_Click;
+        return button;
+    }
+
+    private void ServiceFilterChip_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button)
+            return;
+
+        var tag = button.Tag as string;
+        _selectedServiceKey = string.IsNullOrWhiteSpace(tag) ? null : tag;
+        RefreshFilterChipStyles();
+        ApplyServiceFilter();
+        if (_zoomedDate is DateTime)
+            RefreshZoom();
+    }
+
+    private void RefreshFilterChipStyles()
+    {
+        foreach (var child in ServiceFilterPanel.Children)
+        {
+            if (child is not Button button)
+                continue;
+
+            var key = button.Tag as string;
+            var selected = string.IsNullOrWhiteSpace(key)
+                ? _selectedServiceKey is null
+                : string.Equals(key, _selectedServiceKey, StringComparison.OrdinalIgnoreCase);
+
+            button.Style = selected
+                ? TryFindResource("AccentButtonStyle") as Style
+                : null;
+        }
+    }
+
+    private void ApplyServiceFilter()
+    {
+        _history.Clear();
+
+        IEnumerable<HistoryServiceRow> rows = _allRows;
+        if (!string.IsNullOrWhiteSpace(_selectedServiceKey))
+        {
+            rows = _allRows.Where(r =>
+                string.Equals(r.ServiceKey, _selectedServiceKey, StringComparison.OrdinalIgnoreCase));
+        }
+
+        foreach (var row in rows)
+            _history.Add(row);
+
+        var filteredEmpty = _history.Count == 0;
+        var filterActive = !string.IsNullOrWhiteSpace(_selectedServiceKey);
+
+        if (!_hasAnyData)
+        {
+            NoHistoryBorder.Visibility = Visibility.Visible;
+            HistoryList.Visibility = Visibility.Collapsed;
+            LegendPanel.Visibility = Visibility.Collapsed;
+            NoHistoryTitle.Text = "Keine Verlaufsdaten";
+            NoHistorySubtitle.Text =
+                "Der 14-Tage-Verlauf kombiniert gematik-API-Daten mit lokal erfassten Stunden. Es gibt noch keine gespeicherten Einträge.";
+        }
+        else if (filteredEmpty && filterActive)
+        {
+            NoHistoryBorder.Visibility = Visibility.Visible;
+            HistoryList.Visibility = Visibility.Collapsed;
+            LegendPanel.Visibility = Visibility.Visible;
+            NoHistoryTitle.Text = "Keine Daten für diesen Dienst";
+            NoHistorySubtitle.Text =
+                "Für den gewählten Dienst gibt es in diesem Zeitraum keine Einträge. Filter auf „Alle“ setzen oder einen anderen Dienst wählen.";
+        }
+        else
+        {
+            NoHistoryBorder.Visibility = Visibility.Collapsed;
+            HistoryList.Visibility = Visibility.Visible;
+            LegendPanel.Visibility = Visibility.Visible;
+        }
     }
 
     private void UpdateHeaderHint()

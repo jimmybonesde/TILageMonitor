@@ -58,15 +58,33 @@ public partial class SettingsWindow : Window
             {
                 Content = name,
                 IsChecked = enabled,
-                Margin = new Thickness(0, 4, 18, 4),
+                Margin = new Thickness(0, 0, 0, 0),
+                Padding = new Thickness(10, 6, 12, 6),
                 Foreground = (System.Windows.Media.Brush)FindResource("TextMain"),
+                Background = (System.Windows.Media.Brush)FindResource("ChipBackground"),
+                BorderBrush = (System.Windows.Media.Brush)FindResource("BorderSubtle"),
+                BorderThickness = new Thickness(1),
                 Tag = key,
-                Cursor = System.Windows.Input.Cursors.Hand
+                Cursor = System.Windows.Input.Cursors.Hand,
+                FontSize = 13,
+                VerticalContentAlignment = System.Windows.VerticalAlignment.Center
+            };
+
+            var chip = new System.Windows.Controls.Border
+            {
+                Child = cb,
+                Background = (System.Windows.Media.Brush)FindResource("ChipBackground"),
+                BorderBrush = (System.Windows.Media.Brush)FindResource("BorderSubtle"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(12),
+                Padding = new Thickness(4, 2, 8, 2),
+                Margin = new Thickness(0, 4, 10, 6),
+                SnapsToDevicePixels = true
             };
 
             cb.Checked += NotifyService_Changed;
             cb.Unchecked += NotifyService_Changed;
-            NotifyServicesPanel.Children.Add(cb);
+            NotifyServicesPanel.Children.Add(chip);
         }
     }
 

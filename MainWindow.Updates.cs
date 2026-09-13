@@ -50,13 +50,34 @@ public partial class MainWindow
         }
 
         var openDownload = System.Windows.MessageBox.Show(
-            $"{message}\n\nJetzt den Setup-Installer herunterladen?",
+            $"{message}\n\nJetzt den Setup-Installer herunterladen und starten?",
             "Update verfügbar",
             MessageBoxButton.YesNo,
             MessageBoxImage.Information);
 
-        if (openDownload == MessageBoxResult.Yes && !string.IsNullOrWhiteSpace(result.DownloadUrl))
-            OpenUrl(result.DownloadUrl);
+        if (openDownload != MessageBoxResult.Yes || string.IsNullOrWhiteSpace(result.DownloadUrl))
+            return result;
+
+        var download = await UpdateService.DownloadAndLaunchAsync(result.DownloadUrl);
+        if (download.IsSuccess)
+        {
+            System.Windows.MessageBox.Show(
+                download.Message,
+                "Update",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        else
+        {
+            var openUrl = System.Windows.MessageBox.Show(
+                $"{download.Message}\n\nStattdessen die Download-Seite im Browser öffnen?",
+                "Update",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (openUrl == MessageBoxResult.Yes)
+                OpenUrl(result.DownloadUrl);
+        }
 
         return result;
     }

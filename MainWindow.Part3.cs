@@ -102,11 +102,12 @@ public partial class MainWindow
         }
 
         body = Truncate(body, 110);
-        ToastService.Show(title, body, urgency);
+        var focusKey = changes[0].ServiceKey;
+        ToastService.Show(title, body, urgency, focusKey);
     }
 
     private void ShowIncidentNotification(
-        List<(string Title, string Body, bool IsError)> incidents)
+        List<(string Title, string Body, bool IsError, List<string> ServiceKeys)> incidents)
     {
         if (incidents.Count == 0)
             return;
@@ -135,7 +136,9 @@ public partial class MainWindow
             urgency = hasError ? ToastUrgency.Error : ToastUrgency.Warning;
         }
 
-        ToastService.Show(title, body, urgency);
+        var focusKey = primary.ServiceKeys.FirstOrDefault()
+                       ?? incidents.SelectMany(i => i.ServiceKeys).FirstOrDefault();
+        ToastService.Show(title, body, urgency, focusKey);
     }
 
     private static string FormatStatusShort(string status) =>

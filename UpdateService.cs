@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
@@ -12,12 +14,18 @@ public sealed record UpdateCheckResult(
     string? DownloadUrl,
     string? ErrorMessage);
 
+public sealed record UpdateDownloadResult(
+    bool IsSuccess,
+    string Message,
+    string? LocalPath = null);
+
 public static class UpdateService
 {
     private const string LatestReleaseUrl =
         "https://api.github.com/repos/jimmybonesde/TILageMonitor/releases/latest";
 
     private static readonly HttpClient Client = CreateClient();
+    private static readonly HttpClient DownloadClient = CreateDownloadClient();
 
     public static string CurrentVersion => GetCurrentVersion();
 
@@ -67,6 +75,77 @@ public static class UpdateService
         }
     }
 
+    /// <summary>
+    /// Downloads a Setup.exe asset to a temp folder and launches it.
+    /// Rejects html_url pages that are not direct .exe downloads.
+    /// </summary>
+    public static async Task<UpdateDownloadResult> DownloadAndLaunchAsync(
+        string downloadUrl,
+        IProgress<string>? progress = null,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(downloadUrl))
+            return new UpdateDownloadResult(false, "Keine Download-URL vorhanden.");
+
+        if (!downloadUrl.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            return new UpdateDownloadResult(
+                false,
+                "Die Update-URL verweist nicht auf eine Setup.exe. Bitte die Release-Seite manuell öffnen.",
+                null);
+        }
+
+        try
+        {
+            var fileName = Path.GetFileName(new Uri(downloadUrl).LocalPath);
+            if (string.IsNullOrWhiteSpace(fileName) ||
+                !fileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            {
+                fileName = "TILageMonitor-Setup.exe";
+            }
+
+            var folder = Path.Combine(Path.GetTempPath(), "TILageMonitor-Update");
+            Directory.CreateDirectory(folder);
+            var localPath = Path.Combine(folder, fileName);
+
+            progress?.Report("Lade Setup herunter …");
+
+            using var response = await DownloadClient.GetAsync(
+                downloadUrl,
+                HttpCompletionOption.ResponseHeadersRead,
+                ct);
+            response.EnsureSuccessStatusCode();
+
+            await using (var input = await response.Content.ReadAsStreamAsync(ct))
+            await using (var output = File.Create(localPath))
+            {
+                await input.CopyToAsync(output, ct);
+            }
+
+            progress?.Report("Starte Setup …");
+
+            Process.Start(new ProcessStartInfo(localPath)
+            {
+                UseShellExecute = true
+            });
+
+            return new UpdateDownloadResult(
+                true,
+                "Setup wurde gestartet. Du kannst die App für die Installation schließen.",
+                localPath);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            return new UpdateDownloadResult(
+                false,
+                $"Download oder Start fehlgeschlagen: {ex.Message}");
+        }
+    }
+
     private static HttpClient CreateClient()
     {
         var client = new HttpClient
@@ -75,6 +154,17 @@ public static class UpdateService
         };
         client.DefaultRequestHeaders.UserAgent.ParseAdd("TILageMonitor-UpdateCheck");
         client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+        return client;
+    }
+
+    private static HttpClient CreateDownloadClient()
+    {
+        var client = new HttpClient
+        {
+            Timeout = TimeSpan.FromMinutes(5)
+        };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("TILageMonitor-UpdateDownload");
+        client.DefaultRequestHeaders.Accept.ParseAdd("application/octet-stream");
         return client;
     }
 

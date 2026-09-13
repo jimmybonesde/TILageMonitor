@@ -94,7 +94,7 @@ public partial class MainWindow
                 _ => "✓"
             };
 
-            _apps.Add(new AppRow(icon, name, detail, statusBrush));
+            _apps.Add(new AppRow(icon, name, detail, statusBrush, serviceKey));
         }
 
         // =========================================================
@@ -103,12 +103,15 @@ public partial class MainWindow
 
         foreach (var cause in lage.Cause)
         {
+            var causeFocus = string.IsNullOrWhiteSpace(cause.Service)
+                ? "TI-Komponente"
+                : cause.Service;
             _messages.Add(
                 new MessageRow(
-                    "Ursache · " +
-                    (string.IsNullOrWhiteSpace(cause.Service) ? "TI-Komponente" : cause.Service),
+                    "Ursache · " + causeFocus,
                     $"{cause.Organization} – {cause.Function} (CI: {cause.Ci})",
-                    FormatMessageTimestamp(lage.Timestamp)));
+                    FormatMessageTimestamp(lage.Timestamp),
+                    causeFocus));
         }
 
         // =========================================================
@@ -134,11 +137,13 @@ public partial class MainWindow
             if (latest is not null && latest.Timestamp > incidentWhen)
                 incidentWhen = latest.Timestamp;
 
+            var incidentFocus = affectedKeys.FirstOrDefault() ?? serviceText;
             _messages.Add(
                 new MessageRow(
                     $"{(incident.Status == 1 ? "Störung" : "Einschränkung")} · {serviceText}",
                     $"{incident.Title}\n{body}",
-                    FormatMessageTimestamp(incidentWhen)));
+                    FormatMessageTimestamp(incidentWhen),
+                    incidentFocus));
 
             if (!_firstLoad && _knownActiveIncidents.Add(incident.Id.ToString()))
             {
@@ -173,7 +178,8 @@ public partial class MainWindow
                         "Automatisch erkannte Einschränkung · " + outage.Service,
                         $"{outage.Provider}: " +
                         $"{string.Join("; ", activeSlots.Select(s => s.Function))}",
-                        FormatMessageTimestamp(outageWhen)));
+                        FormatMessageTimestamp(outageWhen),
+                        outage.Service));
             }
         }
 
@@ -262,7 +268,7 @@ public partial class MainWindow
                 .Where(inc =>
                     inc.ServiceKeys.Count == 0 ||
                     inc.ServiceKeys.Any(k => _settings.IsNotifyEnabled(k)))
-                .Select(inc => (inc.Title, inc.Body, inc.IsError))
+                .Select(inc => (inc.Title, inc.Body, inc.IsError, inc.ServiceKeys))
                 .ToList();
 
             if (filteredChanges.Count > 0)
@@ -310,8 +316,11 @@ public partial class MainWindow
             FooterText.Text = $"Letzte Abfrage: {DateTime.Now:dd.MM.yyyy HH:mm:ss}";
         }
 
-        NoMessagesBorder.Visibility =
-            _messages.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        var empty = _messages.Count == 0;
+        NoMessagesBorder.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        MessagesList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
+
+        ApplyPendingToastFocus();
     }
 
     // =============================================================

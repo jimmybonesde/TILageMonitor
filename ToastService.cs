@@ -14,9 +14,12 @@ public enum ToastUrgency
 public static class ToastService
 {
     private static Forms.NotifyIcon? _fallbackTray;
-    private static Action? _onActivated;
+    private static Action<string?>? _onActivated;
     private static bool _initialized;
     private static Func<bool>? _notificationsEnabled;
+    private static string? _lastFocusKey;
+
+    public static string? LastFocusKey => _lastFocusKey;
 
     public static void SetNotificationsEnabledProvider(Func<bool> provider) =>
         _notificationsEnabled = provider;
@@ -24,7 +27,7 @@ public static class ToastService
     public static bool AreNotificationsEnabled =>
         _notificationsEnabled?.Invoke() ?? true;
 
-    public static void Initialize(Action onActivated, Forms.NotifyIcon? fallbackTray = null)
+    public static void Initialize(Action<string?> onActivated, Forms.NotifyIcon? fallbackTray = null)
     {
         _onActivated = onActivated;
         if (fallbackTray is not null)
@@ -40,27 +43,34 @@ public static class ToastService
     public static void SetFallbackTray(Forms.NotifyIcon tray) =>
         _fallbackTray = tray;
 
-    public static void Show(string title, string body, ToastUrgency urgency = ToastUrgency.Info)
+    public static void Show(
+        string title,
+        string body,
+        ToastUrgency urgency = ToastUrgency.Info,
+        string? focusKey = null)
     {
         if (!AreNotificationsEnabled)
             return;
 
+        _lastFocusKey = string.IsNullOrWhiteSpace(focusKey) ? null : focusKey;
+
         var notificationShown = ToastRegistration.IsRegistered &&
-            TryShowAppNotification(title, body);
+            TryShowAppNotification(title, body, _lastFocusKey);
 
         if (!notificationShown)
             ShowBalloonFallback(title, body, urgency);
     }
 
-    private static void InvokeActivationOnDispatcher()
+    private static void InvokeActivationOnDispatcher(string? focusKey)
     {
         try
         {
+            var key = focusKey ?? _lastFocusKey;
             var app = System.Windows.Application.Current;
             if (app?.Dispatcher?.CheckAccess() == true)
-                _onActivated?.Invoke();
+                _onActivated?.Invoke(key);
             else
-                app?.Dispatcher?.Invoke(() => _onActivated?.Invoke());
+                app?.Dispatcher?.Invoke(() => _onActivated?.Invoke(key));
         }
         catch
         {
@@ -68,15 +78,19 @@ public static class ToastService
         }
     }
 
-    private static bool TryShowAppNotification(string title, string body)
+    private static bool TryShowAppNotification(string title, string body, string? focusKey)
     {
         try
         {
-            var notification = new AppNotificationBuilder()
+            var builder = new AppNotificationBuilder()
                 .AddText(title)
                 .AddText(body)
-                .BuildNotification();
+                .AddArgument("action", "open");
 
+            if (!string.IsNullOrWhiteSpace(focusKey))
+                builder.AddArgument("focus", focusKey);
+
+            var notification = builder.BuildNotification();
             AppNotificationManager.Default.Show(notification);
             return true;
         }

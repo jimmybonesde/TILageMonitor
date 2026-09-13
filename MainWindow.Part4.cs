@@ -184,9 +184,11 @@ public record AppRow(
     string Icon,
     string Name,
     string Detail,
-    System.Windows.Media.Brush StatusBrush);
+    System.Windows.Media.Brush StatusBrush,
+    string ServiceKey = "");
 
 public record MessageRow(
     string Header,
     string Body,
-    string TimestampText);
+    string TimestampText,
+    string? FocusKey = null);

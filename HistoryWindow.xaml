@@ -73,6 +73,9 @@
            Foreground="{DynamicResource TextMuted}"
            Margin="0,4,0,0"
            TextWrapping="Wrap"/>
+      <WrapPanel x:Name="ServiceFilterPanel"
+           Orientation="Horizontal"
+           Margin="0,14,0,0"/>
   </StackPanel>
   <Grid Grid.Row="1">
       <!-- Overview: 7 days -->
@@ -146,18 +149,28 @@
         Background="{DynamicResource CardBackground}"
         BorderBrush="{DynamicResource BorderSubtle}"
         BorderThickness="1"
-        CornerRadius="14"
+        CornerRadius="16"
         Padding="28,36"
         Margin="0,0,0,10"
         Visibility="Visible">
-          <StackPanel HorizontalAlignment="Center" MaxWidth="420">
-        <TextBlock Text="Keine Verlaufsdaten"
+          <Border.Effect>
+        <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.10" Direction="270" Color="#000000"/>
+          </Border.Effect>
+          <StackPanel HorizontalAlignment="Center" MaxWidth="440">
+        <Border Width="56" Height="56" CornerRadius="28"
+          Background="{DynamicResource ChipBackground}"
+          HorizontalAlignment="Center" Margin="0,0,0,12">
+            <TextBlock Text="📈" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+        <TextBlock x:Name="NoHistoryTitle"
+             Text="Keine Verlaufsdaten"
              FontSize="16"
              FontWeight="SemiBold"
              Foreground="{DynamicResource TextMain}"
              HorizontalAlignment="Center"
              Margin="0,0,0,8"/>
-        <TextBlock Text="Der 14-Tage-Verlauf baut sich auf, sobald die App läuft und Statusdaten erfasst. Es gibt noch keine gespeicherten Stunden."
+        <TextBlock x:Name="NoHistorySubtitle"
+             Text="Der 14-Tage-Verlauf kombiniert gematik-API-Daten mit lokal erfassten Stunden. Es gibt noch keine gespeicherten Einträge."
              FontSize="13"
              Foreground="{DynamicResource TextMuted}"
              TextWrapping="Wrap"
