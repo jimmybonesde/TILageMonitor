@@ -5,7 +5,7 @@
 <h1 align="center">TI-Lage Monitor</h1>
 
 <p align="center">
-  <strong>Der TI-Status der gematik direkt im Windows-Tray – inklusive 14-Tage-Ausfallhistorie.</strong><br>
+  <strong>Der TI-Status der gematik direkt im Windows-Tray – inklusive klarer 14-Tage-Historie.</strong><br>
   Schlank · lokal · ohne Login
 </p>
 
@@ -22,6 +22,8 @@
   <a href="#-in-60-sekunden-startklar">Schnellstart</a>
   ·
   <a href="#-funktionen">Funktionen</a>
+  ·
+  <a href="#-14-tage-verlauf">14-Tage-Verlauf</a>
   ·
   <a href="https://fachportal.gematik.de/ti-status#TI-Anschluss">gematik Fachportal</a>
 </p>
@@ -54,10 +56,11 @@ Die Hero-Karte fasst die Lage zusammen, Dienste erscheinen als Status-Pills, akt
 | :--: | --- | --- |
 | 🛡️ | **TI-Lage im Tray** | Schild mit grünem, amberfarbenem oder rotem Status-Badge |
 | 🔎 | **Dienste im Blick** | eRezept, ePA, KIM, WANDA, OGD, VSDM und TI-Anschluss |
-| 🔔 | **Windows-Benachrichtigungen** | Klickbare Toasts bei Störung, Teilausfall, API-Ausfall und Entwarnung |
-| 🕒 | **14-Tage-Verlauf** | API-gestützte Ausfallhistorie mit Tages-Zoom; lokale Snapshots ergänzen die Verfügbarkeit |
-| 🎨 | **Desktop-tauglich** | Fluent UI, Hell-/Dunkelmodus, Autostart und Einzelinstanz |
-| ⚙️ | **Steuerbar** | Refresh, Fachportal-Link und Notify-Filter pro Dienst direkt aus der App |
+| 🔔 | **Windows-Benachrichtigungen** | Klickbare Toasts; Klick öffnet das Fenster und springt zum Kontext |
+| 🕒 | **14-Tage-Verlauf** | Tages-Kacheln, Stunden-Zoom, Ereignisse-Timeline und Dienst-Filter |
+| ⬇️ | **Selbst-Update** | Prüft GitHub Releases, lädt das Setup herunter und startet es |
+| 🎨 | **Desktop-tauglich** | Fluent UI, Hell-/Dunkelmodus, Autostart, Start direkt in den Tray |
+| ⚙️ | **Steuerbar** | Notify-Filter pro Dienst, globale Benachrichtigungen aus dem Tray |
 
 ### Statuslogik
 
@@ -75,34 +78,50 @@ Die App ruft Lage, Incidents und Outages parallel ab und folgt dem gematik-Rhyth
 | Aktion | Wirkung |
 | --- | --- |
 | Linksklick auf das Tray-Icon | Hauptfenster ein- oder ausblenden |
+| Rechtsklick → Benachrichtigungen | Alle Toasts global an oder aus |
 | **Aktualisieren** | Status sofort neu laden |
-| **Verlauf** | 14-Tage-Historie mit API-Ausfällen öffnen |
-| **Einstellungen** | Theme, Autostart und Benachrichtigungsfilter ändern |
+| **Verlauf** | 14-Tage-Historie öffnen (maximiert) |
+| **Einstellungen** | Theme, Autostart, Updates und Notify-Filter |
 | **gematik** | Fachportal im Browser öffnen |
 | **Beenden** | Anwendung schließen |
 
 ## 📈 14-Tage-Verlauf
 
-Der Verlauf kombiniert zwei Datenquellen:
+Ab **v1.0.15** ist der Verlauf bewusst ruhiger und lesbarer aufgebaut — statt einer überladenen Stunden-Heatmap für alle Dienste gleichzeitig.
 
-- Die offizielle gematik-API liefert gemeldete Einschränkungen samt Statusschritten für die letzten **14 Tage** – auch wenn der PC ausgeschaltet war.
-- Lokale, stündliche Snapshots ergänzen die Verfügbarkeitsanzeige, solange die App läuft.
+### So ist die Ansicht aufgebaut
 
-Jeder Tag lässt sich anklicken und zeigt dann die Stundenansicht. Die Stundenleiste erscheint bewusst nur dort; die 14-Tage-Übersicht bleibt kompakt.
+1. **Tages-Übersicht (Kalender-Kacheln)**  
+   Pro Dienst eine Zeile mit **14 Tages-Kacheln**. Farbe = schlechtester Status des Tages (OK, Einschränkung, Wartung, Störung oder keine Daten). Wochentag und Datum stehen auf der Kachel.
 
-> Graue Felder bedeuten: Für diese Stunde liegt weder ein lokaler Snapshot noch eine gemeldete API-Einschränkung vor.
+2. **Stunden-Zoom**  
+   Klick auf einen Tag öffnet die **24-Stunden-Ansicht** nur für diesen Tag. Esc oder „Zurück zur Übersicht“ kehrt zurück.
 
+3. **Ereignisse-Timeline**  
+   Unter der Übersicht listet die Karte **Ereignisse** gemeldete Incidents und Outages lesbar auf, z. B. `eRezept · Teilausfall · Di 10:00–12:00`. Klick auf einen Eintrag springt in den Zoom des betreffenden Tages.
 
-### Aus dem Quellcode bauen
+4. **Dienst-Fokus**  
+   Standardmäßig ist **eRezept** vorausgewählt, damit die Ansicht klar bleibt. Über die Filter-Chips lassen sich andere Dienste oder **Alle** wählen.
 
-Voraussetzungen: Windows 10/11 x64, [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) und PowerShell 5.1+.
+### Datenquellen
 
-```powershell
-git clone https://github.com/jimmybonesde/TILageMonitor.git
-cd TILageMonitor
-.\Build.ps1
-.\Install.ps1
-```
+Der Verlauf kombiniert zwei Quellen:
+
+| Quelle | Was sie liefert |
+| --- | --- |
+| **gematik-API** (Incidents / Outages) | Gemeldete Einschränkungen und Statusschritte der letzten **14 Tage** — auch wenn der PC aus war |
+| **Lokale Stunden-Snapshots** (`history.json`) | Ergänzen die Verfügbarkeit (grüne Online-Stunden), solange die App läuft |
+
+> Graue Kacheln / Stunden bedeuten: Für diesen Zeitraum liegt weder ein lokaler Snapshot noch eine gemeldete API-Einschränkung vor. Wenn die Incident-API erreichbar ist, werden Stunden ohne gemeldete Störung als verfügbar (grün) dargestellt.
+
+### Kurzbedienung im Verlauf
+
+| Aktion | Wirkung |
+| --- | --- |
+| Filter-Chip (eRezept, ePA, … / Alle) | Zeilen und Ereignisse eingrenzen |
+| Tages-Kachel anklicken | Stunden-Zoom für diesen Tag |
+| Ereignis anklicken | Zoom auf den Starttag des Ereignisses |
+| Esc / Zurück | Zurück zur Tages-Übersicht |
 
 ## 🔐 Daten & Datenschutz
 
@@ -131,16 +150,28 @@ Verwendete Endpunkte:
 
 ## 🗂️ Für Entwickler
 
+### Aus dem Quellcode bauen
+
+Voraussetzungen: Windows 10/11 x64, [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) und PowerShell 5.1+.
+
+```powershell
+git clone https://github.com/jimmybonesde/TILageMonitor.git
+cd TILageMonitor
+.\Build.ps1
+.\Install.ps1
+```
+
 | Bereich | Zentrale Dateien |
 | --- | --- |
 | UI & Tray | `MainWindow.*`, `App.xaml(.cs)` |
 | API & Modelle | `ApiClient.cs`, `Models.cs` |
 | Persistenz | `SettingsStore.cs`, `CacheStore.cs`, `HistoryStore.cs` |
-| Fenster | `SettingsWindow.*`, `HistoryWindow.*` |
-| Systemdienste | `ToastService.cs`, `ToastRegistration.cs`, `ThemeService.cs`, `AutostartService.cs` |
-| Build & Release | `Build.ps1`, `Install.ps1`, `.github/workflows/release.yml` |
+| Verlauf | `HistoryWindow.*`, `HistoryTimelineBuilder.cs` |
+| Fenster | `SettingsWindow.*`, `AboutWindow.*` |
+| Systemdienste | `ToastService.cs`, `ToastRegistration.cs`, `ThemeService.cs`, `AutostartService.cs`, `UpdateService.cs` |
+| Build & Release | `Build.ps1`, `Install.ps1`, `installer/TILageMonitor.iss`, `.github/workflows/release.yml` |
 
-Technik: WPF + WinForms-Tray · `net10.0-windows10.0.17763.0` · Windows App SDK App Notifications
+Technik: WPF + WinForms-Tray · `net10.0-windows10.0.17763.0` · Windows App SDK App Notifications · Inno Setup Installer
 
 ## 👤 Autor
 
