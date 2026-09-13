@@ -40,6 +40,7 @@
         <SolidColorBrush x:Key="StatusOutageBorder" Color="#FECACA"/>
         <SolidColorBrush x:Key="StatusMaintenanceSurface" Color="#F0F9FF"/>
         <SolidColorBrush x:Key="StatusMaintenanceBorder" Color="#7DD3FC"/>
+        <SolidColorBrush x:Key="StatusEmpty" Color="#CBD5E1"/>
         <SolidColorBrush x:Key="AppIconCircleBackground" Color="#DBEAFE"/>
         <SolidColorBrush x:Key="AppIconForeground" Color="#1D4ED8"/>
 

@@ -3,7 +3,7 @@ using System.Globalization;
 namespace TILageMonitor;
 
 /// <summary>
-/// Compact incident/outage timeline entries for the HistoryWindow „Ereignisse“ card.
+/// Compact incident/outage timeline entries for the HistoryWindow „Ereignisse“ surface.
 /// Intervals are derived similarly to HistoryStore incident/outage hour overlaps.
 /// </summary>
 public sealed class HistoryTimelineEvent
@@ -14,7 +14,16 @@ public sealed class HistoryTimelineEvent
     public DateTime StartLocal { get; }
     public DateTime EndLocal { get; }
     public DateTime DayDate => StartLocal.Date;
+
+    public string Title { get; }
+    public string TimeRangeText { get; }
+    public string Body { get; }
+    public string ClickHint { get; }
+    public string? StatusCode { get; }
     public string DisplayLine { get; }
+
+    public System.Windows.Media.Brush AccentBarBrush =>
+        HistoryDayCell.BrushForStatus(StatusCode);
 
     public HistoryTimelineEvent(
         string serviceKey,
@@ -28,8 +37,27 @@ public sealed class HistoryTimelineEvent
         KindLabel = kindLabel;
         StartLocal = startLocal;
         EndLocal = endLocal;
-        DisplayLine = $"{serviceName} · {kindLabel} · {FormatRange(startLocal, endLocal)}";
+        StatusCode = StatusCodeFromKind(kindLabel);
+        Title = $"{serviceName} · {kindLabel}";
+        TimeRangeText = FormatRange(startLocal, endLocal);
+        Body = kindLabel switch
+        {
+            "Störung" => "Vollständige Störung im TI-Status — Stundenansicht für Details.",
+            "Teilausfall" => "Einschränkung / Teilausfall — Zeitraum lokal dargestellt.",
+            "Wartung" => "Geplante oder laufende Wartung im erfassten Fenster.",
+            _ => "Ereignis aus dem TI-Status (lokal dargestellt)."
+        };
+        ClickHint = $"Stundenansicht öffnen · {startLocal:dd.MM.yyyy}";
+        DisplayLine = $"{Title} · {TimeRangeText}";
     }
+
+    private static string? StatusCodeFromKind(string kindLabel) => kindLabel switch
+    {
+        "Störung" => "full",
+        "Teilausfall" => "partial",
+        "Wartung" => "maintenance",
+        _ => "partial"
+    };
 
     private static string FormatRange(DateTime start, DateTime end)
     {
@@ -44,7 +72,7 @@ public sealed class HistoryTimelineEvent
         var endWeekday = culture.DateTimeFormat.AbbreviatedDayNames[(int)end.DayOfWeek].TrimEnd('.');
         if (endWeekday.Length > 0)
             endWeekday = char.ToUpper(endWeekday[0], culture) + endWeekday[1..];
-        return $"{weekday} {start:HH:mm}–{endWeekday} {end:HH:mm}";
+        return $"{weekday} {start:dd.MM. HH:mm} – {endWeekday} {end:dd.MM. HH:mm}";
     }
 }
 

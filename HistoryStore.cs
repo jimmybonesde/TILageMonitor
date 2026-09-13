@@ -555,6 +555,8 @@ public sealed class HistoryDayGroup
     public string DayTooltip { get; }
     public System.Windows.Media.Brush DayBrush { get; }
     public System.Windows.Media.Brush DayForeground { get; }
+    /// <summary>True when this day is the selected / zoomed day in HistoryWindow.</summary>
+    public bool IsSelected { get; set; }
 
     public HistoryDayGroup(DateTime date, List<HistoryDayCell> hours)
     {
@@ -588,7 +590,11 @@ public sealed class HistoryDayGroup
         };
 
         var known = hours.Count(h => h.Status is not null);
-        return $"{label}: {summary} ({known}/24 Stunden mit Daten)";
+        var ok = hours.Count(h => string.Equals(h.Status, "none", StringComparison.OrdinalIgnoreCase));
+        var partial = hours.Count(h => string.Equals(h.Status, "partial", StringComparison.OrdinalIgnoreCase));
+        var full = hours.Count(h => string.Equals(h.Status, "full", StringComparison.OrdinalIgnoreCase));
+        var maint = hours.Count(h => string.Equals(h.Status, "maintenance", StringComparison.OrdinalIgnoreCase));
+        return $"{label}: {summary}\n{known}/24 Stunden mit Daten · OK {ok} · Einschr. {partial} · Störung {full} · Wartung {maint}\nKlick öffnet die Stundenansicht.";
     }
 }
 
@@ -659,14 +665,16 @@ public sealed class HistoryDayCell
             "partial" => "StatusPartial",
             "maintenance" => "StatusMaintenance",
             "none" => "StatusOk",
-            _ => null
+            _ => "StatusEmpty"
         };
 
-        if (resourceKey is not null &&
-            System.Windows.Application.Current?.TryFindResource(resourceKey) is System.Windows.Media.Brush themed)
-        {
+        if (System.Windows.Application.Current?.TryFindResource(resourceKey) is System.Windows.Media.Brush themed)
             return themed;
-        }
+
+        // Legacy fallback when StatusEmpty is absent
+        if (status is null &&
+            System.Windows.Application.Current?.TryFindResource("ChipBackground") is System.Windows.Media.Brush chip)
+            return chip;
 
         return BrushFromHex(HexForStatus(status));
     }

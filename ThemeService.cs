@@ -46,6 +46,7 @@ public static class ThemeService
             SetBrush(resources, "StatusOutageBorder", "#DC2626");
             SetBrush(resources, "StatusMaintenanceSurface", "#0F2433");
             SetBrush(resources, "StatusMaintenanceBorder", "#0284C7");
+            SetBrush(resources, "StatusEmpty", "#4B5563");
             SetBrush(resources, "AppIconCircleBackground", "#1E3A5F");
             SetBrush(resources, "AppIconForeground", "#93C5FD");
         }
@@ -85,6 +86,7 @@ public static class ThemeService
             SetBrush(resources, "StatusOutageBorder", "#FECACA");
             SetBrush(resources, "StatusMaintenanceSurface", "#F0F9FF");
             SetBrush(resources, "StatusMaintenanceBorder", "#7DD3FC");
+            SetBrush(resources, "StatusEmpty", "#CBD5E1");
             SetBrush(resources, "AppIconCircleBackground", "#DBEAFE");
             SetBrush(resources, "AppIconForeground", "#1D4ED8");
         }

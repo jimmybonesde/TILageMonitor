@@ -14,10 +14,10 @@
     <Company>Randy Carter</Company>
     <Authors>Randy Carter</Authors>
     <Copyright>© 2026 Randy Carter</Copyright>
-    <Version>1.0.16</Version>
-    <FileVersion>1.0.16.0</FileVersion>
-    <AssemblyVersion>1.0.16.0</AssemblyVersion>
-    <InformationalVersion>1.0.16</InformationalVersion>
+    <Version>1.0.17</Version>
+    <FileVersion>1.0.17.0</FileVersion>
+    <AssemblyVersion>1.0.17.0</AssemblyVersion>
+    <InformationalVersion>1.0.17</InformationalVersion>
     <ApplicationIcon>TILageMonitor.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>

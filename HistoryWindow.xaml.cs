@@ -3,25 +3,37 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using WpfButton = System.Windows.Controls.Button;
 
 namespace TILageMonitor;
 
 public partial class HistoryWindow : Window
 {
+    private enum ViewMode
+    {
+        Overview,
+        Hours,
+        Events
+    }
+
     private static readonly CultureInfo DeCulture = CultureInfo.GetCultureInfo("de-DE");
 
     /// <summary>In-session remembered filter; default = first service (eRezept).</summary>
     private static string? s_sessionFilterKey = AppSettings.ServiceKeys[0];
 
     private readonly ObservableCollection<HistoryServiceRow> _history = new();
+    private readonly ObservableCollection<HistoryServiceRow> _focusHistory = new();
     private readonly ObservableCollection<ZoomServiceRow> _zoomRows = new();
-    private readonly ObservableCollection<HistoryTimelineEvent> _timeline = new();
     private readonly List<HistoryServiceRow> _allRows = new();
+    private List<HistoryTimelineEvent> _timelineEventsCache = new();
     private DateTime? _zoomedDate;
+    private DateTime? _selectedDay;
     private string? _selectedServiceKey = s_sessionFilterKey;
     private bool _hasAnyData;
     private bool _chipsBuilt;
+    private ViewMode _viewMode = ViewMode.Overview;
     private IncidentResponse? _incidents;
     private OutageResponse? _outages;
 
@@ -31,15 +43,21 @@ public partial class HistoryWindow : Window
         WindowState = WindowState.Maximized;
         Owner = owner;
         HistoryList.ItemsSource = _history;
+        FocusHistoryList.ItemsSource = _focusHistory;
         ZoomList.ItemsSource = _zoomRows;
-        TimelineList.ItemsSource = _timeline;
+        FocusTimelineList.ItemsSource = Array.Empty<HistoryTimelineEvent>();
+        MultiTimelineList.ItemsSource = Array.Empty<HistoryTimelineEvent>();
+        EventsTimelineList.ItemsSource = Array.Empty<HistoryTimelineEvent>();
         ZoomHourAxis.ItemsSource = Enumerable.Range(0, 24).Select(h => h.ToString()).ToList();
         UpdateLegendColors();
+        UpdateSegmentStyles();
+        SoftenShadowsForTheme();
         Focusable = true;
         PreviewKeyDown += HistoryWindow_PreviewKeyDown;
         Loaded += (_, _) =>
         {
             BuildServiceFilterChips();
+            ApplyViewMode(animated: false);
             Activate();
             Focus();
         };
@@ -69,16 +87,19 @@ public partial class HistoryWindow : Window
 
         ApplyServiceFilter();
         RefreshTimeline();
+        UpdateKpis();
 
         var covered = HistoryStore.CountCoveredHours(history);
         var expected = HistoryStore.ExpectedHoursInWindow;
         CoverageHint.Text = $"14 Tage API-Verlauf · {covered} / {expected} Stunden zusätzlich lokal erfasst";
 
         UpdateLegendColors();
+        SoftenShadowsForTheme();
         UpdateHeaderHint();
+        ApplyViewMode(animated: false);
 
-        if (_zoomedDate is DateTime)
-            RefreshZoom();
+        if (_viewMode == ViewMode.Hours)
+            EnsureZoomDay();
     }
 
     private void BuildServiceFilterChips()
@@ -89,23 +110,21 @@ public partial class HistoryWindow : Window
 
         ServiceFilterPanel.Children.Clear();
 
-        // Service chips first (focus mode default); „Alle“ secondary at the end
         foreach (var key in AppSettings.ServiceKeys)
         {
             var name = AppSettings.ServiceDisplayNames.TryGetValue(key, out var n) ? n : key;
             ServiceFilterPanel.Children.Add(CreateFilterChip(name, key));
         }
 
-        ServiceFilterPanel.Children.Add(CreateFilterChip("Alle", null));
         RefreshFilterChipStyles();
     }
 
-    private WpfButton CreateFilterChip(string label, string? serviceKey)
+    private WpfButton CreateFilterChip(string label, string serviceKey)
     {
         var button = new WpfButton
         {
             Content = label,
-            Tag = serviceKey ?? "",
+            Tag = serviceKey,
             Margin = new Thickness(0, 0, 8, 8),
             Padding = new Thickness(12, 6, 12, 6),
             FontSize = 12,
@@ -126,9 +145,27 @@ public partial class HistoryWindow : Window
         RefreshFilterChipStyles();
         ApplyServiceFilter();
         RefreshTimeline();
+        UpdateKpis();
         UpdateHeaderHint();
-        if (_zoomedDate is DateTime)
-            RefreshZoom();
+        if (_viewMode == ViewMode.Hours)
+            EnsureZoomDay();
+        else
+            ApplyViewMode(animated: false);
+    }
+
+    private void AllServices_Click(object sender, RoutedEventArgs e)
+    {
+        _selectedServiceKey = null;
+        s_sessionFilterKey = null;
+        RefreshFilterChipStyles();
+        ApplyServiceFilter();
+        RefreshTimeline();
+        UpdateKpis();
+        UpdateHeaderHint();
+        if (_viewMode == ViewMode.Hours)
+            EnsureZoomDay();
+        else
+            ApplyViewMode(animated: false);
     }
 
     private void RefreshFilterChipStyles()
@@ -139,25 +176,26 @@ public partial class HistoryWindow : Window
                 continue;
 
             var key = button.Tag as string;
-            var selected = string.IsNullOrWhiteSpace(key)
-                ? _selectedServiceKey is null
-                : string.Equals(key, _selectedServiceKey, StringComparison.OrdinalIgnoreCase);
+            var selected = !string.IsNullOrWhiteSpace(_selectedServiceKey) &&
+                           string.Equals(key, _selectedServiceKey, StringComparison.OrdinalIgnoreCase);
 
             button.Style = selected
                 ? TryFindResource("AccentButtonStyle") as Style
                 : null;
-
-            // „Alle“ stays visually secondary when not selected
-            if (string.IsNullOrWhiteSpace(key) && !selected)
-                button.Opacity = 0.78;
-            else
-                button.Opacity = 1.0;
+            button.Opacity = 1.0;
         }
+
+        var allSelected = _selectedServiceKey is null;
+        AllServicesButton.Style = allSelected
+            ? TryFindResource("AccentButtonStyle") as Style
+            : null;
+        AllServicesButton.Opacity = allSelected ? 1.0 : 0.82;
     }
 
     private void ApplyServiceFilter()
     {
         _history.Clear();
+        _focusHistory.Clear();
 
         var focusMode = !string.IsNullOrWhiteSpace(_selectedServiceKey);
         IEnumerable<HistoryServiceRow> rows = _allRows;
@@ -170,77 +208,389 @@ public partial class HistoryWindow : Window
         foreach (var row in rows)
         {
             row.IsFocusMode = focusMode;
-            _history.Add(row);
+            ApplyDaySelectionFlags(row);
+            if (focusMode)
+                _focusHistory.Add(row);
+            else
+                _history.Add(row);
         }
 
-        var filteredEmpty = _history.Count == 0;
-        var filterActive = focusMode;
+        var filteredEmpty = focusMode ? _focusHistory.Count == 0 : _history.Count == 0;
 
         if (!_hasAnyData)
         {
             NoHistoryBorder.Visibility = Visibility.Visible;
-            HistoryList.Visibility = Visibility.Collapsed;
+            FocusOverviewGrid.Visibility = Visibility.Collapsed;
+            MultiOverviewPanel.Visibility = Visibility.Collapsed;
             LegendPanel.Visibility = Visibility.Collapsed;
-            TimelineCard.Visibility = Visibility.Collapsed;
-            NoHistoryTitle.Text = "Keine Verlaufsdaten";
+            StableOkBorder.Visibility = Visibility.Collapsed;
+            NoHistoryTitle.Text = "Noch keine Verlaufsdaten";
             NoHistorySubtitle.Text =
-                "Der 14-Tage-Verlauf kombiniert gematik-API-Daten mit lokal erfassten Stunden. Es gibt noch keine gespeicherten Einträge.";
+                "Der 14-Tage-Verlauf kombiniert gematik-API-Daten mit lokal erfassten Stunden. Sobald die App aktualisiert, füllen sich die Kacheln ruhig von selbst.";
         }
-        else if (filteredEmpty && filterActive)
+        else if (filteredEmpty && focusMode)
         {
             NoHistoryBorder.Visibility = Visibility.Visible;
-            HistoryList.Visibility = Visibility.Collapsed;
+            FocusOverviewGrid.Visibility = Visibility.Collapsed;
+            MultiOverviewPanel.Visibility = Visibility.Collapsed;
             LegendPanel.Visibility = Visibility.Visible;
-            TimelineCard.Visibility = Visibility.Visible;
+            StableOkBorder.Visibility = Visibility.Collapsed;
             NoHistoryTitle.Text = "Keine Daten für diesen Dienst";
             NoHistorySubtitle.Text =
-                "Für den gewählten Dienst gibt es in diesem Zeitraum keine Einträge. Filter auf „Alle“ setzen oder einen anderen Dienst wählen.";
+                "Für den gewählten Dienst gibt es in diesem Zeitraum keine Einträge. „Alle Dienste“ wählen oder einen anderen Chip tippen.";
         }
         else
         {
             NoHistoryBorder.Visibility = Visibility.Collapsed;
-            HistoryList.Visibility = Visibility.Visible;
             LegendPanel.Visibility = Visibility.Visible;
-            TimelineCard.Visibility = Visibility.Visible;
+            UpdateStableOkCard();
+            if (focusMode)
+            {
+                FocusOverviewGrid.Visibility = Visibility.Visible;
+                MultiOverviewPanel.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                FocusOverviewGrid.Visibility = Visibility.Collapsed;
+                MultiOverviewPanel.Visibility = Visibility.Visible;
+            }
         }
+    }
+
+    private void UpdateStableOkCard()
+    {
+        if (!_hasAnyData)
+        {
+            StableOkBorder.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        var focusRows = GetFocusRows();
+        if (focusRows.Count == 0)
+        {
+            StableOkBorder.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        var degraded = 0;
+        var knownDays = 0;
+        foreach (var row in focusRows)
+        {
+            foreach (var day in row.Days ?? Enumerable.Empty<HistoryDayGroup>())
+            {
+                if (day.DayStatus is null)
+                    continue;
+                knownDays++;
+                if (!string.Equals(day.DayStatus, "none", StringComparison.OrdinalIgnoreCase))
+                    degraded++;
+            }
+        }
+
+        if (knownDays > 0 && degraded == 0)
+        {
+            StableOkBorder.Visibility = Visibility.Visible;
+            var name = FocusDisplayName();
+            StableOkTitle.Text = "Stabil · Alles ruhig";
+            StableOkSubtitle.Text = focusRows.Count == 1
+                ? $"In den letzten 14 Tagen blieb {name} ohne Einschränkung oder Störung — ein ruhiges Bild."
+                : "In den letzten 14 Tagen waren alle bekannten Tage über die Dienste hinweg ohne Einschränkung oder Störung.";
+        }
+        else
+        {
+            StableOkBorder.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private List<HistoryServiceRow> GetFocusRows()
+    {
+        if (!string.IsNullOrWhiteSpace(_selectedServiceKey))
+        {
+            return _allRows
+                .Where(r => string.Equals(r.ServiceKey, _selectedServiceKey, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        return _allRows.ToList();
+    }
+
+    private string FocusDisplayName()
+    {
+        if (!string.IsNullOrWhiteSpace(_selectedServiceKey) &&
+            AppSettings.ServiceDisplayNames.TryGetValue(_selectedServiceKey, out var n))
+            return n;
+        return "alle Dienste";
     }
 
     private void RefreshTimeline()
     {
-        _timeline.Clear();
         if (!_hasAnyData)
         {
-            TimelineEmpty.Visibility = Visibility.Collapsed;
+            _timelineEventsCache = new List<HistoryTimelineEvent>();
+            FocusTimelineList.ItemsSource = _timelineEventsCache;
+            MultiTimelineList.ItemsSource = new List<HistoryTimelineEvent>();
+            EventsTimelineList.ItemsSource = new List<HistoryTimelineEvent>();
+            FocusTimelineEmpty.Visibility = Visibility.Collapsed;
+            MultiTimelineEmpty.Visibility = Visibility.Collapsed;
+            EventsEmptyCard.Visibility = Visibility.Collapsed;
             return;
         }
 
-        var events = HistoryTimelineBuilder.Build(_incidents, _outages, _selectedServiceKey);
-        foreach (var ev in events)
-            _timeline.Add(ev);
+        _timelineEventsCache = HistoryTimelineBuilder.Build(_incidents, _outages, _selectedServiceKey);
+        // Separate list instances so each ItemsControl has its own binding source
+        FocusTimelineList.ItemsSource = _timelineEventsCache.ToList();
+        MultiTimelineList.ItemsSource = _timelineEventsCache.ToList();
+        EventsTimelineList.ItemsSource = _timelineEventsCache.ToList();
 
-        TimelineEmpty.Visibility = _timeline.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        TimelineList.Visibility = _timeline.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        var empty = _timelineEventsCache.Count == 0;
+        FocusTimelineEmpty.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        MultiTimelineEmpty.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        FocusTimelineList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
+        MultiTimelineList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
+        EventsTimelineList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
+        EventsEmptyCard.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UpdateKpis()
+    {
+        var rows = GetFocusRows();
+        string? todayWorst = null;
+        var degradedDays = 0;
+        var knownHours = 0;
+        var okHours = 0;
+        var today = DateTime.Today;
+
+        foreach (var row in rows)
+        {
+            foreach (var day in row.Days ?? Enumerable.Empty<HistoryDayGroup>())
+            {
+                if (day.DayStatus is not null &&
+                    !string.Equals(day.DayStatus, "none", StringComparison.OrdinalIgnoreCase))
+                {
+                    degradedDays++;
+                }
+
+                if (day.Date.Date == today && day.DayStatus is not null)
+                {
+                    if (todayWorst is null ||
+                        HistoryStore.StatusSeverity(day.DayStatus) > HistoryStore.StatusSeverity(todayWorst))
+                    {
+                        todayWorst = day.DayStatus;
+                    }
+                }
+
+                foreach (var hour in day.Hours ?? Enumerable.Empty<HistoryDayCell>())
+                {
+                    if (hour.Status is null)
+                        continue;
+                    knownHours++;
+                    if (string.Equals(hour.Status, "none", StringComparison.OrdinalIgnoreCase))
+                        okHours++;
+                }
+            }
+        }
+
+        // When Alle: count unique calendar days with any degraded service, not sum of rows
+        if (_selectedServiceKey is null && rows.Count > 1)
+        {
+            degradedDays = rows
+                .SelectMany(r => r.Days ?? Enumerable.Empty<HistoryDayGroup>())
+                .Where(d => d.DayStatus is not null &&
+                            !string.Equals(d.DayStatus, "none", StringComparison.OrdinalIgnoreCase))
+                .Select(d => d.Date.Date)
+                .Distinct()
+                .Count();
+
+            todayWorst = null;
+            foreach (var day in rows.SelectMany(r => r.Days ?? Enumerable.Empty<HistoryDayGroup>())
+                         .Where(d => d.Date.Date == today && d.DayStatus is not null))
+            {
+                if (todayWorst is null ||
+                    HistoryStore.StatusSeverity(day.DayStatus!) > HistoryStore.StatusSeverity(todayWorst))
+                {
+                    todayWorst = day.DayStatus;
+                }
+            }
+        }
+
+        var todayLabel = todayWorst switch
+        {
+            "full" => "Störung",
+            "partial" => "Einschränkung",
+            "maintenance" => "Wartung",
+            "none" => "Alles OK",
+            _ => _hasAnyData ? "Keine Daten" : "Alles OK"
+        };
+        KpiTodayValue.Text = todayLabel;
+        KpiTodayHint.Text = _selectedServiceKey is null
+            ? "Schlechtester Status heute (alle Dienste)"
+            : $"Schlechtester Status heute · {FocusDisplayName()}";
+
+        ApplyKpiTodaySurface(todayWorst);
+
+        KpiDaysValue.Text = degradedDays == 1
+            ? "1 auffälliger Tag"
+            : $"{degradedDays} auffällige Tage";
+        KpiDaysHint.Text = "Tage mit Einschränkung, Störung oder Wartung";
+
+        if (knownHours == 0)
+        {
+            KpiAvailValue.Text = "—";
+            KpiAvailHint.Text = "Noch keine bekannten Stunden für die Berechnung";
+        }
+        else
+        {
+            var pct = Math.Round(100.0 * okHours / knownHours, 1);
+            KpiAvailValue.Text = pct.ToString("0.#", DeCulture) + " %";
+            KpiAvailHint.Text = $"OK-Stunden: {okHours} von {knownHours} bekannten";
+        }
+    }
+
+    private void ApplyKpiTodaySurface(string? status)
+    {
+        string surface;
+        string border;
+        switch (status)
+        {
+            case "full":
+                surface = "StatusOutageSurface";
+                border = "StatusOutageBorder";
+                break;
+            case "partial":
+                surface = "StatusPartialSurface";
+                border = "StatusPartialBorder";
+                break;
+            case "maintenance":
+                surface = "StatusMaintenanceSurface";
+                border = "StatusMaintenanceBorder";
+                break;
+            default:
+                surface = "StatusOkSurface";
+                border = "StatusOkBorder";
+                break;
+        }
+
+        if (TryFindResource(surface) is Brush sb)
+            KpiTodayCard.Background = sb;
+        if (TryFindResource(border) is Brush bb)
+            KpiTodayCard.BorderBrush = bb;
     }
 
     private void UpdateHeaderHint()
     {
-        if (_zoomedDate is not null)
+        if (_viewMode == ViewMode.Hours)
         {
             HeaderHint.Text =
-                "Stundenansicht (0–23) — Esc oder „Zurück zur Übersicht“ kehrt zur 14-Tage-Tagesübersicht.";
+                "Stundenansicht (0–23) — Esc oder „Zurück zur Übersicht“ kehrt zur Übersicht.";
+        }
+        else if (_viewMode == ViewMode.Events)
+        {
+            HeaderHint.Text =
+                "Ereignisse als Timeline — Klick öffnet die Stundenansicht für den Starttag.";
         }
         else if (!string.IsNullOrWhiteSpace(_selectedServiceKey))
         {
-            var name = AppSettings.ServiceDisplayNames.TryGetValue(_selectedServiceKey, out var n)
-                ? n
-                : _selectedServiceKey;
             HeaderHint.Text =
-                $"Fokus: {name} — Tageskacheln der letzten 14 Tage (schlechtester Status je Tag). Tag anklicken für Stundenzoom.";
+                $"Fokus: {FocusDisplayName()} — große Tageskacheln links, Ereignisse rechts. Tag oder Ereignis öffnet Stunden.";
         }
         else
         {
             HeaderHint.Text =
-                "Tagesübersicht aller Dienste (14 Tage). Farbe = schlechtester Status des Tages. Tag anklicken für Stundenzoom.";
+                "Alle Dienste in kompakten Zeilen. Ein Dienst-Chip fokussiert die Detailansicht mit Timeline.";
+        }
+    }
+
+    private void Segment_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not WpfButton button || button.Tag is not string tag)
+            return;
+
+        var mode = tag switch
+        {
+            "Hours" => ViewMode.Hours,
+            "Events" => ViewMode.Events,
+            _ => ViewMode.Overview
+        };
+
+        _viewMode = mode;
+        if (mode == ViewMode.Hours)
+            EnsureZoomDay();
+        else if (mode == ViewMode.Overview)
+            _zoomedDate = _selectedDay;
+
+        ApplyViewMode(animated: true);
+        UpdateHeaderHint();
+        UpdateSegmentStyles();
+    }
+
+    private void UpdateSegmentStyles()
+    {
+        StyleSegment(SegOverview, _viewMode == ViewMode.Overview);
+        StyleSegment(SegHours, _viewMode == ViewMode.Hours);
+        StyleSegment(SegEvents, _viewMode == ViewMode.Events);
+    }
+
+    private void StyleSegment(WpfButton button, bool selected)
+    {
+        if (selected)
+        {
+            button.Background = TryFindResource("CardBackground") as Brush
+                                ?? Brushes.White;
+            button.Foreground = TryFindResource("TextMain") as Brush
+                                ?? Brushes.Black;
+            button.FontWeight = FontWeights.SemiBold;
+        }
+        else
+        {
+            button.Background = Brushes.Transparent;
+            button.Foreground = TryFindResource("TextMuted") as Brush
+                                ?? Brushes.Gray;
+            button.FontWeight = FontWeights.SemiBold;
+        }
+    }
+
+    private void ApplyViewMode(bool animated)
+    {
+        UpdateSegmentStyles();
+
+        var showOverview = _viewMode == ViewMode.Overview;
+        var showHours = _viewMode == ViewMode.Hours;
+        var showEvents = _viewMode == ViewMode.Events;
+
+        SetPanelVisible(OverviewPanel, showOverview, animated);
+        SetPanelVisible(ZoomPanel, showHours, animated);
+        SetPanelVisible(EventsPanel, showEvents, animated);
+
+        if (showHours)
+            RefreshZoom();
+    }
+
+    private static void SetPanelVisible(UIElement panel, bool visible, bool animated)
+    {
+        if (!animated)
+        {
+            panel.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            panel.Opacity = visible ? 1.0 : 0.0;
+            return;
+        }
+
+        if (visible)
+        {
+            panel.Visibility = Visibility.Visible;
+            var fade = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(160))
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            panel.BeginAnimation(UIElement.OpacityProperty, fade);
+        }
+        else
+        {
+            var fade = new DoubleAnimation(panel.Opacity, 0.0, TimeSpan.FromMilliseconds(120));
+            fade.Completed += (_, _) =>
+            {
+                if (panel.Opacity <= 0.01)
+                    panel.Visibility = Visibility.Collapsed;
+            };
+            panel.BeginAnimation(UIElement.OpacityProperty, fade);
         }
     }
 
@@ -248,7 +598,8 @@ public partial class HistoryWindow : Window
     {
         if (sender is FrameworkElement { DataContext: HistoryDayGroup day })
         {
-            EnterZoom(day.Date);
+            SelectDay(day.Date, flash: true);
+            EnterHoursForDay(day.Date);
             e.Handled = true;
         }
     }
@@ -257,36 +608,94 @@ public partial class HistoryWindow : Window
     {
         if (sender is FrameworkElement { DataContext: HistoryTimelineEvent ev })
         {
-            EnterZoom(ev.DayDate);
+            SelectDay(ev.DayDate, flash: false);
+            EnterHoursForDay(ev.DayDate);
             e.Handled = true;
         }
     }
 
-    private void EnterZoom(DateTime date)
+    private void EnterHoursForDay(DateTime date)
     {
         _zoomedDate = date.Date;
+        _viewMode = ViewMode.Hours;
         RefreshZoom();
-        OverviewPanel.Visibility = Visibility.Collapsed;
-        ZoomPanel.Visibility = Visibility.Visible;
+        ApplyViewMode(animated: true);
         UpdateHeaderHint();
+        UpdateSegmentStyles();
         Focus();
+    }
+
+    private void EnsureZoomDay()
+    {
+        if (_zoomedDate is null && _selectedDay is null)
+            _zoomedDate = DateTime.Today;
+        else
+            _zoomedDate ??= _selectedDay;
+
+        SelectDay(_zoomedDate.Value, flash: false);
+        RefreshZoom();
+        ZoomHintBorder.Visibility = Visibility.Collapsed;
+    }
+
+    private void SelectDay(DateTime date, bool flash)
+    {
+        _selectedDay = date.Date;
+        foreach (var row in _allRows)
+            ApplyDaySelectionFlags(row);
+
+        // Force ItemsControl refresh for IsSelected DataTriggers
+        RefreshBoundRows();
+
+        if (flash && OverviewPanel.Visibility == Visibility.Visible)
+        {
+            // brief opacity pulse on overview is enough; avoid heavy animation
+            var pulse = new DoubleAnimation(1.0, 0.88, TimeSpan.FromMilliseconds(90))
+            {
+                AutoReverse = true
+            };
+            OverviewPanel.BeginAnimation(UIElement.OpacityProperty, pulse);
+        }
+    }
+
+    private void ApplyDaySelectionFlags(HistoryServiceRow row)
+    {
+        foreach (var day in row.Days ?? Enumerable.Empty<HistoryDayGroup>())
+            day.IsSelected = _selectedDay is DateTime sel && day.Date.Date == sel.Date;
+    }
+
+    private void RefreshBoundRows()
+    {
+        var focus = !string.IsNullOrWhiteSpace(_selectedServiceKey);
+        if (focus)
+        {
+            var snap = _focusHistory.ToList();
+            _focusHistory.Clear();
+            foreach (var r in snap)
+                _focusHistory.Add(r);
+        }
+        else
+        {
+            var snap = _history.ToList();
+            _history.Clear();
+            foreach (var r in snap)
+                _history.Add(r);
+        }
     }
 
     private void ExitZoom_Click(object sender, RoutedEventArgs e) => ExitZoom();
 
     private void ExitZoom()
     {
-        _zoomedDate = null;
-        _zoomRows.Clear();
-        OverviewPanel.Visibility = Visibility.Visible;
-        ZoomPanel.Visibility = Visibility.Collapsed;
+        _viewMode = ViewMode.Overview;
+        ApplyViewMode(animated: true);
         UpdateHeaderHint();
+        UpdateSegmentStyles();
         Focus();
     }
 
     private void HistoryWindow_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
-        if (e.Key == Key.Escape && _zoomedDate is not null)
+        if (e.Key == Key.Escape && _viewMode == ViewMode.Hours)
         {
             ExitZoom();
             e.Handled = true;
@@ -296,14 +705,25 @@ public partial class HistoryWindow : Window
     private void RefreshZoom()
     {
         if (_zoomedDate is not DateTime date)
+        {
+            ZoomHintBorder.Visibility = Visibility.Visible;
+            ZoomTitle.Text = "Kein Tag gewählt";
+            _zoomRows.Clear();
             return;
+        }
 
+        ZoomHintBorder.Visibility = Visibility.Collapsed;
         ZoomTitle.Text = date.ToString("dddd, dd.MM.yyyy", DeCulture);
         if (ZoomTitle.Text.Length > 0)
             ZoomTitle.Text = char.ToUpper(ZoomTitle.Text[0], DeCulture) + ZoomTitle.Text[1..];
 
         _zoomRows.Clear();
-        foreach (var row in _history)
+        var source = !string.IsNullOrWhiteSpace(_selectedServiceKey) ? _focusHistory : _history;
+        // If collections empty (e.g. mid-refresh), fall back to all filtered rows
+        if (source.Count == 0)
+            source = new ObservableCollection<HistoryServiceRow>(GetFocusRows());
+
+        foreach (var row in source)
         {
             var day = (row.Days ?? Enumerable.Empty<HistoryDayGroup>())
                 .FirstOrDefault(d => d.Date.Date == date.Date);
@@ -320,6 +740,14 @@ public partial class HistoryWindow : Window
         LegendMaintenance.Background = HistoryDayCell.BrushForStatus("maintenance");
         LegendFull.Background = HistoryDayCell.BrushForStatus("full");
         LegendEmpty.Background = HistoryDayCell.BrushForStatus(null);
+    }
+
+    private void SoftenShadowsForTheme()
+    {
+        var opacity = ThemeService.IsDark ? 0.16 : 0.10;
+        // Named shadow on first KPI; others are fine with XAML defaults
+        if (KpiShadow1 is not null)
+            KpiShadow1.Opacity = opacity;
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
