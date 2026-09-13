@@ -25,10 +25,37 @@
             <Setter Property="Margin" Value="0,3,0,0"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
+        <Style x:Key="AboutLinkStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentButtonBackground}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock x:Name="LinkText"
+                                   Text="{TemplateBinding Content}"
+                                   Foreground="{TemplateBinding Foreground}"
+                                   FontSize="{TemplateBinding FontSize}"
+                                   TextDecorations="Underline"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="LinkText" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -77,14 +104,37 @@
                            Margin="0,0,0,6"/>
                 <TextBlock Style="{StaticResource BulletStyle}" Text="• Ampel-Status im Infobereich (Systemtray)"/>
                 <TextBlock Style="{StaticResource BulletStyle}" Text="• Windows-Toasts bei Störungen und Statuswechseln"/>
-                <TextBlock Style="{StaticResource BulletStyle}" Text="• 7-Tage-Verlauf lokal gespeichert"/>
+                <TextBlock Style="{StaticResource BulletStyle}" Text="• 14-Tage-Verlauf mit Tages-Kacheln und Ereignisse-Timeline"/>
                 <TextBlock Style="{StaticResource BulletStyle}" Text="• Offline-Cache bei API-Ausfall"/>
                 <TextBlock Style="{StaticResource BulletStyle}" Text="• Autostart, Dunkelmodus, Benachrichtigungsfilter"/>
             </StackPanel>
         </Border>
 
-        <!-- Disclaimer + link -->
+        <!-- Contact -->
         <Border Grid.Row="2" Style="{StaticResource AboutCardStyle}">
+            <StackPanel>
+                <TextBlock Text="Kontakt / Support"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,6"/>
+                <TextBlock FontSize="12.5"
+                           Foreground="{DynamicResource TextMuted}"
+                           TextWrapping="Wrap"
+                           Text="Fragen oder Feedback zur Community-App?"/>
+                <Button Content="www.jimmybones.de"
+                        Style="{StaticResource AboutLinkStyle}"
+                        Click="OpenHomepage_Click"
+                        ToolTip="Homepage öffnen"/>
+                <Button Content="Webmaster@JimmyBones.de"
+                        Style="{StaticResource AboutLinkStyle}"
+                        Click="OpenEmail_Click"
+                        ToolTip="E-Mail schreiben"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Disclaimer + link -->
+        <Border Grid.Row="3" Style="{StaticResource AboutCardStyle}">
             <StackPanel>
                 <TextBlock Text="Hinweis"
                            FontSize="14"
@@ -103,7 +153,7 @@
             </StackPanel>
         </Border>
 
-        <Button Grid.Row="3"
+        <Button Grid.Row="4"
                 Content="Schließen"
                 HorizontalAlignment="Right"
                 MinWidth="110"

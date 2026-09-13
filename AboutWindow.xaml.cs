@@ -11,13 +11,22 @@ public partial class AboutWindow : Window
         VersionText.Text = $"Version {MainWindow.GetDisplayVersion()}";
     }
 
-    private void OpenFachportal_Click(object sender, RoutedEventArgs e)
+    private void OpenFachportal_Click(object sender, RoutedEventArgs e) =>
+        OpenUrl("https://fachportal.gematik.de/ti-status#TI-Anschluss");
+
+    private void OpenHomepage_Click(object sender, RoutedEventArgs e) =>
+        OpenUrl("https://www.jimmybones.de");
+
+    private void OpenEmail_Click(object sender, RoutedEventArgs e) =>
+        OpenUrl("mailto:Webmaster@JimmyBones.de");
+
+    private static void OpenUrl(string url)
     {
         try
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = "https://fachportal.gematik.de/ti-status#TI-Anschluss",
+                FileName = url,
                 UseShellExecute = true
             });
         }
