@@ -47,6 +47,12 @@ public partial class MainWindow : Window
     private IncidentResponse? _lastIncidents;
     private OutageResponse? _lastOutages;
     private string? _pendingToastFocusKey;
+    private bool _forceClose;
+    private LageV2? _lastLage;
+    private bool _lastFromCache;
+    private DateTime? _lastCacheTime;
+    private bool _lastSuppressTrayUpdate;
+    private string? _lastBalloonedUpdateVersion;
 
 
     private static readonly Dictionary<string, string> ServiceNames =
@@ -98,8 +104,6 @@ public partial class MainWindow : Window
             if (e.Button == Forms.MouseButtons.Left)
                 ToggleWindow();
         };
-
-        _tray.DoubleClick += (_, _) => ToggleWindow();
 
         // Fallback: Klick auf Balloon (wenn Toast-API fehlschlägt) öffnet das Fenster
         _tray.BalloonTipClicked += (_, _) =>
@@ -158,6 +162,14 @@ public partial class MainWindow : Window
             if (e.Cancel)
                 return;
 
+            // Title-bar X / Alt+F4: hide to tray; only Beenden (_forceClose) quits.
+            if (!_forceClose)
+            {
+                e.Cancel = true;
+                HideToTray();
+                return;
+            }
+
             DisposeRuntime();
         };
 
@@ -189,6 +201,8 @@ public partial class MainWindow : Window
 
             await RefreshAsync(false);
             ScheduleNextRefresh();
+            // „Beim Start“: one background update check after first refresh
+            _ = CheckForUpdatesAsync(userInitiated: false);
         };
     }
 
@@ -303,11 +317,26 @@ public partial class MainWindow : Window
         _settings = settings;
         SyncAutostartMenuItem();
         SyncNotificationsMenuItem();
-        if (themeChanged && _historyWindow is not null)
+        if (themeChanged)
         {
-            // Rebuild brushes/rows first, then soft-shadows/chips (visual tree must exist)
-            NotifyHistoryUpdated(_lastHistory, _lastIncidents, _lastOutages);
-            _historyWindow.ApplyThemeRefresh();
+            // Re-apply MainWindow theme-dependent visuals (service pills, connection color)
+            if (_lastLage is not null)
+            {
+                Render(
+                    _lastLage,
+                    _lastIncidents ?? new IncidentResponse(),
+                    _lastOutages ?? new OutageResponse(),
+                    fromCache: _lastFromCache,
+                    cacheTime: _lastCacheTime,
+                    suppressTrayUpdate: _lastSuppressTrayUpdate);
+            }
+
+            if (_historyWindow is not null)
+            {
+                // Rebuild brushes/rows first, then soft-shadows/chips (visual tree must exist)
+                NotifyHistoryUpdated(_lastHistory, _lastIncidents, _lastOutages);
+                _historyWindow.ApplyThemeRefresh();
+            }
         }
         _settingsWindow?.SyncFrom(_settings);
     }

@@ -168,6 +168,7 @@ public partial class MainWindow
 
     private void CloseApp()
     {
+        _forceClose = true;
         DisposeRuntime();
         System.Windows.Application.Current.Shutdown();
     }

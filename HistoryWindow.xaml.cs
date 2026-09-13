@@ -491,7 +491,7 @@ public partial class HistoryWindow : Window
         else if (_viewMode == ViewMode.Events)
         {
             HeaderHint.Text =
-                "Ereignisse als Timeline — Klick öffnet die Stundenansicht für den Starttag.";
+                "Ereignisse als Timeline — Esc kehrt zur Übersicht; Klick öffnet die Stundenansicht für den Starttag.";
         }
         else if (!string.IsNullOrWhiteSpace(_selectedServiceKey))
         {
@@ -698,7 +698,8 @@ public partial class HistoryWindow : Window
 
     private void HistoryWindow_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
-        if (e.Key == Key.Escape && _viewMode == ViewMode.Hours)
+        if (e.Key == Key.Escape &&
+            (_viewMode == ViewMode.Hours || _viewMode == ViewMode.Events))
         {
             ExitZoom();
             e.Handled = true;

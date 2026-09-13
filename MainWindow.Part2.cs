@@ -27,6 +27,11 @@ public partial class MainWindow
         incidents.Data ??= new();
         outages.Data ??= new();
 
+        _lastLage = lage;
+        _lastFromCache = fromCache;
+        _lastCacheTime = cacheTime;
+        _lastSuppressTrayUpdate = suppressTrayUpdate;
+
         _apps.Clear();
         _messages.Clear();
 

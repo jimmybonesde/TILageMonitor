@@ -37,7 +37,7 @@
 |:---:|:---:|
 | ![Hauptfenster im Hellmodus](docs/assets/screenshot-light.png) | ![Hauptfenster im Dunkelmodus](docs/assets/screenshot-dark.png) |
 
-Die Hero-Karte fasst die Lage zusammen, Dienste erscheinen als Status-Pills, aktuelle Meldungen darunter. Das Tray-Icon zeigt den Zustand auch dann, wenn das Fenster geschlossen ist.
+Die Hero-Karte fasst die Lage zusammen, Dienste erscheinen als Status-Pills, aktuelle Meldungen darunter. Schließen (X) und Minimieren legen das Fenster nur in den Tray — das Monitoring läuft weiter. Nur **Beenden** beendet die App.
 
 ## 🚀 In 60 Sekunden startklar
 
@@ -78,12 +78,13 @@ Die App ruft Lage, Incidents und Outages parallel ab und folgt dem gematik-Rhyth
 | Aktion | Wirkung |
 | --- | --- |
 | Linksklick auf das Tray-Icon | Hauptfenster ein- oder ausblenden |
+| Schließen (X) / Minimieren | Fenster in den Tray legen (Monitoring läuft weiter) |
 | Rechtsklick → Benachrichtigungen | Alle Toasts global an oder aus |
 | **Aktualisieren** | Status sofort neu laden |
 | **Verlauf** | 14-Tage-Historie öffnen (maximiert) |
 | **Einstellungen** | Theme, Autostart, Updates und Notify-Filter |
 | **gematik** | Fachportal im Browser öffnen |
-| **Beenden** | Anwendung schließen |
+| **Beenden** | Anwendung beenden |
 
 ## 📈 14-Tage-Verlauf
 

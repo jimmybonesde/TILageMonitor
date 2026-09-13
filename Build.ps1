@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 Write-Host "=== TI-Lage Monitor Build ===" -ForegroundColor Cyan
 
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
-    Write-Host "dotnet wurde nicht gefunden. Installiere das .NET 8 SDK." -ForegroundColor Red
+    Write-Host "dotnet wurde nicht gefunden. Installiere das .NET 10 SDK." -ForegroundColor Red
     exit 1
 }
 

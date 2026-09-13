@@ -1,5 +1,4 @@
 using System.Windows;
-using Forms = System.Windows.Forms;
 
 namespace TILageMonitor;
 
@@ -41,11 +40,19 @@ public partial class MainWindow
 
         if (!userInitiated)
         {
-            _tray.ShowBalloonTip(
-                10000,
+            // Respect „Benachrichtigungen aus“ and balloon only once per latestVersion
+            if (!ToastService.AreNotificationsEnabled)
+                return result;
+
+            var latest = result.LatestVersion ?? string.Empty;
+            if (string.Equals(_lastBalloonedUpdateVersion, latest, StringComparison.OrdinalIgnoreCase))
+                return result;
+
+            _lastBalloonedUpdateVersion = latest;
+            ToastService.Show(
                 "Update verfügbar",
                 $"{message} In den Einstellungen kannst du es herunterladen.",
-                Forms.ToolTipIcon.Info);
+                ToastUrgency.Info);
             return result;
         }
 

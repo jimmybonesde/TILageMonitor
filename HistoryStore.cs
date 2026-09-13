@@ -413,12 +413,18 @@ public static class HistoryStore
         return result;
     }
 
-    private static string? IncidentSeverity(IncidentStep step) => step.Status switch
+    private static string? IncidentSeverity(IncidentStep step)
     {
-        1 => "full",
-        4 => "partial",
-        _ => null
-    };
+        // Align with HistoryTimelineBuilder.KindFromIncidentStep
+        if (step.HasMaintenance)
+            return "maintenance";
+        return step.Status switch
+        {
+            1 => "full",
+            4 => "partial",
+            _ => null
+        };
+    }
 
     private static void AddOverlappingHours(
         Dictionary<(string Service, string HourKey), string> result,

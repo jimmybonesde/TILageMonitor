@@ -35,6 +35,16 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        // Autostart writes "--tray". Startup is already tray-first (Show then Hide);
+        // parse known args so future flags can land without breaking the Run key.
+        foreach (var arg in e.Args)
+        {
+            if (string.Equals(arg, "--tray", StringComparison.OrdinalIgnoreCase))
+            {
+                // no-op today — reserved for start-visible modes later
+            }
+        }
+
         var settings = SettingsStore.Load();
         ThemeService.ApplyTheme(settings.DarkMode);
 
