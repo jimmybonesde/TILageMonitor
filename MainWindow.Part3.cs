@@ -165,9 +165,16 @@ public partial class MainWindow
         var result = new List<string>();
         foreach (var app in incident.App ?? Enumerable.Empty<string>())
         {
-            if (names.TryGetValue(app, out var name))
+            if (string.IsNullOrWhiteSpace(app))
+                continue;
+
+            var key = HistoryStore.TryMapServiceKey(app);
+            if (key is not null && names.TryGetValue(key, out var name))
                 result.Add(name);
-            else if (!string.IsNullOrWhiteSpace(app))
+            else if (key is not null &&
+                     AppSettings.ServiceDisplayNames.TryGetValue(key, out var display))
+                result.Add(display);
+            else
                 result.Add(app);
         }
         return result.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
@@ -178,19 +185,11 @@ public partial class MainWindow
         var result = new List<string>();
         foreach (var app in incident.App ?? Enumerable.Empty<string>())
         {
-            if (string.IsNullOrWhiteSpace(app))
-                continue;
-
-            foreach (var key in AppSettings.ServiceKeys)
-            {
-                if (string.Equals(key, app, StringComparison.OrdinalIgnoreCase))
-                {
-                    result.Add(key);
-                    break;
-                }
-            }
+            var key = HistoryStore.TryMapServiceKey(app);
+            if (key is not null)
+                result.Add(key);
         }
-        return result;
+        return result.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     private static string StripHtml(string text)

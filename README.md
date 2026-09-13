@@ -93,7 +93,7 @@ Der 14-Tage-Verlauf ist in **2.0** fest integriert (gereift über 1.0.15–1.0.1
 ### So ist die Ansicht aufgebaut
 
 1. **KPI-Header**  
-   Drei Karten oben: **Heute** (schlechtester Status), **14 Tage** (auffällige Tage mit Einschränkung, Störung oder Wartung) und **Verfügbarkeit %** (Anteil bekannter Stunden mit Status OK).
+   Drei Karten oben: **Heute** (schlechtester Status), **14 Tage** (auffällige Tage mit Einschränkung, Störung oder Wartung) und **Verfügbarkeit %** (bevorzugt lokale Snapshots; sonst API-gefüllte OK-Stunden ohne zukünftige Stunden).
 
 2. **Segmentierte Ansicht**  
    Umschalter **Übersicht | Stunden | Ereignisse** — dieselbe Datenbasis, drei Lesarten.

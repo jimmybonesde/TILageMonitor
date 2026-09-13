@@ -45,11 +45,24 @@ public static class CacheStore
     /// Soft-fail: when a refresh gets Lage but incidents/outages failed, keep the
     /// previous last-good incidents/outages instead of poisoning the cache with empties.
     /// </summary>
-    public static IncidentResponse ResolveIncidents(IncidentResponse? fresh, IncidentResponse? lastGood) =>
-        fresh ?? lastGood ?? new IncidentResponse();
+    public static IncidentResponse ResolveIncidents(IncidentResponse? fresh, IncidentResponse? lastGood)
+    {
+        // Mirror Save: HTTP-success-but-empty-failure shells must not displace last-good.
+        if (fresh is null)
+            return lastGood ?? new IncidentResponse();
+        if (IsEmptyFailure(fresh) && lastGood is not null && !IsEmptyFailure(lastGood))
+            return lastGood;
+        return fresh;
+    }
 
-    public static OutageResponse ResolveOutages(OutageResponse? fresh, OutageResponse? lastGood) =>
-        fresh ?? lastGood ?? new OutageResponse();
+    public static OutageResponse ResolveOutages(OutageResponse? fresh, OutageResponse? lastGood)
+    {
+        if (fresh is null)
+            return lastGood ?? new OutageResponse();
+        if (IsEmptyFailure(fresh) && lastGood is not null && !IsEmptyFailure(lastGood))
+            return lastGood;
+        return fresh;
+    }
 
     public static void Save(LageV2 lage, IncidentResponse incidents, OutageResponse outages)
     {

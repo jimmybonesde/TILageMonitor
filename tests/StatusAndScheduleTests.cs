@@ -205,4 +205,83 @@ public sealed class StatusAndScheduleTests
         Assert.NotNull(empty);
         Assert.Empty(empty.Data);
     }
+
+    [Fact]
+    public void SoftFail_resolve_keeps_last_good_when_fresh_is_empty_failure_shell()
+    {
+        var last = new IncidentResponse
+        {
+            Success = true,
+            Data = [new Incident { Id = 7, Title = "keep-me" }]
+        };
+        var fresh = new IncidentResponse { Success = false, Data = [] };
+
+        var resolved = CacheStore.ResolveIncidents(fresh, last);
+        Assert.Same(last, resolved);
+
+        var outagesLast = new OutageResponse
+        {
+            Success = true,
+            Data = [new Outage { Service = "eRezept" }]
+        };
+        var outagesFresh = new OutageResponse { Success = false, Data = [] };
+        Assert.Same(outagesLast, CacheStore.ResolveOutages(outagesFresh, outagesLast));
+    }
+
+    [Theory]
+    [InlineData("E-Rezept", "erezept")]
+    [InlineData("eRezept", "erezept")]
+    [InlineData("ÖGD", "ogd")]
+    [InlineData("OGD", "ogd")]
+    [InlineData("TI-Anschluss", "tianschluss")]
+    [InlineData("tianschluss", "tianschluss")]
+    public void TryMapServiceKey_maps_common_api_labels(string label, string expectedKey)
+    {
+        Assert.Equal(expectedKey, HistoryStore.TryMapServiceKey(label));
+    }
+
+    [Fact]
+    public void Timeline_merges_adjacent_same_kind_after_status2_carry()
+    {
+        var now = DateTime.Now;
+        var hour = Math.Clamp(now.Hour - 4, 0, 19);
+        var incident = new Incident
+        {
+            App = ["E-Rezept"],
+            Steps =
+            [
+                new IncidentStep
+                {
+                    Status = 4,
+                    Timestamp = now.Date.AddHours(hour).ToUniversalTime()
+                },
+                new IncidentStep
+                {
+                    Status = 2,
+                    Timestamp = now.Date.AddHours(hour + 1).ToUniversalTime()
+                },
+                new IncidentStep
+                {
+                    Status = 2,
+                    Timestamp = now.Date.AddHours(hour + 2).ToUniversalTime()
+                },
+                new IncidentStep
+                {
+                    Status = 3,
+                    Timestamp = now.Date.AddHours(hour + 3).ToUniversalTime()
+                }
+            ]
+        };
+
+        var events = HistoryTimelineBuilder.Build(
+            new IncidentResponse { Data = [incident] },
+            new OutageResponse(),
+            serviceFilterKey: "erezept",
+            maxEvents: 40);
+
+        var partial = events.Where(e => e.KindLabel == "Teilausfall").ToList();
+        var merged = Assert.Single(partial);
+        Assert.Equal(now.Date.AddHours(hour), merged.StartLocal);
+        Assert.Equal(now.Date.AddHours(hour + 3), merged.EndLocal);
+    }
 }

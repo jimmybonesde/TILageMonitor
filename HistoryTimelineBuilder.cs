@@ -190,7 +190,7 @@ public static class HistoryTimelineBuilder
             }
         }
 
-        return DedupeOverlapping(events)
+        return MergeAdjacentSameKind(DedupeOverlapping(events))
             .OrderByDescending(e => e.StartLocal)
             .ThenBy(e => e.ServiceName, StringComparer.Create(De, ignoreCase: true))
             .Take(Math.Max(1, maxEvents))
@@ -206,6 +206,52 @@ public static class HistoryTimelineBuilder
             4 => "Teilausfall",
             _ => step.HasMaintenance ? "Wartung" : null
         };
+    }
+
+    /// <summary>
+    /// Merge adjacent/overlapping intervals with the same ServiceKey + KindLabel
+    /// (e.g. after status-2 carry splits one outage into many tiny cards).
+    /// Prefers earliest StartLocal and extends EndLocal.
+    /// </summary>
+    private static List<HistoryTimelineEvent> MergeAdjacentSameKind(List<HistoryTimelineEvent> events)
+    {
+        var merged = new List<HistoryTimelineEvent>();
+        foreach (var group in events.GroupBy(
+                     e => (Service: e.ServiceKey.ToLowerInvariant(), e.KindLabel)))
+        {
+            HistoryTimelineEvent? current = null;
+            foreach (var ev in group.OrderBy(e => e.StartLocal).ThenBy(e => e.EndLocal))
+            {
+                if (current is null)
+                {
+                    current = ev;
+                    continue;
+                }
+
+                // Adjacent or overlapping: extend the open interval.
+                if (ev.StartLocal <= current.EndLocal)
+                {
+                    var start = current.StartLocal <= ev.StartLocal ? current.StartLocal : ev.StartLocal;
+                    var end = current.EndLocal >= ev.EndLocal ? current.EndLocal : ev.EndLocal;
+                    current = new HistoryTimelineEvent(
+                        current.ServiceKey,
+                        current.ServiceName,
+                        current.KindLabel,
+                        start,
+                        end);
+                }
+                else
+                {
+                    merged.Add(current);
+                    current = ev;
+                }
+            }
+
+            if (current is not null)
+                merged.Add(current);
+        }
+
+        return merged;
     }
 
     /// <summary>
