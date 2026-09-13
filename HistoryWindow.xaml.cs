@@ -6,6 +6,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using WpfButton = System.Windows.Controls.Button;
+using MediaBrush = System.Windows.Media.Brush;
+using MediaBrushes = System.Windows.Media.Brushes;
 
 namespace TILageMonitor;
 
@@ -469,9 +471,9 @@ public partial class HistoryWindow : Window
                 break;
         }
 
-        if (TryFindResource(surface) is Brush sb)
+        if (TryFindResource(surface) is MediaBrush sb)
             KpiTodayCard.Background = sb;
-        if (TryFindResource(border) is Brush bb)
+        if (TryFindResource(border) is MediaBrush bb)
             KpiTodayCard.BorderBrush = bb;
     }
 
@@ -533,17 +535,17 @@ public partial class HistoryWindow : Window
     {
         if (selected)
         {
-            button.Background = TryFindResource("CardBackground") as Brush
-                                ?? Brushes.White;
-            button.Foreground = TryFindResource("TextMain") as Brush
-                                ?? Brushes.Black;
+            button.Background = TryFindResource("CardBackground") as MediaBrush
+                                ?? MediaBrushes.White;
+            button.Foreground = TryFindResource("TextMain") as MediaBrush
+                                ?? MediaBrushes.Black;
             button.FontWeight = FontWeights.SemiBold;
         }
         else
         {
-            button.Background = Brushes.Transparent;
-            button.Foreground = TryFindResource("TextMuted") as Brush
-                                ?? Brushes.Gray;
+            button.Background = MediaBrushes.Transparent;
+            button.Foreground = TryFindResource("TextMuted") as MediaBrush
+                                ?? MediaBrushes.Gray;
             button.FontWeight = FontWeights.SemiBold;
         }
     }
