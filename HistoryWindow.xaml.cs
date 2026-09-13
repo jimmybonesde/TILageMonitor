@@ -97,7 +97,7 @@ public partial class HistoryWindow : Window
             Margin = new Thickness(0, 0, 8, 8),
             Padding = new Thickness(12, 6, 12, 6),
             FontSize = 12,
-            Cursor = Cursors.Hand
+            Cursor = System.Windows.Input.Cursors.Hand
         };
         button.Click += ServiceFilterChip_Click;
         return button;
@@ -255,7 +255,7 @@ public partial class HistoryWindow : Window
     {
         LegendOk.Background = HistoryDayCell.BrushForStatus("none");
         LegendPartial.Background = HistoryDayCell.BrushForStatus("partial");
-        LegendMaintenance.Background = HistoryDayCell.BrushForStatus("maintenance");
+        LegendMaintenance.Background = HistoryDayCell.BrushForStatus("full");
         LegendFull.Background = HistoryDayCell.BrushForStatus("full");
         LegendEmpty.Background = HistoryDayCell.BrushForStatus(null);
     }
