@@ -255,7 +255,7 @@ public partial class HistoryWindow : Window
     {
         LegendOk.Background = HistoryDayCell.BrushForStatus("none");
         LegendPartial.Background = HistoryDayCell.BrushForStatus("partial");
-        LegendMaintenance.Background = HistoryDayCell.BrushForStatus("full");
+        LegendMaintenance.Background = HistoryDayCell.BrushForStatus("maintenance");
         LegendFull.Background = HistoryDayCell.BrushForStatus("full");
         LegendEmpty.Background = HistoryDayCell.BrushForStatus(null);
     }
