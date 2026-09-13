@@ -58,7 +58,7 @@ jobs:
             -p:Version=$version `
             -p:FileVersion="$version.0" `
             -p:AssemblyVersion="$version.0" `
-            -p:InformationalVersion="${{ steps.version.outputs.tag }}" `
+            -p:InformationalVersion=$version `
             -o publish
 
       - name: Create offline setup installer

@@ -93,10 +93,7 @@ public partial class MainWindow
         var asm = Assembly.GetExecutingAssembly();
         var informational = asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
         if (!string.IsNullOrWhiteSpace(informational))
-        {
-            var plus = informational.IndexOf('+');
-            return plus >= 0 ? informational[..plus] : informational;
-        }
+            return NormalizeDisplayVersion(informational);
 
         try
         {
@@ -106,12 +103,9 @@ public partial class MainWindow
                 var fvi = FileVersionInfo.GetVersionInfo(path);
                 var product = fvi.ProductVersion;
                 if (!string.IsNullOrWhiteSpace(product))
-                {
-                    var plus = product.IndexOf('+');
-                    return plus >= 0 ? product[..plus] : product;
-                }
+                    return NormalizeDisplayVersion(product);
                 if (!string.IsNullOrWhiteSpace(fvi.FileVersion))
-                    return fvi.FileVersion!;
+                    return NormalizeDisplayVersion(fvi.FileVersion!);
             }
         }
         catch
@@ -119,7 +113,15 @@ public partial class MainWindow
             // fall through
         }
 
-        return "1.0.7";
+        return "1.0.13";
+    }
+
+    private static string NormalizeDisplayVersion(string value)
+    {
+        var version = value.Split('+')[0].Trim();
+        if (version.Length > 0 && (version[0] == 'v' || version[0] == 'V'))
+            version = version[1..].Trim();
+        return string.IsNullOrWhiteSpace(version) ? "1.0.13" : version;
     }
 
     private static string FormatMessageTimestamp(DateTime value)
@@ -212,7 +214,7 @@ public partial class MainWindow
             // Last-known-good Cache speichern
             CacheStore.Save(lage, incidents, outages);
 
-            // Client-seitigen 7-Tage-Verlauf upserten
+            // Client-seitigen 14-Tage-Verlauf upserten
             var history = HistoryStore.UpsertNow(lage);
 
             // API wieder da nach wiederholten Fehlern
