@@ -80,8 +80,8 @@ public sealed class StatusAndScheduleTests
             new HistoryFile(),
             new IncidentResponse { Data = [incident] });
 
-        var eRezept = Assert.Single(rows.Where(row => row.ServiceKey == "erezept"));
-        var today = Assert.Single(eRezept.Days.Where(day => day.Date == DateTime.Today));
+        var eRezept = Assert.Single(rows, row => row.ServiceKey == "erezept");
+        var today = Assert.Single(eRezept.Days, day => day.Date == DateTime.Today);
 
         Assert.Equal("partial", today.Hours[10].Status);
         Assert.Null(today.Hours[11].Status);
@@ -94,8 +94,8 @@ public sealed class StatusAndScheduleTests
             new HistoryFile(),
             new IncidentResponse { Success = true });
 
-        var eRezept = Assert.Single(rows.Where(row => row.ServiceKey == "erezept"));
-        var today = Assert.Single(eRezept.Days.Where(day => day.Date == DateTime.Today));
+        var eRezept = Assert.Single(rows, row => row.ServiceKey == "erezept");
+        var today = Assert.Single(eRezept.Days, day => day.Date == DateTime.Today);
 
         Assert.All(today.Hours, hour => Assert.Equal("none", hour.Status));
     }
