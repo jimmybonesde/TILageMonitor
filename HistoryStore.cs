@@ -260,6 +260,23 @@ public static class HistoryStore
     public static int ExpectedHoursInWindow => KeepDays * HoursPerDay;
 
     /// <summary>
+    /// Worst known status across a day's hour cells. Null hours are ignored;
+    /// if every hour is unknown the day status is null (keine Daten).
+    /// </summary>
+    public static string? WorstStatusOfDay(IEnumerable<HistoryDayCell> hours)
+    {
+        string? worst = null;
+        foreach (var cell in hours)
+        {
+            if (cell.Status is null)
+                continue;
+            if (worst is null || StatusSeverity(cell.Status) > StatusSeverity(worst))
+                worst = cell.Status;
+        }
+        return worst;
+    }
+
+    /// <summary>
     /// Liefert für jeden bekannten Dienst 14 Tagesgruppen à 24 Stunden (ältester → heute).
     /// </summary>
     public static List<HistoryServiceRow> BuildRows(
@@ -463,6 +480,9 @@ public static class HistoryStore
         return result;
     }
 
+    /// <summary>Maps an API service label to a canonical AppSettings service key.</summary>
+    public static string? TryMapServiceKey(string? service) => MapServiceKey(service);
+
     private static string? MapServiceKey(string? service)
     {
         if (string.IsNullOrWhiteSpace(service))
@@ -505,6 +525,17 @@ public sealed class HistoryServiceRow
     /// <summary>14 day groups (oldest → today), each with 24 hour cells.</summary>
     public List<HistoryDayGroup> Days { get; }
 
+    /// <summary>True when the history filter focuses a single service (larger tiles).</summary>
+    public bool IsFocusMode { get; set; }
+
+    public double TileMinHeight => IsFocusMode ? 84 : 60;
+    public double ServiceLabelWidth => IsFocusMode ? 130 : 110;
+    public double ServiceLabelFontSize => IsFocusMode ? 15 : 13;
+    public System.Windows.Thickness CardPadding =>
+        IsFocusMode
+            ? new System.Windows.Thickness(16, 16, 16, 16)
+            : new System.Windows.Thickness(14, 12, 14, 12);
+
     public HistoryServiceRow(string serviceName, string serviceKey, List<HistoryDayGroup> days)
     {
         ServiceName = serviceName;
@@ -517,15 +548,47 @@ public sealed class HistoryDayGroup
 {
     public DateTime Date { get; }
     public string Label { get; }
+    public string WeekdayAbbrev { get; }
+    public string DateLabel { get; }
     public List<HistoryDayCell> Hours { get; }
+    public string? DayStatus { get; }
+    public string DayTooltip { get; }
+    public System.Windows.Media.Brush DayBrush { get; }
+    public System.Windows.Media.Brush DayForeground { get; }
 
     public HistoryDayGroup(DateTime date, List<HistoryDayCell> hours)
     {
         Date = date.Date;
         var culture = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
         var weekday = culture.DateTimeFormat.AbbreviatedDayNames[(int)date.DayOfWeek].TrimEnd('.');
-        Label = $"{weekday} {date:dd.MM}";
+        if (weekday.Length > 0)
+            weekday = char.ToUpper(weekday[0], culture) + weekday[1..];
+        WeekdayAbbrev = weekday;
+        DateLabel = date.ToString("dd.MM", culture);
+        Label = $"{WeekdayAbbrev} {DateLabel}";
         Hours = hours;
+        DayStatus = HistoryStore.WorstStatusOfDay(hours);
+        DayBrush = HistoryDayCell.BrushForStatus(DayStatus);
+        DayForeground = DayStatus is null
+            ? (System.Windows.Application.Current?.TryFindResource("TextMain") as System.Windows.Media.Brush
+               ?? HistoryDayCell.BrushFromHex("#0F172A"))
+            : HistoryDayCell.BrushFromHex("#FFFFFF");
+        DayTooltip = BuildDayTooltip(Label, DayStatus, hours);
+    }
+
+    private static string BuildDayTooltip(string label, string? dayStatus, List<HistoryDayCell> hours)
+    {
+        var summary = dayStatus switch
+        {
+            "full" => "Störung",
+            "partial" => "Einschränkung",
+            "maintenance" => "Wartung",
+            "none" => "OK",
+            _ => "keine Daten"
+        };
+
+        var known = hours.Count(h => h.Status is not null);
+        return $"{label}: {summary} ({known}/24 Stunden mit Daten)";
     }
 }
 

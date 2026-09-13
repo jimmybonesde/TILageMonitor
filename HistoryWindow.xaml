@@ -2,314 +2,398 @@
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   Title="TI-Status · 14 Tage"
-  Width="960"
-  Height="560"
-  MinWidth="720"
-  MinHeight="420"
+  Width="980"
+  Height="620"
+  MinWidth="760"
+  MinHeight="460"
   WindowState="Maximized"
   WindowStartupLocation="CenterOwner"
   ResizeMode="CanResizeWithGrip"
   Background="{DynamicResource WindowBackground}"
   ShowInTaskbar="False"
   Focusable="True">
-    <Window.Resources>
-  <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="15"/>
+  <Window.Resources>
+    <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="16"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
-      <Setter Property="Margin" Value="0,0,0,4"/>
-  </Style>
-  <Style x:Key="SectionHintStyle" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,0,0,6"/>
+    </Style>
+    <Style x:Key="SectionHintStyle" TargetType="TextBlock">
       <Setter Property="FontSize" Value="12"/>
       <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
       <Setter Property="Margin" Value="0,0,0,12"/>
       <Setter Property="TextWrapping" Value="Wrap"/>
-  </Style>
-  <Style x:Key="HistoryCardStyle" TargetType="Border">
+    </Style>
+    <Style x:Key="HistoryCardStyle" TargetType="Border">
       <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
       <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
       <Setter Property="BorderThickness" Value="1"/>
       <Setter Property="CornerRadius" Value="14"/>
       <Setter Property="Padding" Value="14,12"/>
+      <Setter Property="Margin" Value="0,0,0,10"/>
+    </Style>
+    <Style x:Key="DayTileStyle" TargetType="Border">
+      <Setter Property="Margin" Value="3"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="BorderThickness" Value="1.5"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+      <Setter Property="Padding" Value="6,8"/>
+      <Setter Property="SnapsToDevicePixels" Value="True"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style x:Key="ZoomHourCellStyle" TargetType="Border">
+      <Setter Property="Height" Value="40"/>
+      <Setter Property="Margin" Value="1.5"/>
+      <Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+      <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+    <Style x:Key="TimelineItemStyle" TargetType="Border">
+      <Setter Property="Background" Value="{DynamicResource ChipBackground}"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Padding" Value="12,10"/>
       <Setter Property="Margin" Value="0,0,0,8"/>
-  </Style>
-  <Style x:Key="HourCellStyle" TargetType="Border">
-      <Setter Property="Height" Value="15"/>
-      <Setter Property="Margin" Value="0.5"/>
-      <Setter Property="CornerRadius" Value="2"/>
-      <Setter Property="SnapsToDevicePixels" Value="True"/>
-  </Style>
-  <Style x:Key="ZoomHourCellStyle" TargetType="Border">
-      <Setter Property="Height" Value="30"/>
-      <Setter Property="Margin" Value="1"/>
-      <Setter Property="CornerRadius" Value="4"/>
-      <Setter Property="SnapsToDevicePixels" Value="True"/>
-  </Style>
-    </Window.Resources>
-    <Grid Margin="24">
-  <Grid.RowDefinitions>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+  </Window.Resources>
+  <Grid Margin="24">
+    <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
-  </Grid.RowDefinitions>
-  <StackPanel Grid.Row="0" Margin="0,0,0,18">
+    </Grid.RowDefinitions>
+
+    <StackPanel Grid.Row="0" Margin="0,0,0,16">
       <DockPanel LastChildFill="True">
-    <TextBlock x:Name="CoverageHint"
-         DockPanel.Dock="Right"
-         Text="0 / 168 Stunden erfasst"
-         FontSize="12"
-         Foreground="{DynamicResource TextMuted}"
-         VerticalAlignment="Bottom"
-         Margin="12,0,0,2"/>
-    <TextBlock Text="TI-Status · 14 Tage"
-         FontSize="24"
-         FontWeight="SemiBold"
-         Foreground="{DynamicResource TextMain}"/>
+        <TextBlock x:Name="CoverageHint"
+                   DockPanel.Dock="Right"
+                   Text="0 / 336 Stunden erfasst"
+                   FontSize="12"
+                   Foreground="{DynamicResource TextMuted}"
+                   VerticalAlignment="Bottom"
+                   Margin="12,0,0,2"/>
+        <TextBlock Text="TI-Status · 14 Tage"
+                   FontSize="24"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextMain}"/>
       </DockPanel>
       <TextBlock x:Name="HeaderHint"
-           Text="Stündliche Auflösung über die letzten 7 lokalen Kalendertage (baut sich mit der Laufzeit auf). Tag anklicken zum Zoomen."
-           FontSize="13"
-           Foreground="{DynamicResource TextMuted}"
-           Margin="0,4,0,0"
-           TextWrapping="Wrap"/>
+                 Text="Tagesübersicht der letzten 14 Tage (schlechtester Status je Tag). Tag anklicken für Stundenzoom. Filter fokussiert einen Dienst."
+                 FontSize="13"
+                 Foreground="{DynamicResource TextMuted}"
+                 Margin="0,4,0,0"
+                 TextWrapping="Wrap"/>
       <WrapPanel x:Name="ServiceFilterPanel"
-           Orientation="Horizontal"
-           Margin="0,14,0,0"/>
-  </StackPanel>
-  <Grid Grid.Row="1">
-      <!-- Overview: 7 days -->
+                 Orientation="Horizontal"
+                 Margin="0,14,0,0"/>
+    </StackPanel>
+
+    <Grid Grid.Row="1">
+      <!-- Overview: 14 calendar day tiles per service -->
       <Grid x:Name="OverviewPanel">
-    <ScrollViewer VerticalScrollBarVisibility="Auto"
-            HorizontalScrollBarVisibility="Auto">
-        <StackPanel MinWidth="880">
-      <ItemsControl x:Name="HistoryList" Margin="0,0,0,4" Visibility="Collapsed">
-          <ItemsControl.ItemTemplate>
-        <DataTemplate>
-            <Border Style="{StaticResource HistoryCardStyle}">
-          <Grid>
-              <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="110"/>
-            <ColumnDefinition Width="*"/>
-              </Grid.ColumnDefinitions>
-              <TextBlock Text="{Binding ServiceName}"
-                   FontSize="13"
-                   FontWeight="SemiBold"
-                   Foreground="{DynamicResource TextMain}"
-                   VerticalAlignment="Center"
-                   TextWrapping="Wrap"
-                   Margin="0,0,8,0"/>
-              <ItemsControl Grid.Column="1"
-                ItemsSource="{Binding Days}"
-                HorizontalAlignment="Stretch">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-              <UniformGrid Rows="1" Columns="14"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto">
+          <StackPanel MinWidth="900">
+            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Tagesübersicht"/>
+            <TextBlock Style="{StaticResource SectionHintStyle}"
+                       Text="Ein Kachel pro Tag — Farbe zeigt den schlechtesten bekannten Status. Klick öffnet die Stundenansicht."/>
+
+            <ItemsControl x:Name="HistoryList" Margin="0,0,0,8" Visibility="Collapsed">
+              <ItemsControl.ItemTemplate>
                 <DataTemplate>
-              <Border Cursor="Hand"
-                Background="Transparent"
-                Padding="0"
-                MouseLeftButtonUp="DayColumn_MouseLeftButtonUp"
-                ToolTip="Tag vergrößern">
-                  <StackPanel Margin="3,0">
-                <TextBlock Text="{Binding Label}"
-                     FontSize="10"
-                     Foreground="{DynamicResource TextMuted}"
-                     HorizontalAlignment="Center"
-                     Margin="0,0,0,4"
-                     Cursor="Hand"/>
-                <ItemsControl ItemsSource="{Binding Hours}">
-                    <ItemsControl.ItemsPanel>
-                  <ItemsPanelTemplate>
-                      <UniformGrid Rows="1" Columns="24"/>
-                  </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                      <Border Style="{StaticResource HourCellStyle}"
-                        Background="{Binding CellBrush}"
-                        ToolTip="{Binding Tooltip}"/>
-                  </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                  </StackPanel>
-              </Border>
+                  <Border Style="{StaticResource HistoryCardStyle}"
+                          Padding="{Binding CardPadding}">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="128"/>
+                        <ColumnDefinition Width="*"/>
+                      </Grid.ColumnDefinitions>
+                      <TextBlock Text="{Binding ServiceName}"
+                                 FontSize="{Binding ServiceLabelFontSize}"
+                                 FontWeight="SemiBold"
+                                 Foreground="{DynamicResource TextMain}"
+                                 VerticalAlignment="Center"
+                                 TextWrapping="Wrap"
+                                 Margin="0,0,10,0"/>
+                      <ItemsControl Grid.Column="1"
+                                    ItemsSource="{Binding Days}"
+                                    HorizontalAlignment="Stretch">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <UniformGrid Rows="1" Columns="14"/>
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Border Background="{Binding DayBrush}"
+                                    MouseLeftButtonUp="DayColumn_MouseLeftButtonUp"
+                                    ToolTip="{Binding DayTooltip}">
+                              <Border.Style>
+                                <Style TargetType="Border" BasedOn="{StaticResource DayTileStyle}">
+                                  <Setter Property="MinHeight" Value="60"/>
+                                  <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.IsFocusMode, RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="True">
+                                      <Setter Property="MinHeight" Value="86"/>
+                                    </DataTrigger>
+                                  </Style.Triggers>
+                                </Style>
+                              </Border.Style>
+                              <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding WeekdayAbbrev}"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding DayForeground}"
+                                           HorizontalAlignment="Center"
+                                           Opacity="0.92"/>
+                                <TextBlock Text="{Binding DateLabel}"
+                                           FontSize="14"
+                                           FontWeight="Bold"
+                                           Foreground="{Binding DayForeground}"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,2,0,0"/>
+                              </StackPanel>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </Grid>
+                  </Border>
                 </DataTemplate>
-            </ItemsControl.ItemTemplate>
-              </ItemsControl>
-          </Grid>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Border x:Name="NoHistoryBorder"
+                    Background="{DynamicResource CardBackground}"
+                    BorderBrush="{DynamicResource BorderSubtle}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="28,36"
+                    Margin="0,0,0,12"
+                    Visibility="Visible">
+              <Border.Effect>
+                <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.10" Direction="270" Color="#000000"/>
+              </Border.Effect>
+              <StackPanel HorizontalAlignment="Center" MaxWidth="440">
+                <Border Width="56" Height="56" CornerRadius="28"
+                        Background="{DynamicResource ChipBackground}"
+                        HorizontalAlignment="Center" Margin="0,0,0,12">
+                  <TextBlock Text="📈" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock x:Name="NoHistoryTitle"
+                           Text="Keine Verlaufsdaten"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,8"/>
+                <TextBlock x:Name="NoHistorySubtitle"
+                           Text="Der 14-Tage-Verlauf kombiniert gematik-API-Daten mit lokal erfassten Stunden. Es gibt noch keine gespeicherten Einträge."
+                           FontSize="13"
+                           Foreground="{DynamicResource TextMuted}"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           HorizontalAlignment="Center"/>
+              </StackPanel>
             </Border>
-        </DataTemplate>
-          </ItemsControl.ItemTemplate>
-      </ItemsControl>
-      <Border x:Name="NoHistoryBorder"
-        Background="{DynamicResource CardBackground}"
-        BorderBrush="{DynamicResource BorderSubtle}"
-        BorderThickness="1"
-        CornerRadius="16"
-        Padding="28,36"
-        Margin="0,0,0,10"
-        Visibility="Visible">
-          <Border.Effect>
-        <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.10" Direction="270" Color="#000000"/>
-          </Border.Effect>
-          <StackPanel HorizontalAlignment="Center" MaxWidth="440">
-        <Border Width="56" Height="56" CornerRadius="28"
-          Background="{DynamicResource ChipBackground}"
-          HorizontalAlignment="Center" Margin="0,0,0,12">
-            <TextBlock Text="📈" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        </Border>
-        <TextBlock x:Name="NoHistoryTitle"
-             Text="Keine Verlaufsdaten"
-             FontSize="16"
-             FontWeight="SemiBold"
-             Foreground="{DynamicResource TextMain}"
-             HorizontalAlignment="Center"
-             Margin="0,0,0,8"/>
-        <TextBlock x:Name="NoHistorySubtitle"
-             Text="Der 14-Tage-Verlauf kombiniert gematik-API-Daten mit lokal erfassten Stunden. Es gibt noch keine gespeicherten Einträge."
-             FontSize="13"
-             Foreground="{DynamicResource TextMuted}"
-             TextWrapping="Wrap"
-             TextAlignment="Center"
-             HorizontalAlignment="Center"/>
+
+            <!-- Ereignisse / incident timeline -->
+            <Border x:Name="TimelineCard"
+                    Style="{StaticResource HistoryCardStyle}"
+                    Margin="0,8,0,4"
+                    Visibility="Collapsed">
+              <StackPanel>
+                <TextBlock Style="{StaticResource SectionHeaderStyle}"
+                           Text="Ereignisse"
+                           Margin="0,0,0,4"/>
+                <TextBlock Style="{StaticResource SectionHintStyle}"
+                           Text="Aktuelle Störungen und Einschränkungen aus dem TI-Status (lokal dargestellt). Klick zoomt auf den Starttag."
+                           Margin="0,0,0,10"/>
+                <ItemsControl x:Name="TimelineList">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Style="{StaticResource TimelineItemStyle}"
+                              MouseLeftButtonUp="TimelineEvent_MouseLeftButtonUp"
+                              ToolTip="Tag vergrößern">
+                        <DockPanel LastChildFill="True">
+                          <TextBlock DockPanel.Dock="Right"
+                                     Text="→"
+                                     FontSize="14"
+                                     Foreground="{DynamicResource TextMuted}"
+                                     VerticalAlignment="Center"
+                                     Margin="10,0,0,0"/>
+                          <TextBlock Text="{Binding DisplayLine}"
+                                     FontSize="13"
+                                     FontWeight="SemiBold"
+                                     Foreground="{DynamicResource TextMain}"
+                                     TextWrapping="Wrap"
+                                     VerticalAlignment="Center"/>
+                        </DockPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock x:Name="TimelineEmpty"
+                           Text="Keine Ereignisse im Zeitraum."
+                           FontSize="13"
+                           Foreground="{DynamicResource TextMuted}"
+                           Visibility="Collapsed"
+                           Margin="0,4,0,0"/>
+              </StackPanel>
+            </Border>
           </StackPanel>
-      </Border>
-        </StackPanel>
-    </ScrollViewer>
+        </ScrollViewer>
       </Grid>
+
       <!-- Zoom: single day, 24 hours -->
       <Grid x:Name="ZoomPanel" Visibility="Collapsed">
-    <ScrollViewer VerticalScrollBarVisibility="Auto"
-            HorizontalScrollBarVisibility="Auto">
-        <StackPanel MinWidth="880">
-      <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-          <Button Content="← Alle 14 Tage"
-            Click="ExitZoom_Click"
-            Padding="12,6"
-            MinWidth="120"
-            VerticalAlignment="Center"/>
-          <TextBlock x:Name="ZoomTitle"
-               FontSize="16"
-               FontWeight="SemiBold"
-               Foreground="{DynamicResource TextMain}"
-               VerticalAlignment="Center"
-               Margin="16,0,0,0"/>
-      </StackPanel>
-      <!-- Hour axis -->
-      <Border Style="{StaticResource HistoryCardStyle}" Padding="14,8" Margin="0,0,0,4">
-          <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="110"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <TextBlock Text="Stunde"
-             FontSize="11"
-             Foreground="{DynamicResource TextMuted}"
-             VerticalAlignment="Center"/>
-        <ItemsControl x:Name="ZoomHourAxis" Grid.Column="1">
-            <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-              <UniformGrid Rows="1" Columns="24"/>
-          </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-          <DataTemplate>
-              <TextBlock Text="{Binding}"
-                   FontSize="10"
-                   Foreground="{DynamicResource TextMuted}"
-                   HorizontalAlignment="Center"
-                   Margin="1,0"/>
-          </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-          </Grid>
-      </Border>
-      <ItemsControl x:Name="ZoomList" Margin="0,0,0,4">
-          <ItemsControl.ItemTemplate>
-        <DataTemplate>
-            <Border Style="{StaticResource HistoryCardStyle}">
-          <Grid>
-              <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="110"/>
-            <ColumnDefinition Width="*"/>
-              </Grid.ColumnDefinitions>
-              <TextBlock Text="{Binding ServiceName}"
-                   FontSize="13"
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto">
+          <StackPanel MinWidth="900">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+              <Button Content="← Zurück zur Übersicht"
+                      Click="ExitZoom_Click"
+                      Padding="14,8"
+                      MinWidth="160"
+                      VerticalAlignment="Center"/>
+              <TextBlock x:Name="ZoomTitle"
+                         FontSize="18"
+                         FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextMain}"
+                         VerticalAlignment="Center"
+                         Margin="18,0,0,0"/>
+            </StackPanel>
+            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Stundenansicht (0–23)"/>
+            <TextBlock Style="{StaticResource SectionHintStyle}"
+                       Text="Esc oder Zurück kehrt zur 14-Tage-Tagesübersicht."/>
+
+            <Border Style="{StaticResource HistoryCardStyle}" Padding="14,10" Margin="0,0,0,6">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="130"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Stunde"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMuted}"
+                           VerticalAlignment="Center"/>
+                <ItemsControl x:Name="ZoomHourAxis" Grid.Column="1">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <UniformGrid Rows="1" Columns="24"/>
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding}"
+                                 FontSize="11"
+                                 FontWeight="SemiBold"
+                                 Foreground="{DynamicResource TextMuted}"
+                                 HorizontalAlignment="Center"
+                                 Margin="1,0"/>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Grid>
+            </Border>
+            <ItemsControl x:Name="ZoomList" Margin="0,0,0,4">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Style="{StaticResource HistoryCardStyle}" Padding="16,14">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="*"/>
+                      </Grid.ColumnDefinitions>
+                      <TextBlock Text="{Binding ServiceName}"
+                                 FontSize="14"
+                                 FontWeight="SemiBold"
+                                 Foreground="{DynamicResource TextMain}"
+                                 VerticalAlignment="Center"
+                                 TextWrapping="Wrap"
+                                 Margin="0,0,10,0"/>
+                      <ItemsControl Grid.Column="1"
+                                    ItemsSource="{Binding Hours}">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <UniformGrid Rows="1" Columns="24"/>
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Border Style="{StaticResource ZoomHourCellStyle}"
+                                    Background="{Binding CellBrush}"
+                                    ToolTip="{Binding Tooltip}"/>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </Grid>
+
+    <Border x:Name="LegendPanel"
+            Grid.Row="2"
+            Background="{DynamicResource CardBackground}"
+            BorderBrush="{DynamicResource BorderSubtle}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="14,10"
+            Margin="0,12,0,0"
+            Visibility="Collapsed">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+        <TextBlock Text="Legende"
+                   FontSize="12"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource TextMain}"
                    VerticalAlignment="Center"
-                   TextWrapping="Wrap"
-                   Margin="0,0,8,0"/>
-              <ItemsControl Grid.Column="1"
-                ItemsSource="{Binding Hours}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-              <UniformGrid Rows="1" Columns="24"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-              <Border Style="{StaticResource ZoomHourCellStyle}"
-                Background="{Binding CellBrush}"
-                ToolTip="{Binding Tooltip}"/>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-              </ItemsControl>
-          </Grid>
-            </Border>
-        </DataTemplate>
-          </ItemsControl.ItemTemplate>
-      </ItemsControl>
+                   Margin="0,0,16,0"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+          <Border x:Name="LegendOk" Width="14" Height="14" CornerRadius="3"
+                  Background="{DynamicResource StatusOk}" VerticalAlignment="Center"/>
+          <TextBlock Text="OK" Margin="6,0,0,0" FontSize="12"
+                     Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
         </StackPanel>
-    </ScrollViewer>
-      </Grid>
-  </Grid>
-  <StackPanel x:Name="LegendPanel"
-        Grid.Row="2"
-        Orientation="Horizontal"
-        Margin="0,10,0,0"
-        HorizontalAlignment="Left"
-        Visibility="Collapsed">
-      <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
-    <Border x:Name="LegendOk" Width="12" Height="12" CornerRadius="2"
-      Background="{DynamicResource StatusOk}" VerticalAlignment="Center"/>
-    <TextBlock Text="OK" Margin="6,0,0,0" FontSize="11"
-         Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+          <Border x:Name="LegendPartial" Width="14" Height="14" CornerRadius="3"
+                  Background="{DynamicResource StatusPartial}" VerticalAlignment="Center"/>
+          <TextBlock Text="Einschränkung" Margin="6,0,0,0" FontSize="12"
+                     Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+          <Border x:Name="LegendMaintenance" Width="14" Height="14" CornerRadius="3"
+                  Background="{DynamicResource StatusMaintenance}" VerticalAlignment="Center"/>
+          <TextBlock Text="Wartung" Margin="6,0,0,0" FontSize="12"
+                     Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+          <Border x:Name="LegendFull" Width="14" Height="14" CornerRadius="3"
+                  Background="{DynamicResource StatusOutage}" VerticalAlignment="Center"/>
+          <TextBlock Text="Störung" Margin="6,0,0,0" FontSize="12"
+                     Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+          <Border x:Name="LegendEmpty" Width="14" Height="14" CornerRadius="3" Background="#CBD5E1" VerticalAlignment="Center"/>
+          <TextBlock Text="keine Daten" Margin="6,0,0,0" FontSize="12"
+                     Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+        </StackPanel>
       </StackPanel>
-      <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
-    <Border x:Name="LegendPartial" Width="12" Height="12" CornerRadius="2"
-      Background="{DynamicResource StatusPartial}" VerticalAlignment="Center"/>
-    <TextBlock Text="Einschränkung" Margin="6,0,0,0" FontSize="11"
-         Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
-      </StackPanel>
-      <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
-    <Border x:Name="LegendMaintenance" Width="12" Height="12" CornerRadius="2"
-      Background="{DynamicResource StatusMaintenance}" VerticalAlignment="Center"/>
-    <TextBlock Text="Wartung" Margin="6,0,0,0" FontSize="11"
-         Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
-      </StackPanel>
-      <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
-    <Border x:Name="LegendFull" Width="12" Height="12" CornerRadius="2"
-      Background="{DynamicResource StatusOutage}" VerticalAlignment="Center"/>
-    <TextBlock Text="Störung" Margin="6,0,0,0" FontSize="11"
-         Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
-      </StackPanel>
-      <StackPanel Orientation="Horizontal">
-    <Border x:Name="LegendEmpty" Width="12" Height="12" CornerRadius="2" Background="#CBD5E1" VerticalAlignment="Center"/>
-    <TextBlock Text="keine Daten" Margin="6,0,0,0" FontSize="11"
-         Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
-      </StackPanel>
-  </StackPanel>
-  <Grid Grid.Row="3" Margin="0,12,0,0">
+    </Border>
+
+    <Grid Grid.Row="3" Margin="0,12,0,0">
       <Button Content="Schließen"
-        HorizontalAlignment="Right"
-        MinWidth="110"
-        Click="Close_Click"
-        Padding="16,10"/>
-  </Grid>
+              HorizontalAlignment="Right"
+              MinWidth="110"
+              Click="Close_Click"
+              Padding="16,10"/>
     </Grid>
+  </Grid>
 </Window>

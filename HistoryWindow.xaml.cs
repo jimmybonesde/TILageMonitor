@@ -11,13 +11,19 @@ public partial class HistoryWindow : Window
 {
     private static readonly CultureInfo DeCulture = CultureInfo.GetCultureInfo("de-DE");
 
+    /// <summary>In-session remembered filter; default = first service (eRezept).</summary>
+    private static string? s_sessionFilterKey = AppSettings.ServiceKeys[0];
+
     private readonly ObservableCollection<HistoryServiceRow> _history = new();
     private readonly ObservableCollection<ZoomServiceRow> _zoomRows = new();
+    private readonly ObservableCollection<HistoryTimelineEvent> _timeline = new();
     private readonly List<HistoryServiceRow> _allRows = new();
     private DateTime? _zoomedDate;
-    private string? _selectedServiceKey;
+    private string? _selectedServiceKey = s_sessionFilterKey;
     private bool _hasAnyData;
     private bool _chipsBuilt;
+    private IncidentResponse? _incidents;
+    private OutageResponse? _outages;
 
     public HistoryWindow(MainWindow owner)
     {
@@ -26,6 +32,7 @@ public partial class HistoryWindow : Window
         Owner = owner;
         HistoryList.ItemsSource = _history;
         ZoomList.ItemsSource = _zoomRows;
+        TimelineList.ItemsSource = _timeline;
         ZoomHourAxis.ItemsSource = Enumerable.Range(0, 24).Select(h => h.ToString()).ToList();
         UpdateLegendColors();
         Focusable = true;
@@ -46,6 +53,9 @@ public partial class HistoryWindow : Window
         history.Hours ??= new List<HistoryHourSnapshot>();
         history.Days = null; // ignore legacy shape in UI path
 
+        _incidents = incidents;
+        _outages = outages;
+
         _allRows.Clear();
         _hasAnyData = history.Hours.Count > 0 ||
                       incidents?.Data?.Count > 0 ||
@@ -58,6 +68,7 @@ public partial class HistoryWindow : Window
         }
 
         ApplyServiceFilter();
+        RefreshTimeline();
 
         var covered = HistoryStore.CountCoveredHours(history);
         var expected = HistoryStore.ExpectedHoursInWindow;
@@ -77,14 +88,15 @@ public partial class HistoryWindow : Window
         _chipsBuilt = true;
 
         ServiceFilterPanel.Children.Clear();
-        ServiceFilterPanel.Children.Add(CreateFilterChip("Alle", null));
 
+        // Service chips first (focus mode default); „Alle“ secondary at the end
         foreach (var key in AppSettings.ServiceKeys)
         {
             var name = AppSettings.ServiceDisplayNames.TryGetValue(key, out var n) ? n : key;
             ServiceFilterPanel.Children.Add(CreateFilterChip(name, key));
         }
 
+        ServiceFilterPanel.Children.Add(CreateFilterChip("Alle", null));
         RefreshFilterChipStyles();
     }
 
@@ -110,8 +122,11 @@ public partial class HistoryWindow : Window
 
         var tag = button.Tag as string;
         _selectedServiceKey = string.IsNullOrWhiteSpace(tag) ? null : tag;
+        s_sessionFilterKey = _selectedServiceKey;
         RefreshFilterChipStyles();
         ApplyServiceFilter();
+        RefreshTimeline();
+        UpdateHeaderHint();
         if (_zoomedDate is DateTime)
             RefreshZoom();
     }
@@ -131,6 +146,12 @@ public partial class HistoryWindow : Window
             button.Style = selected
                 ? TryFindResource("AccentButtonStyle") as Style
                 : null;
+
+            // „Alle“ stays visually secondary when not selected
+            if (string.IsNullOrWhiteSpace(key) && !selected)
+                button.Opacity = 0.78;
+            else
+                button.Opacity = 1.0;
         }
     }
 
@@ -138,24 +159,29 @@ public partial class HistoryWindow : Window
     {
         _history.Clear();
 
+        var focusMode = !string.IsNullOrWhiteSpace(_selectedServiceKey);
         IEnumerable<HistoryServiceRow> rows = _allRows;
-        if (!string.IsNullOrWhiteSpace(_selectedServiceKey))
+        if (focusMode)
         {
             rows = _allRows.Where(r =>
                 string.Equals(r.ServiceKey, _selectedServiceKey, StringComparison.OrdinalIgnoreCase));
         }
 
         foreach (var row in rows)
+        {
+            row.IsFocusMode = focusMode;
             _history.Add(row);
+        }
 
         var filteredEmpty = _history.Count == 0;
-        var filterActive = !string.IsNullOrWhiteSpace(_selectedServiceKey);
+        var filterActive = focusMode;
 
         if (!_hasAnyData)
         {
             NoHistoryBorder.Visibility = Visibility.Visible;
             HistoryList.Visibility = Visibility.Collapsed;
             LegendPanel.Visibility = Visibility.Collapsed;
+            TimelineCard.Visibility = Visibility.Collapsed;
             NoHistoryTitle.Text = "Keine Verlaufsdaten";
             NoHistorySubtitle.Text =
                 "Der 14-Tage-Verlauf kombiniert gematik-API-Daten mit lokal erfassten Stunden. Es gibt noch keine gespeicherten Einträge.";
@@ -165,6 +191,7 @@ public partial class HistoryWindow : Window
             NoHistoryBorder.Visibility = Visibility.Visible;
             HistoryList.Visibility = Visibility.Collapsed;
             LegendPanel.Visibility = Visibility.Visible;
+            TimelineCard.Visibility = Visibility.Visible;
             NoHistoryTitle.Text = "Keine Daten für diesen Dienst";
             NoHistorySubtitle.Text =
                 "Für den gewählten Dienst gibt es in diesem Zeitraum keine Einträge. Filter auf „Alle“ setzen oder einen anderen Dienst wählen.";
@@ -174,19 +201,46 @@ public partial class HistoryWindow : Window
             NoHistoryBorder.Visibility = Visibility.Collapsed;
             HistoryList.Visibility = Visibility.Visible;
             LegendPanel.Visibility = Visibility.Visible;
+            TimelineCard.Visibility = Visibility.Visible;
         }
+    }
+
+    private void RefreshTimeline()
+    {
+        _timeline.Clear();
+        if (!_hasAnyData)
+        {
+            TimelineEmpty.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        var events = HistoryTimelineBuilder.Build(_incidents, _outages, _selectedServiceKey);
+        foreach (var ev in events)
+            _timeline.Add(ev);
+
+        TimelineEmpty.Visibility = _timeline.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        TimelineList.Visibility = _timeline.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void UpdateHeaderHint()
     {
         if (_zoomedDate is not null)
         {
-            HeaderHint.Text = "Vergrößerte Tagesansicht — Esc oder Zurück kehrt zur 14-Tage-Übersicht.";
+            HeaderHint.Text =
+                "Stundenansicht (0–23) — Esc oder „Zurück zur Übersicht“ kehrt zur 14-Tage-Tagesübersicht.";
+        }
+        else if (!string.IsNullOrWhiteSpace(_selectedServiceKey))
+        {
+            var name = AppSettings.ServiceDisplayNames.TryGetValue(_selectedServiceKey, out var n)
+                ? n
+                : _selectedServiceKey;
+            HeaderHint.Text =
+                $"Fokus: {name} — Tageskacheln der letzten 14 Tage (schlechtester Status je Tag). Tag anklicken für Stundenzoom.";
         }
         else
         {
             HeaderHint.Text =
-                "Stündliche Übersicht der letzten 14 Tage aus der gematik-API; lokale Daten ergänzen die Anzeige. Tag anklicken zum Zoomen.";
+                "Tagesübersicht aller Dienste (14 Tage). Farbe = schlechtester Status des Tages. Tag anklicken für Stundenzoom.";
         }
     }
 
@@ -195,6 +249,15 @@ public partial class HistoryWindow : Window
         if (sender is FrameworkElement { DataContext: HistoryDayGroup day })
         {
             EnterZoom(day.Date);
+            e.Handled = true;
+        }
+    }
+
+    private void TimelineEvent_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: HistoryTimelineEvent ev })
+        {
+            EnterZoom(ev.DayDate);
             e.Handled = true;
         }
     }
@@ -236,7 +299,6 @@ public partial class HistoryWindow : Window
             return;
 
         ZoomTitle.Text = date.ToString("dddd, dd.MM.yyyy", DeCulture);
-        // Capitalize weekday if culture returns lowercase
         if (ZoomTitle.Text.Length > 0)
             ZoomTitle.Text = char.ToUpper(ZoomTitle.Text[0], DeCulture) + ZoomTitle.Text[1..];
 
