@@ -23,6 +23,7 @@ public sealed record UpdateDownloadResult(
 
 public static class UpdateService
 {
+    public const long MaxInstallerBytes = 500L * 1024 * 1024;
     private const string LatestReleaseUrl =
         "https://api.github.com/repos/jimmybonesde/TILageMonitor/releases/latest";
 
@@ -122,11 +123,23 @@ public static class UpdateService
                 HttpCompletionOption.ResponseHeadersRead,
                 ct);
             response.EnsureSuccessStatusCode();
+            var declaredLength = response.Content.Headers.ContentLength;
+            if (declaredLength is > MaxInstallerBytes)
+                return new UpdateDownloadResult(false, "Der Installer ist ungewöhnlich groß und wurde aus Sicherheitsgründen abgebrochen.");
 
             await using (var input = await response.Content.ReadAsStreamAsync(ct))
             await using (var output = File.Create(localPath))
             {
-                await input.CopyToAsync(output, ct);
+                var buffer = new byte[80 * 1024];
+                long total = 0;
+                int read;
+                while ((read = await input.ReadAsync(buffer.AsMemory(0, buffer.Length), ct)) > 0)
+                {
+                    total += read;
+                    if (total > MaxInstallerBytes)
+                        throw new InvalidDataException("Der Installer überschreitet das Größenlimit von 500 MB.");
+                    await output.WriteAsync(buffer.AsMemory(0, read), ct);
+                }
             }
 
             progress?.Report("Prüfe Setup-Datei …");
@@ -189,7 +202,8 @@ public static class UpdateService
             Environment.ProcessId,
             installerPath,
             applicationPath,
-            logPath);
+            logPath,
+            Path.Combine(Path.GetTempPath(), $"TILageMonitor-Update-Backup-{Guid.NewGuid():N}"));
 
         File.WriteAllText(helperPath, script);
 
