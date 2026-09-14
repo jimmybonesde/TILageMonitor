@@ -157,7 +157,15 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <TextBlock x:Name="FooterText" FontSize="11" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-            <TextBlock x:Name="VersionFooterText" Grid.Column="1" Text="© 2026 R.C. · TI-Lage Monitor" FontSize="11" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.8"/>
+            <TextBlock x:Name="VersionFooterText" Grid.Column="1" FontSize="11" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.8">
+                <Run Text="© 2026 "/>
+                <Hyperlink Click="OpenHomepage_Click"
+                           Foreground="{DynamicResource TextMuted}"
+                           TextDecorations="{x:Null}"
+                           ToolTip="www.jimmybones.de"><Run Text="R.C."/></Hyperlink>
+                <Run Text=" · TI-Lage Monitor · Version "/>
+                <Run x:Name="VersionFooterVersionRun"/>
+            </TextBlock>
             <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <Border x:Name="UpdateFooterBorder"
                         Background="{DynamicResource StatusOkSurface}"

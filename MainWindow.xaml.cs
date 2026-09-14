@@ -71,7 +71,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         LocalizationService.Apply(this);
-        VersionFooterText.Text = $"© 2026 R.C. · TI-Lage Monitor · Version {GetDisplayVersion()}";
+        VersionFooterVersionRun.Text = GetDisplayVersion();
 
         AppsList.ItemsSource = _apps;
         MessagesList.ItemsSource = _messages;
