@@ -32,6 +32,7 @@ public partial class SettingsWindow : Window
         DarkModeToggle.IsChecked = _settings.DarkMode;
         AutoStartToggle.IsChecked = _settings.AutoStart;
         AutoInstallUpdatesToggle.IsChecked = _settings.AutoInstallUpdates;
+        SetLanguageSelection(_settings.Language);
         BuildNotifyCheckboxes();
         _initializing = false;
     }
@@ -44,6 +45,7 @@ public partial class SettingsWindow : Window
         DarkModeToggle.IsChecked = settings.DarkMode;
         AutoStartToggle.IsChecked = settings.AutoStart;
         AutoInstallUpdatesToggle.IsChecked = settings.AutoInstallUpdates;
+        SetLanguageSelection(settings.Language);
         BuildNotifyCheckboxes();
         _initializing = false;
     }
@@ -142,6 +144,30 @@ public partial class SettingsWindow : Window
         _settings.AutoInstallUpdates = AutoInstallUpdatesToggle.IsChecked == true;
         SettingsStore.Save(_settings);
         _ownerMain.ApplySettings(_settings);
+    }
+
+    private void SetLanguageSelection(string? language)
+    {
+        var mode = language?.Trim().ToLowerInvariant();
+        LanguageGermanToggle.IsChecked = mode == "de";
+        LanguageEnglishToggle.IsChecked = mode == "en";
+        LanguageSystemToggle.IsChecked = mode is not "de" and not "en";
+    }
+
+    private void Language_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_initializing)
+            return;
+
+        _settings.Language = LanguageGermanToggle.IsChecked == true
+            ? "de"
+            : LanguageEnglishToggle.IsChecked == true
+                ? "en"
+                : "system";
+
+        SettingsStore.Save(_settings);
+        LanguageRestartHint.Text = LocalizationService.Translate(
+            "Die Auswahl wurde gespeichert und wird nach einem Neustart der App übernommen.");
     }
 
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)

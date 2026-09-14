@@ -10,7 +10,24 @@ namespace TILageMonitor;
 /// </summary>
 public static class LocalizationService
 {
-    public static bool IsGerman => IsGermanCulture(CultureInfo.CurrentUICulture);
+    private static string _language = "system";
+
+    public static bool IsGerman => _language switch
+    {
+        "de" => true,
+        "en" => false,
+        _ => IsGermanCulture(CultureInfo.CurrentUICulture)
+    };
+
+    public static void Configure(string? language)
+    {
+        _language = language?.Trim().ToLowerInvariant() switch
+        {
+            "de" => "de",
+            "en" => "en",
+            _ => "system"
+        };
+    }
 
     public static bool IsGermanCulture(CultureInfo? culture) =>
         string.Equals((culture ?? CultureInfo.CurrentUICulture).TwoLetterISOLanguageName, "de", StringComparison.OrdinalIgnoreCase);
@@ -47,6 +64,12 @@ public static class LocalizationService
         ["Benachrichtigungen: aus"] = "Notifications: off",
         ["Benachrichtigungen: an"] = "Notifications: on",
         ["Darstellung, Startverhalten, Updates und Benachrichtigungen"] = "Appearance, startup behavior, updates and notifications",
+        ["Sprache"] = "Language",
+        ["Sprache der Oberfläche auswählen"] = "Choose the interface language",
+        ["Automatisch (Windows-Systemsprache)"] = "Automatic (Windows display language)",
+        ["Deutsch"] = "German",
+        ["Die Auswahl wird nach einem Neustart der App übernommen."] = "Your selection will take effect after restarting the app.",
+        ["Die Auswahl wurde gespeichert und wird nach einem Neustart der App übernommen."] = "Your selection was saved and will take effect after restarting the app.",
         ["Darstellung"] = "Appearance",
         ["Oberfläche der Anwendung"] = "Application appearance",
         ["Dunkelmodus"] = "Dark mode",
@@ -112,12 +135,9 @@ public static class LocalizationService
         ["TI-Status: wird geladen…"] = "TI status: loading…",
         ["Die Update-Prüfung ist fehlgeschlagen."] = "The update check failed.",
         ["Teilausfall"] = "Partial outage",
-        ["Alles OK"] = "All OK",
         ["Verfügbar"] = "Available",
         ["Keine Daten"] = "No data",
-        ["Heute"] = "Today",
         ["auffällige Tage"] = "affected days",
-        ["Schlechtester Status heute"] = "Worst status today",
         ["physische Stunden mit Daten"] = "physical hours with data",
         ["Klick öffnet die Stundenansicht."] = "Click to open the hourly view.",
         ["wieder verfügbar"] = "available again"
@@ -125,7 +145,7 @@ public static class LocalizationService
 
     public static string Translate(string? value, CultureInfo? culture = null)
     {
-        if (string.IsNullOrEmpty(value) || IsGermanCulture(culture))
+        if (string.IsNullOrEmpty(value) || (culture is null ? IsGerman : IsGermanCulture(culture)))
             return value ?? string.Empty;
         if (English.TryGetValue(value, out var translated))
             return translated;
