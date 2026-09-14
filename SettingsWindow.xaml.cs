@@ -182,7 +182,7 @@ public partial class SettingsWindow : Window
                 ? result.IsUpdateAvailable
                     ? LocalizationService.IsGerman ? $"Update {result.LatestVersion} verfügbar." : $"Update {result.LatestVersion} available."
                     : LocalizationService.IsGerman ? $"Aktuell: Version {result.CurrentVersion}." : $"Current: version {result.CurrentVersion}."
-                : result.ErrorMessage ?? LocalizationService.Translate("Update-Prüfung fehlgeschlagen.");
+                : LocalizationService.Translate(result.ErrorMessage ?? "Update-Prüfung fehlgeschlagen.");
         }
         finally
         {
