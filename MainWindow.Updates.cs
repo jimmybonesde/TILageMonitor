@@ -4,6 +4,8 @@ namespace TILageMonitor;
 
 public partial class MainWindow
 {
+    private string? _availableUpdateDownloadUrl;
+    private string? _availableUpdateChecksumUrl;
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(bool userInitiated)
     {
         var result = await UpdateService.CheckAsync();
@@ -24,6 +26,8 @@ public partial class MainWindow
 
         if (!result.IsUpdateAvailable)
         {
+            HideUpdateFooter();
+
             if (userInitiated)
             {
                 System.Windows.MessageBox.Show(
@@ -60,6 +64,8 @@ public partial class MainWindow
                     ToastUrgency.Warning);
             }
 
+            ShowUpdateFooter(result);
+
             // Respect „Benachrichtigungen aus“ and balloon only once per latestVersion
             if (!ToastService.AreNotificationsEnabled)
                 return result;
@@ -75,6 +81,8 @@ public partial class MainWindow
                 ToastUrgency.Info);
             return result;
         }
+
+        ShowUpdateFooter(result);
 
         var openDownload = System.Windows.MessageBox.Show(
             $"{message}\n\nJetzt den Setup-Installer herunterladen und starten?",
@@ -109,5 +117,57 @@ public partial class MainWindow
         }
 
         return result;
+    }
+
+    private void ShowUpdateFooter(UpdateCheckResult result)
+    {
+        if (string.IsNullOrWhiteSpace(result.DownloadUrl))
+            return;
+
+        _availableUpdateDownloadUrl = result.DownloadUrl;
+        _availableUpdateChecksumUrl = result.ChecksumUrl;
+        UpdateFooterText.Text = $"Update {result.LatestVersion} verfügbar";
+        InstallUpdateButton.IsEnabled = true;
+        InstallUpdateButton.Content = "Update installieren";
+        UpdateFooterBorder.Visibility = Visibility.Visible;
+    }
+
+    private void HideUpdateFooter()
+    {
+        _availableUpdateDownloadUrl = null;
+        _availableUpdateChecksumUrl = null;
+        UpdateFooterBorder.Visibility = Visibility.Collapsed;
+    }
+
+    private async void InstallUpdateFooter_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_availableUpdateDownloadUrl))
+            return;
+
+        InstallUpdateButton.IsEnabled = false;
+        InstallUpdateButton.Content = "Lade Update …";
+
+        var download = await UpdateService.DownloadAndLaunchAsync(
+            _availableUpdateDownloadUrl,
+            _availableUpdateChecksumUrl);
+
+        if (download.IsSuccess)
+        {
+            InstallUpdateButton.Content = "Setup gestartet";
+            System.Windows.MessageBox.Show(
+                download.Message,
+                "Update",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        InstallUpdateButton.IsEnabled = true;
+        InstallUpdateButton.Content = "Erneut versuchen";
+        System.Windows.MessageBox.Show(
+            download.Message,
+            "Update",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
     }
 }
