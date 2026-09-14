@@ -1,166 +1,159 @@
 <p align="center">
-  <img src="docs/assets/app-icon-128.png" alt="TI-Lage Monitor" width="160">
+  <img src="docs/assets/app-icon-128.png" alt="TI-Lage Monitor" width="144">
 </p>
 
 <h1 align="center">TI-Lage Monitor</h1>
 
 <p align="center">
-  <strong>Der TI-Status der gematik direkt im Windows-Tray – inklusive klarer 14-Tage-Historie.</strong><br>
-  Schlank · lokal · ohne Login
+  <strong>gematik TI-Status im Windows-Tray — live, lokal, mit 14-Tage-Verlauf.</strong><br>
+  <em>Schlank · ohne Login · Community-App</em>
 </p>
 
 <p align="center">
-  <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><img src="https://img.shields.io/github/v/release/jimmybonesde/TILageMonitor?style=flat&label=Download&logo=github" alt="Aktueller Download"></a>
-  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat&logo=windows&logoColor=white" alt="Windows 10 und 11">
+  <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><img src="https://img.shields.io/github/v/release/jimmybonesde/TILageMonitor?style=flat&label=Download&logo=github" alt="Latest release"></a>
+  <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><img src="https://img.shields.io/github/downloads/jimmybonesde/TILageMonitor/total?style=flat&label=Downloads" alt="Downloads"></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat&logo=windows&logoColor=white" alt="Windows 10 | 11">
   <img src="https://img.shields.io/badge/.NET-10-512BD4?style=flat&logo=dotnet&logoColor=white" alt=".NET 10">
-  <img src="https://img.shields.io/badge/Lizenz-MIT-green?style=flat" alt="Community-App">
+  <img src="https://img.shields.io/badge/Lizenz-MIT-green?style=flat" alt="MIT">
+  <a href="https://github.com/jimmybonesde/TILageMonitor/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/jimmybonesde/TILageMonitor/ci.yml?branch=main&style=flat&label=CI" alt="CI"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><strong>⬇️ Neueste Version herunterladen</strong></a>
+  <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><strong>⬇️ Download</strong></a>
   ·
-  <a href="#-in-60-sekunden-startklar">Schnellstart</a>
+  <a href="#-schnellstart">Schnellstart</a>
   ·
   <a href="#-funktionen">Funktionen</a>
   ·
+  <a href="#-statuslogik">Statuslogik</a>
+  ·
+  <a href="#-bedienung">Bedienung</a>
+  ·
   <a href="#-14-tage-verlauf">14-Tage-Verlauf</a>
   ·
-  <a href="https://fachportal.gematik.de/ti-status#TI-Anschluss">gematik Fachportal</a>
+  <a href="#-daten--datenschutz">Daten</a>
+  ·
+  <a href="#-für-entwickler">Entwickler</a>
 </p>
 
 > [!IMPORTANT]
-> **Kein offizielles gematik-Produkt.** TI-Lage Monitor ist eine Community-App von Randy Carter (R.C.). Maßgeblich bleibt das [gematik Fachportal TI-Status](https://fachportal.gematik.de/ti-status#TI-Anschluss).
+> **Kein offizielles gematik-Produkt.** TI-Lage Monitor ist eine unabhängige Community-App von Randy Carter (R.C.). Maßgeblich bleibt das [gematik Fachportal TI-Status](https://fachportal.gematik.de/ti-status#TI-Anschluss).
 
 ## 📸 Auf einen Blick
 
 | Hellmodus | Dunkelmodus |
 |:---:|:---:|
-| ![Hauptfenster im Hellmodus](docs/assets/screenshot-light.png) | ![Hauptfenster im Dunkelmodus](docs/assets/screenshot-dark.png) |
+| ![Hauptfenster Hellmodus](docs/assets/screenshot-light.png) | ![Hauptfenster Dunkelmodus](docs/assets/screenshot-dark.png) |
 
-Die Hero-Karte fasst die Lage zusammen, Dienste erscheinen als Status-Pills, aktuelle Meldungen darunter. Schließen (X) und Minimieren legen das Fenster nur in den Tray — das Monitoring läuft weiter. Nur **Beenden** beendet die App.
+Hero-Karte, Status-Pills je Dienst, aktuelle Meldungen darunter. **X** und **Minimieren** legen das Fenster nur in den Tray — Monitoring läuft weiter. Nur **Beenden** beendet die App.
 
-## 🚀 In 60 Sekunden startklar
+## 🚀 Schnellstart
 
-1. [Neueste Version herunterladen](https://github.com/jimmybonesde/TILageMonitor/releases/latest).
-2. **Empfohlen:** `TILageMonitor-x.y.z-Setup.exe` starten.
-3. Installation abschließen — Startmenü-Eintrag und Desktop-Verknüpfung werden auf Wunsch erstellt.
+1. [Neueste Version herunterladen](https://github.com/jimmybonesde/TILageMonitor/releases/latest) (`TILageMonitor-*-Setup.exe`).
+2. Setup starten und Installation abschließen.
+3. Optional: Autostart, Theme und Sprache unter **Einstellungen**.
 
-> 💡 Der Setup-Installer ist vollständig offline und enthält .NET 10 sowie die Windows App SDK. Unter **Einstellungen → Updates** kann die automatische, stille Installation aktiviert werden; der Installer wird vorher per SHA-256 geprüft.
+> [!TIP]
+> Der Installer ist offline und bringt .NET 10 sowie Windows App SDK mit. Unter **Einstellungen → Updates** lässt sich die optionale stille Auto-Installation aktivieren; der Download wird per **SHA-256** geprüft (nur GitHub-URLs).
 
 > [!WARNING]
-> Die EXE ist derzeit **unsigniert**. Windows SmartScreen kann deshalb warnen. Details stehen in [SIGNING.md](SIGNING.md).
+> Die EXE ist derzeit **unsigniert**. Windows SmartScreen kann warnen. Details und Signatur-Plan: [SIGNING.md](SIGNING.md).
 
 ## ✨ Funktionen
 
-| | Funktion | Was sie bringt |
+| | Funktion | Nutzen |
 | :--: | --- | --- |
-| 🛡️ | **TI-Lage im Tray** | Schild mit grünem, amberfarbenem oder rotem Status-Badge |
-| 🔎 | **Dienste im Blick** | eRezept, ePA, KIM, WANDA, OGD, VSDM und TI-Anschluss |
-| 🔔 | **Windows-Benachrichtigungen** | Klickbare Toasts; Klick öffnet das Fenster und springt zum Kontext |
-| 🕒 | **14-Tage-Verlauf** | Tages-Kacheln, Stunden-Zoom, Ereignisse-Timeline und Dienst-Filter |
-| ⬇️ | **Selbst-Update** | Prüft GitHub Releases; optional automatisch, still und mit SHA-256-Prüfung installieren |
-| 🎨 | **Desktop-tauglich** | Fluent UI, Hell-/Dunkelmodus, Autostart, Start direkt in den Tray |
-| ⚙️ | **Steuerbar** | Notify-Filter pro Dienst, globale Benachrichtigungen aus dem Tray |
+| 🛡️ | **Tray-Ampel** | Grün / Amber / Rot / Keine Daten direkt im Infobereich |
+| 🔎 | **7 TI-Dienste** | eRezept, ePA, KIM, WANDA, OGD, VSDM, TI-Anschluss |
+| 🔔 | **Windows-Toasts** | Klickbare Benachrichtigungen mit Kontextsprung |
+| 📈 | **14-Tage-Verlauf** | Übersicht · Stunden · Ereignisse — KPI, Fokus-Chips, Timeline |
+| ⬇️ | **GitHub-Updates** | Releases prüfen, SHA-256 verifizieren, optional still installieren |
+| 🎨 | **Fluent UI** | Hell-/Dunkelmodus, Autostart, Start direkt in den Tray |
+| ⚙️ | **Notify-Filter** | Pro Dienst und global aus dem Tray steuerbar |
 
-### Statuslogik
+v2.x behandelt den **14-Tage-Verlauf als First-Class-Feature** — ruhige KPI, Fokus-Layout und klare Timelines statt einer überladenen Heatmap.
+
+## 🟢 Statuslogik
 
 | Status | Bedeutung |
 | --- | --- |
-| 🟢 **Grün** | Alle überwachten Dienste sind verfügbar |
+| 🟢 **Grün** | Überwachte Dienste verfügbar |
 | 🟠 **Amber** | Einschränkung oder Teilausfall |
 | 🔴 **Rot** | Vollausfall oder kritische Störung |
-| ⚪ **Keine Daten** | Öffentliche API nicht erreichbar oder noch kein Abruf erfolgt |
+| ⚪ **Keine Daten** | API nicht erreichbar oder noch kein Abruf |
 
-Die App ruft Lage, Incidents und Outages parallel ab und folgt dem gematik-Rhythmus mit Offset (`:01`, `:06`, `:11`, …). Nach drei aufeinanderfolgenden API-Fehlern zeigt sie einen dauerhaften „API down“-Status.
+Lage (tilage **v2**), Incidents (**v1**) und Outages (**v1**) werden parallel von `ti-lage.prod.ccs.gematik.solutions` geladen. Abrufe folgen dem gematik-Rhythmus mit Offset (`:01`, `:06`, `:11`, …). Nach **drei aufeinanderfolgenden** API-Fehlern gilt dauerhaft **API down**.
 
 ## 🖱️ Bedienung
 
 | Aktion | Wirkung |
 | --- | --- |
-| Linksklick auf das Tray-Icon | Hauptfenster ein- oder ausblenden |
-| Schließen (X) / Minimieren | Fenster in den Tray legen (Monitoring läuft weiter) |
-| Rechtsklick → Benachrichtigungen | Alle Toasts global an oder aus |
+| Linksklick Tray-Icon | Hauptfenster ein-/ausblenden |
+| Schließen (X) / Minimieren | Nur in den Tray (Monitoring weiter) |
+| Rechtsklick → Benachrichtigungen | Toasts global an/aus |
 | **Aktualisieren** | Status sofort neu laden |
-| **Verlauf** | 14-Tage-Historie öffnen (maximiert) |
-| **Einstellungen** | Theme, Autostart, Updates und Notify-Filter |
-| **gematik** | Fachportal im Browser öffnen |
-| **Beenden** | Anwendung beenden |
+| **Verlauf** | 14-Tage-Historie (maximiert) |
+| **Einstellungen** | Theme, Sprache, Autostart, Updates, Filter |
+| **gematik** | Fachportal im Browser |
+| **Beenden** | App beenden |
 
 ## 📈 14-Tage-Verlauf
 
-Der 14-Tage-Verlauf ist in **2.0** fest integriert (gereift über 1.0.15–1.0.17): ruhige KPI-Übersicht, Fokus-Layout und klare Timelines statt einer überladenen Stunden-Heatmap für alle Dienste gleichzeitig.
+Drei Segmente auf derselben Datenbasis: **Übersicht | Stunden | Ereignisse**.
 
-### So ist die Ansicht aufgebaut
-
-1. **KPI-Header**  
-   Drei Karten oben: **Heute** (schlechtester Status), **14 Tage** (auffällige Tage mit Einschränkung, Störung oder Wartung) und **Verfügbarkeit %** (bevorzugt lokale Snapshots; sonst API-gefüllte OK-Stunden ohne zukünftige Stunden).
-
-2. **Segmentierte Ansicht**  
-   Umschalter **Übersicht | Stunden | Ereignisse** — dieselbe Datenbasis, drei Lesarten.
-
-3. **Fokus-Layout (Standard)**  
-   Standardfilter ist **Alle Dienste** (kompakte Zeilen). Ein Dienst-Chip fokussiert große **Tages-Kacheln**. Die **Ereignisse-Timeline** liegt im Segment **Ereignisse**.
-
-4. **Timeline-Karten**  
-   Einträge mit farbigem linken Status-Balken (z. B. `eRezept · Teilausfall · Di 10:00–12:00`). Klick springt in den **Stunden-Zoom** des betreffenden Tages. In der Stundenansicht öffnet ein Klick auf eine auffällige Stunde das passende Ereignis.
-
-5. **Stabil / Alles ruhig**  
-   Wenn für den Fokus keine Auffälligkeiten vorliegen, erscheint ein beruhigender Leer-/OK-Zustand statt einer leeren Liste.
-
-6. **Mikro-Details**  
-   Ausgewählter Tag mit Akzent-Rahmen, Tooltips an Kacheln und Ereignissen, weiche Ein-/Ausblendungen der Panels beim Segmentwechsel. Hell- und Dunkelmodus aktualisieren Farben, Schatten und Chips live.
-
-### Datenquellen
-
-Der Verlauf kombiniert zwei Quellen:
-
-| Quelle | Was sie liefert |
+| Baustein | Inhalt |
 | --- | --- |
-| **gematik-API** (Incidents / Outages) | Gemeldete Einschränkungen und Statusschritte der letzten **14 Tage** — auch wenn der PC aus war |
-| **Lokale Stunden-Snapshots** (`history.json`) | Ergänzen die Verfügbarkeit (grüne Online-Stunden), solange die App läuft |
+| **KPI** | **Heute** · **14 Tage** (auffällige Tage) · **Verfügbarkeit %** |
+| **Fokus-Chips** | Alle Dienste oder ein Dienst — kompakte Zeilen bzw. große Tages-Kacheln |
+| **Timeline** | Karten mit Status-Balken; Klick zoomt in Stunden / markiert Ereignisse |
+| **Leer/OK** | Beruhigende „Alles ruhig“-Zustände statt leerer Listen |
+| **Theme** | Hell/Dunkel aktualisiert Farben, Schatten und Chips live |
 
-> Graue Kacheln / Stunden bedeuten: Für diesen Zeitraum liegt weder ein lokaler Snapshot noch eine gemeldete API-Einschränkung vor — **zukünftige Stunden bleiben grau**. Wenn die Incident-API erreichbar ist, werden bereits begonnene Stunden ohne gemeldete Störung als verfügbar (grün) dargestellt. Das Verlaufsfenster bleibt in der Taskleiste nutzbar, auch wenn das Hauptfenster im Tray liegt.
-
-### Kurzbedienung im Verlauf
-
-| Aktion | Wirkung |
+| Quelle | Lieferumfang |
 | --- | --- |
-| Filter-Chip (eRezept, ePA, … / Alle) | Zeilen und Ereignisse eingrenzen |
-| Tages-Kachel anklicken | Stunden-Zoom für diesen Tag |
-| Ereignis anklicken | Zoom auf den Starttag des Ereignisses |
-| Auffällige Stunde anklicken | Wechselt zu **Ereignisse** und markiert das passende Ereignis |
+| **gematik-API** (Incidents / Outages) | Gemeldete Einschränkungen der letzten 14 Tage — auch bei ausgeschaltetem PC |
+| **Lokale Snapshots** (`history.json`) | Ergänzen grüne Online-Stunden, solange die App läuft |
+
+> [!NOTE]
+> Graue Kacheln/Stunden = weder lokaler Snapshot noch API-Meldung (zukünftige Stunden bleiben grau). Bei erreichbarer Incident-API gelten begonnene Stunden ohne Störung als verfügbar (grün).
+
+| Aktion im Verlauf | Wirkung |
+| --- | --- |
+| Filter-Chip | Zeilen und Ereignisse eingrenzen |
+| Tages-Kachel | Stunden-Zoom |
+| Ereignis / auffällige Stunde | Zoom bzw. Segment **Ereignisse** |
 | Esc / Zurück | Zurück zur Tages-Übersicht |
 
 ## 🔐 Daten & Datenschutz
 
 - Nur öffentliche gematik-APIs — **kein Login, kein API-Key**
 - Keine Cloud-Synchronisation
-- Alle Dateien liegen lokal unter `%AppData%\TILageMonitor\`
+- Lokal unter `%AppData%\TILageMonitor\`
 
 | Datei | Inhalt |
 | --- | --- |
-| `settings.json` | Theme, Autostart, Notify-Filter |
+| `settings.json` | Theme, Sprache, Autostart, Notify-Filter, Updates |
 | `last-lage.json` | Offline-Cache des letzten Stands |
-| `history.json` | Stündliche lokale Ergänzung zum 14-Tage-Verlauf |
+| `history.json` | Stündliche lokale Ergänzung zum Verlauf |
 
-Verwendete Endpunkte:
+**Endpunkte**
 
 - `https://ti-lage.prod.ccs.gematik.solutions/lageapi/v2/tilage`
 - `https://ti-lage.prod.ccs.gematik.solutions/lageapi/v1/tistatus/incident`
 - `https://ti-lage.prod.ccs.gematik.solutions/lageapi/v1/tistatus/outage`
 
+Updates laden ausschließlich von allowlisted GitHub-Hosts (`github.com`, `*.githubusercontent.com`).
+
 ## ⚠️ Bekannte Grenzen
 
-- Nur für Windows x64
-- Eine unsignierte EXE kann SmartScreen-Warnungen auslösen
-- Ausfälle stammen bis zu 14 Tage aus der API; vollständige OK-Verfügbarkeit wird zusätzlich lokal erfasst
-- Die App ergänzt das gematik Fachportal, ersetzt es aber nicht
+- Nur Windows **x64** (10 / 11)
+- Unsignierte EXE → mögliche SmartScreen-Warnung ([SIGNING.md](SIGNING.md))
+- API deckt Störungen bis 14 Tage ab; vollständige OK-Verfügbarkeit braucht lokale Snapshots
+- Ergänzt das Fachportal — ersetzt es nicht
 
 ## 🗂️ Für Entwickler
 
-### Aus dem Quellcode bauen
-
-Voraussetzungen: Windows 10/11 x64, [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) und PowerShell 5.1+.
+**Voraussetzungen:** Windows 10/11 x64 · [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) · PowerShell 5.1+
 
 ```powershell
 git clone https://github.com/jimmybonesde/TILageMonitor.git
@@ -169,29 +162,30 @@ cd TILageMonitor
 .\Install.ps1
 ```
 
-| Bereich | Zentrale Dateien |
+| Bereich | Dateien |
 | --- | --- |
 | UI & Tray | `MainWindow.*`, `App.xaml(.cs)` |
-| API & Modelle | `ApiClient.cs`, `Models.cs` |
-| Persistenz | `SettingsStore.cs`, `CacheStore.cs`, `HistoryStore.cs` |
+| API & Modelle | `ApiClient.cs`, `Models.cs`, `TiStatusClassifier.cs` |
+| Persistenz | `SettingsStore.cs`, `CacheStore.cs`, `HistoryStore.cs`, `AtomicJsonStore.cs` |
 | Verlauf | `HistoryWindow.*`, `HistoryTimelineBuilder.cs` |
 | Fenster | `SettingsWindow.*`, `AboutWindow.*` |
-| Systemdienste | `ToastService.cs`, `ToastRegistration.cs`, `ThemeService.cs`, `AutostartService.cs`, `UpdateService.cs` |
-| Build & Release | `Build.ps1`, `Install.ps1`, `installer/TILageMonitor.iss`, `.github/workflows/release.yml` |
+| System | `ToastService.cs`, `ThemeService.cs`, `AutostartService.cs`, `UpdateService.cs`, `LocalizationService.cs` |
+| Build / Release | `Build.ps1`, `Install.ps1`, `installer/TILageMonitor.iss`, `.github/workflows/` |
 
-Technik: WPF + WinForms-Tray · `net10.0-windows10.0.17763.0` · Windows App SDK App Notifications · Inno Setup Installer
+**Stack:** WPF + WinForms-Tray · `net10.0-windows` · Windows App SDK Toasts · Inno Setup · MIT
 
 ## 👤 Autor
 
-**Randy Carter** · R.C. · © 2026
+**Randy Carter** (R.C.) · © 2026 · Community-App, nicht gematik
 
 <p align="center">
-  <sub>Für Praxen & IT, die den TI-Status im Blick behalten wollen — ohne einen Portal-Tab offen zu lassen.</sub>
+  <sub>Für Praxen &amp; IT, die den TI-Status im Blick behalten — ohne einen Portal-Tab offen zu lassen.</sub>
 </p>
 
+---
 
-## Sprache / Language
+## 🌐 Sprache / Language
 
-Die App richtet sich automatisch nach der Windows-Anzeigesprache: Deutsch wird auf Deutsch angezeigt, Englisch (und andere nicht-deutsche Systeme) auf Englisch. Ein manueller Sprachschalter ist nicht erforderlich.
+**DE:** Unter **Einstellungen → Sprache** wählen Sie **Automatisch (Windows)** · **Deutsch** · **Englisch**. Die Auswahl greift nach einem **Neustart** der App.
 
-The app automatically follows the Windows display language: German systems use German, English (and other non-German systems) use English. No manual language switch is required.
+**EN:** Under **Settings → Language** choose **Automatic (Windows)** · **German** · **English**. The selection takes effect after **restarting** the app.
