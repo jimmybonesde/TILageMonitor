@@ -139,17 +139,23 @@ public static class UpdateService
 
             progress?.Report(silent ? "Installiere Update …" : "Starte Setup …");
 
+            if (silent)
+            {
+                QueueSilentInstallAfterCurrentProcessExits(localPath);
+                return new UpdateDownloadResult(
+                    true,
+                    "Das Update wird nach dem Beenden der App automatisch installiert und anschließend gestartet.",
+                    localPath);
+            }
+
             Process.Start(new ProcessStartInfo(localPath)
             {
-                UseShellExecute = true,
-                Arguments = silent
-                    ? "/SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS"
-                    : string.Empty
+                UseShellExecute = true
             });
 
             return new UpdateDownloadResult(
                 true,
-                "Setup wurde gestartet. Du kannst die App für die Installation schließen.",
+                "Setup wurde gestartet.",
                 localPath);
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
@@ -162,6 +168,44 @@ public static class UpdateService
                 false,
                 $"Download oder Start fehlgeschlagen: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Starts a hidden helper that waits for this process to end before running Inno Setup.
+    /// This prevents the installer from racing the still-running tray application.
+    /// </summary>
+    private static void QueueSilentInstallAfterCurrentProcessExits(string installerPath)
+    {
+        var helperPath = Path.Combine(
+            Path.GetTempPath(),
+            $"TILageMonitor-Update-${Guid.NewGuid():N}.cmd");
+        var processId = Environment.ProcessId;
+        var script = $"""
+            @echo off
+            :waitforapp
+            tasklist /FI "PID eq ${processId}" /NH | findstr /C:" ${processId} " >nul
+            if not errorlevel 1 (
+              timeout /t 1 /nobreak >nul
+              goto waitforapp
+            )
+            start "" "${installerPath}" /SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS
+            del "%~f0"
+            """;
+
+        File.WriteAllText(helperPath, script);
+
+        var launcher = new ProcessStartInfo
+        {
+            FileName = Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden
+        };
+        launcher.ArgumentList.Add("/c");
+        launcher.ArgumentList.Add(helperPath);
+
+        if (Process.Start(launcher) is null)
+            throw new InvalidOperationException("Der Update-Starter konnte nicht gestartet werden.");
     }
 
     private static HttpClient CreateClient()
