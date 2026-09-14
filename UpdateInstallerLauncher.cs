@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace TILageMonitor;
 
 public static class UpdateInstallerLauncher
