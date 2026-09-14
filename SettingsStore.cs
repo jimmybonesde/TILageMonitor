@@ -13,6 +13,13 @@ public sealed class AppSettings
     public bool AutoStart { get; set; }
 
     /// <summary>
+    /// Downloads verified releases and installs them silently after the app closes.
+    /// Default is opt-in to keep update control with the user.
+    /// </summary>
+    [JsonPropertyName("autoInstallUpdates")]
+    public bool AutoInstallUpdates { get; set; }
+
+    /// <summary>
     /// Globale Benachrichtigungen (Toasts/Balloons). Default: true.
     /// Tray-Menü kann dies umschalten; pro-Dienst Filter gilt nur wenn aktiv.
     /// </summary>
