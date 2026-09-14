@@ -70,6 +70,11 @@ public partial class App : System.Windows.Application
         _window.ShowInTaskbar = false;
         _window.Show();
         _window.Hide();
+
+        if (e.Args.Any(arg => string.Equals(arg, "--update-failed", StringComparison.OrdinalIgnoreCase)))
+        {
+            Dispatcher.BeginInvoke(_window.ShowUpdateFailureAfterRestart);
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)
