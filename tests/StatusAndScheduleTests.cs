@@ -86,7 +86,8 @@ public sealed class StatusAndScheduleTests
             4242,
             @"C:\Temp\TILageMonitor-2.0.9-Setup.exe",
             @"C:\Users\Randy\AppData\Local\Programs\TILageMonitor\TILageMonitor.exe",
-            @"C:\Users\Randy\AppData\Roaming\TILageMonitor\update-install.log");
+            @"C:\Users\Randy\AppData\Roaming\TILageMonitor\update-install.log",
+            @"C:\Temp\TILageMonitor-Update-Backup-test");
 
         Assert.Contains("start \"\" /wait", script, StringComparison.Ordinal);
         Assert.Contains("/VERYSILENT", script, StringComparison.Ordinal);
