@@ -172,25 +172,24 @@ public static class UpdateService
 
     /// <summary>
     /// Starts a hidden helper that waits for this process to end before running Inno Setup.
-    /// This prevents the installer from racing the still-running tray application.
+    /// If setup fails, the previous app is reopened with a visible error instead of leaving
+    /// the user with a silently failed update.
     /// </summary>
     private static void QueueSilentInstallAfterCurrentProcessExits(string installerPath)
     {
+        var applicationPath = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(applicationPath))
+            throw new InvalidOperationException("Der Pfad der laufenden Anwendung konnte nicht bestimmt werden.");
+
         var helperPath = Path.Combine(
             Path.GetTempPath(),
             $"TILageMonitor-Update-{Guid.NewGuid():N}.cmd");
-        var processId = Environment.ProcessId;
-        var script = $"""
-            @echo off
-            :waitforapp
-            tasklist /FI "PID eq {processId}" /NH | findstr /C:" {processId} " >nul
-            if not errorlevel 1 (
-              timeout /t 1 /nobreak >nul
-              goto waitforapp
-            )
-            start "" "{installerPath}" /SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS
-            del "%~f0"
-            """;
+        var logPath = Path.Combine(SettingsStore.SettingsDirectoryPath, "update-install.log");
+        var script = UpdateInstallerLauncher.BuildScript(
+            Environment.ProcessId,
+            installerPath,
+            applicationPath,
+            logPath);
 
         File.WriteAllText(helperPath, script);
 
