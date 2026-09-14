@@ -94,6 +94,7 @@ public sealed class StatusAndScheduleTests
         Assert.Contains("/LOG=", script, StringComparison.Ordinal);
         Assert.Contains("--update-failed", script, StringComparison.Ordinal);
         Assert.Contains("robocopy", script, StringComparison.Ordinal);
+        Assert.Contains("--failed-update-version", script, StringComparison.Ordinal);
     }
 
 
