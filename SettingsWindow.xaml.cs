@@ -147,16 +147,16 @@ public partial class SettingsWindow : Window
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
         CheckForUpdatesButton.IsEnabled = false;
-        UpdateStatusText.Text = "Prüfe GitHub-Release …";
+        UpdateStatusText.Text = LocalizationService.Translate("Prüfe GitHub-Release …");
 
         try
         {
             var result = await _ownerMain.CheckForUpdatesAsync(userInitiated: true);
             UpdateStatusText.Text = result.IsSuccess
                 ? result.IsUpdateAvailable
-                    ? $"Update {result.LatestVersion} verfügbar."
-                    : $"Aktuell: Version {result.CurrentVersion}."
-                : result.ErrorMessage ?? "Update-Prüfung fehlgeschlagen.";
+                    ? LocalizationService.IsGerman ? $"Update {result.LatestVersion} verfügbar." : $"Update {result.LatestVersion} available."
+                    : LocalizationService.IsGerman ? $"Aktuell: Version {result.CurrentVersion}." : $"Current: version {result.CurrentVersion}."
+                : result.ErrorMessage ?? LocalizationService.Translate("Update-Prüfung fehlgeschlagen.");
         }
         finally
         {
