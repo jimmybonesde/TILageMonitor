@@ -19,6 +19,13 @@ public static class LocalizationService
         _ => IsGermanCulture(CultureInfo.CurrentUICulture)
     };
 
+    public static CultureInfo DisplayCulture => _language switch
+    {
+        "de" => CultureInfo.GetCultureInfo("de-DE"),
+        "en" => CultureInfo.GetCultureInfo("en-US"),
+        _ => CultureInfo.CurrentUICulture
+    };
+
     public static void Configure(string? language)
     {
         _language = language?.Trim().ToLowerInvariant() switch
