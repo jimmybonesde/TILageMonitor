@@ -66,7 +66,7 @@ exit /b %updateExitCode%
         if (!Version.TryParse(failedUpdateVersion, out _))
             throw new ArgumentException("Die fehlgeschlagene Update-Version ist ungültig.", nameof(failedUpdateVersion));
 
-        return $"--update-failed --failed-update-version \\\"{failedUpdateVersion.Trim()}\\\"";
+        return $"--update-failed --failed-update-version \"{failedUpdateVersion.Trim()}\"";
     }
 
     private static string RequireSafePath(string value, string parameterName)
