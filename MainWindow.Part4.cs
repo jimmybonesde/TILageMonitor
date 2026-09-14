@@ -181,15 +181,41 @@ public record ServiceStatusChange(
     string CurrentStatus,
     string Details);
 
-public record AppRow(
-    string Icon,
-    string Name,
-    string Detail,
-    System.Windows.Media.Brush StatusBrush,
-    string ServiceKey = "");
+public sealed record AppRow
+{
+    public AppRow(
+        string icon,
+        string name,
+        string detail,
+        System.Windows.Media.Brush statusBrush,
+        string serviceKey = "")
+    {
+        Icon = icon;
+        Name = name;
+        Detail = LocalizationService.Translate(detail);
+        StatusBrush = statusBrush;
+        ServiceKey = serviceKey;
+    }
 
-public record MessageRow(
-    string Header,
-    string Body,
-    string TimestampText,
-    string? FocusKey = null);
+    public string Icon { get; }
+    public string Name { get; }
+    public string Detail { get; }
+    public System.Windows.Media.Brush StatusBrush { get; }
+    public string ServiceKey { get; }
+}
+
+public sealed record MessageRow
+{
+    public MessageRow(string header, string body, string timestampText, string? focusKey = null)
+    {
+        Header = LocalizationService.Translate(header);
+        Body = LocalizationService.Translate(body);
+        TimestampText = timestampText;
+        FocusKey = focusKey;
+    }
+
+    public string Header { get; }
+    public string Body { get; }
+    public string TimestampText { get; }
+    public string? FocusKey { get; }
+}
