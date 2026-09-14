@@ -21,7 +21,7 @@
 <p align="center">
   <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><strong>⬇️ Download</strong></a>
   ·
-  <a href="#-funktionen">Features</a>
+  <a href="#-funktionen">Funktionen</a>
   ·
   <a href="#-14-tage-verlauf">Verlauf</a>
   ·
