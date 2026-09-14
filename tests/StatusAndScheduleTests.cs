@@ -55,6 +55,12 @@ public sealed class StatusAndScheduleTests
             GematikRefreshSchedule.GetDelayUntilNextSlot(now));
     }
     [Fact]
+    public void Automatic_update_installation_is_opt_in_by_default()
+    {
+        Assert.False(new AppSettings().AutoInstallUpdates);
+    }
+
+    [Fact]
     public void History_uses_incident_timeline_when_no_local_snapshot_exists()
     {
         var now = DateTime.Now;
