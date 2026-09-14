@@ -41,16 +41,16 @@ public sealed class HistoryTimelineEvent
         StartLocal = startLocal;
         EndLocal = endLocal;
         StatusCode = StatusCodeFromKind(kindLabel);
-        Title = $"{serviceName} · {kindLabel}";
+        Title = LocalizationService.Translate($"{serviceName} · {kindLabel}");
         TimeRangeText = FormatRange(startLocal, endLocal);
-        Body = kindLabel switch
+        Body = LocalizationService.Translate(kindLabel switch
         {
             "Störung" => "Vollständige Störung im TI-Status — Stundenansicht für Details.",
             "Teilausfall" => "Einschränkung / Teilausfall — Zeitraum lokal dargestellt.",
             "Wartung" => "Geplante oder laufende Wartung im erfassten Fenster.",
             _ => "Ereignis aus dem TI-Status (lokal dargestellt)."
-        };
-        ClickHint = $"Stundenansicht öffnen · {startLocal:dd.MM.yyyy}";
+        });
+        ClickHint = LocalizationService.Translate($"Stundenansicht öffnen · {startLocal:dd.MM.yyyy}");
         DisplayLine = $"{Title} · {TimeRangeText}";
     }
 
