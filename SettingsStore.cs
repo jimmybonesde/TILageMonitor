@@ -6,6 +6,12 @@ namespace TILageMonitor;
 
 public sealed class AppSettings
 {
+    /// <summary>
+    /// UI language: "system" follows Windows, "de" forces German, "en" forces English.
+    /// </summary>
+    [JsonPropertyName("language")]
+    public string Language { get; set; } = "system";
+
     [JsonPropertyName("darkMode")]
     public bool DarkMode { get; set; }
 
