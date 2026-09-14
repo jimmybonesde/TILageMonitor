@@ -109,7 +109,7 @@ public static class LocalizationService
         ["Wartung"] = "Maintenance",
         ["Störung"] = "Outage",
         ["keine Daten"] = "no data",
-        ["TI-Status: wird geladen…"] = "TI status: loading…"
+        ["TI-Status: wird geladen…"] = "TI status: loading…",\n        ["Die Update-Prüfung ist fehlgeschlagen."] = "The update check failed."
     };
 
     public static string Translate(string? value, CultureInfo? culture = null)
