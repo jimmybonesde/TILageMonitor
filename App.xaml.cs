@@ -49,6 +49,21 @@ public partial class App : System.Windows.Application
         LocalizationService.Configure(settings.Language);
         ThemeService.ApplyTheme(settings.DarkMode);
 
+        var failedUpdateVersion = GetArgumentValue(e.Args, "--failed-update-version");
+        if (e.Args.Any(arg => string.Equals(arg, "--update-failed", StringComparison.OrdinalIgnoreCase)) &&
+            Version.TryParse(failedUpdateVersion, out _))
+        {
+            settings.LastAutoInstallFailureVersion = failedUpdateVersion;
+            settings.AutoInstallRetryAfterUtc = AutoUpdateRetryPolicy.GetNextRetryUtc(DateTime.UtcNow);
+            SettingsStore.Save(settings);
+        }
+        else if (e.Args.Any(arg => string.Equals(arg, "--updated", StringComparison.OrdinalIgnoreCase)))
+        {
+            settings.LastAutoInstallFailureVersion = null;
+            settings.AutoInstallRetryAfterUtc = null;
+            SettingsStore.Save(settings);
+        }
+
         if (!SettingsStore.Exists)
             SettingsStore.Save(settings);
 
@@ -76,6 +91,18 @@ public partial class App : System.Windows.Application
         {
             Dispatcher.BeginInvoke(_window.ShowUpdateFailureAfterRestart);
         }
+    }
+
+    private static string? GetArgumentValue(IEnumerable<string> args, string name)
+    {
+        var values = args.ToArray();
+        for (var i = 0; i + 1 < values.Length; i++)
+        {
+            if (string.Equals(values[i], name, StringComparison.OrdinalIgnoreCase))
+                return values[i + 1];
+        }
+
+        return null;
     }
 
     protected override void OnExit(ExitEventArgs e)
