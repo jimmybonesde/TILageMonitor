@@ -21,7 +21,7 @@ public partial class MainWindow
             if (userInitiated)
             {
                 System.Windows.MessageBox.Show(
-                    result.ErrorMessage ?? "Die Update-Prüfung ist fehlgeschlagen.",
+                    result.ErrorMessage ?? LocalizationService.Translate("Die Update-Prüfung ist fehlgeschlagen."),
                     "Updates prüfen",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -38,7 +38,7 @@ public partial class MainWindow
             if (userInitiated)
             {
                 System.Windows.MessageBox.Show(
-                    $"TI-Lage Monitor ist aktuell (Version {result.CurrentVersion}).",
+                    LocalizationService.IsGerman ? $"TI-Lage Monitor ist aktuell (Version {result.CurrentVersion})." : $"TI-Lage Monitor is up to date (version {result.CurrentVersion}).",
                     "Updates prüfen",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
