@@ -8,6 +8,7 @@ public partial class AboutWindow : Window
     public AboutWindow()
     {
         InitializeComponent();
+        LocalizationService.Apply(this);
         VersionText.Text = $"Version {MainWindow.GetDisplayVersion()}";
     }
 
