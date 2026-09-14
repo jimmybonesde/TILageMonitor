@@ -1,29 +1,24 @@
-# Code Signing (optional)
+# Code Signing für Releases
 
-Die mit `Build.ps1` erzeugte `publish\TILageMonitor.exe` ist **nicht** signiert.
-Ohne gültiges Authenticode-Zertifikat kann Windows SmartScreen beim ersten Start warnen.
+Ohne ein gültiges Authenticode-Zertifikat zeigt Windows für einen unbekannten Herausgeber gegebenenfalls SmartScreen an. Das Repository enthält absichtlich weder Zertifikate noch private Schlüssel.
 
-## Beispiel mit signtool (eigenes Zertifikat erforderlich)
+## Einmalig in GitHub einrichten
 
-```powershell
-# Beispiel – Pfade und Zertifikat vom Herausgeber ersetzen.
-# KEINE erfundenen Zertifikate oder Secrets verwenden.
+1. Ein echtes Code-Signing-Zertifikat als PFX besorgen (z. B. von DigiCert, Sectigo oder GlobalSign).
+2. Die PFX-Datei lokal in Base64 umwandeln:
 
-signtool sign /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com `
-  /f "C:\path\to\your-code-signing.pfx" /p "<PFX-Passwort>" `
-  ".\publish\TILageMonitor.exe"
-```
+   ```powershell
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\Pfad\TILageMonitor.pfx")) |
+     Set-Clipboard
+   ```
 
-Alternativ Signierung über ein im Zertifikatsspeicher vorhandenes Zertifikat:
+3. Unter **Repository → Settings → Secrets and variables → Actions** diese Secrets anlegen:
 
-```powershell
-signtool sign /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com `
-  /n "Ihr Herausgebername" `
-  ".\publish\TILageMonitor.exe"
-```
+   - `WINDOWS_CERTIFICATE_BASE64` – der Base64-Inhalt der PFX
+   - `WINDOWS_CERTIFICATE_PASSWORD` – das PFX-Passwort
 
-## Hinweise
+Danach signiert der Release-Workflow den Installer, prüft die Signatur mit `signtool verify /pa` und erstellt erst anschließend die SHA-256-Prüfsumme.
 
-- SmartScreen und „Unbekannter Herausgeber“ verschwinden nur mit einem **echten** Code-Signing-Zertifikat (z. B. von DigiCert, Sectigo, GlobalSign) des Publishers.
-- Dieses Repository enthält **keine** Zertifikate und keine privaten Schlüssel.
-- Nach dem Signieren optional `signtool verify /pa .\publish\TILageMonitor.exe` prüfen.
+## Verhalten ohne Zertifikat
+
+Der Workflow bleibt funktionsfähig und erzeugt weiterhin einen Installer mit Prüfsumme, veröffentlicht ihn aber unsigniert. Die Update-Funktion akzeptiert ausschließlich die signierte Prüfsumme der Release-Datei. Für eine echte Herausgeber-Identität und SmartScreen-Reputation muss das oben beschriebene Zertifikat hinterlegt werden.
