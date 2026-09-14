@@ -726,7 +726,7 @@ public sealed class HistoryDayCell
                 date,
                 hour,
                 null,
-                $"{tipPrefix}: kein Datenpunkt",
+                LocalizationService.Translate($"{tipPrefix}: kein Datenpunkt"),
                 BrushForStatus(null));
         }
 
