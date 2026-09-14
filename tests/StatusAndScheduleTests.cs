@@ -54,6 +54,25 @@ public sealed class StatusAndScheduleTests
             TimeSpan.FromSeconds(expectedSeconds),
             GematikRefreshSchedule.GetDelayUntilNextSlot(now));
     }
+    [Theory]
+    [InlineData("https://github.com/jimmybonesde/TILageMonitor/releases/tag/v2.0.7", false)]
+    [InlineData("https://github.com/jimmybonesde/TILageMonitor/releases/download/v2.0.7/TILageMonitor-2.0.7-Setup.exe", true)]
+    public void Update_service_accepts_only_direct_setup_assets(string url, bool expected)
+    {
+        Assert.Equal(expected, UpdateService.IsSetupDownloadUrl(url));
+    }
+
+    [Fact]
+    public void Automatic_update_retry_waits_for_same_failed_release()
+    {
+        var now = new DateTime(2026, 9, 14, 10, 0, 0, DateTimeKind.Utc);
+        var retryAfter = AutoUpdateRetryPolicy.GetNextRetryUtc(now);
+
+        Assert.False(AutoUpdateRetryPolicy.ShouldAttempt("2.0.7", "2.0.7", retryAfter, now.AddHours(1)));
+        Assert.True(AutoUpdateRetryPolicy.ShouldAttempt("2.0.8", "2.0.7", retryAfter, now.AddHours(1)));
+        Assert.True(AutoUpdateRetryPolicy.ShouldAttempt("2.0.7", "2.0.7", retryAfter, retryAfter));
+    }
+
     [Fact]
     public void Automatic_update_installation_is_opt_in_by_default()
     {
