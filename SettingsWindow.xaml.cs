@@ -30,6 +30,7 @@ public partial class SettingsWindow : Window
         _initializing = true;
         DarkModeToggle.IsChecked = _settings.DarkMode;
         AutoStartToggle.IsChecked = _settings.AutoStart;
+        AutoInstallUpdatesToggle.IsChecked = _settings.AutoInstallUpdates;
         BuildNotifyCheckboxes();
         _initializing = false;
     }
@@ -41,6 +42,7 @@ public partial class SettingsWindow : Window
         _initializing = true;
         DarkModeToggle.IsChecked = settings.DarkMode;
         AutoStartToggle.IsChecked = settings.AutoStart;
+        AutoInstallUpdatesToggle.IsChecked = settings.AutoInstallUpdates;
         BuildNotifyCheckboxes();
         _initializing = false;
     }
@@ -128,6 +130,16 @@ public partial class SettingsWindow : Window
         _settings.AutoStart = enabled;
         SettingsStore.Save(_settings);
         AutostartService.SetEnabled(enabled);
+        _ownerMain.ApplySettings(_settings);
+    }
+
+    private void AutoInstallUpdatesToggle_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_initializing)
+            return;
+
+        _settings.AutoInstallUpdates = AutoInstallUpdatesToggle.IsChecked == true;
+        SettingsStore.Save(_settings);
         _ownerMain.ApplySettings(_settings);
     }
 
