@@ -149,13 +149,13 @@ public static class LocalizationService
     private static void ApplyElement(DependencyObject element)
     {
         if (element is TextBlock textBlock) textBlock.Text = Translate(textBlock.Text);
-        if (element is Label label) label.Content = Translate(label.Content?.ToString());
-        if (element is Button button) button.Content = Translate(button.Content?.ToString());
-        if (element is CheckBox checkBox) checkBox.Content = Translate(checkBox.Content?.ToString());
-        if (element is RadioButton radioButton) radioButton.Content = Translate(radioButton.Content?.ToString());
+        if (element is System.Windows.Controls.Label label) label.Content = Translate(label.Content?.ToString());
+        if (element is System.Windows.Controls.Button button) button.Content = Translate(button.Content?.ToString());
+        if (element is System.Windows.Controls.CheckBox checkBox) checkBox.Content = Translate(checkBox.Content?.ToString());
+        if (element is System.Windows.Controls.RadioButton radioButton) radioButton.Content = Translate(radioButton.Content?.ToString());
         if (element is HeaderedContentControl headered) headered.Header = Translate(headered.Header?.ToString());
         if (element is TabItem tab) tab.Header = Translate(tab.Header?.ToString());
-        if (element is MenuItem menu) menu.Header = Translate(menu.Header?.ToString());
+        if (element is System.Windows.Controls.MenuItem menu) menu.Header = Translate(menu.Header?.ToString());
         if (element is FrameworkElement fe && fe.ToolTip is string tip) fe.ToolTip = Translate(tip);
 
         foreach (var child in LogicalTreeHelper.GetChildren(element))
