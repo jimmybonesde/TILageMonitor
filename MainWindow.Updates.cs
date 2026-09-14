@@ -43,12 +43,12 @@ public partial class MainWindow
             if (_settings.AutoInstallUpdates &&
                 !string.IsNullOrWhiteSpace(result.DownloadUrl))
             {
-                var download = await UpdateService.DownloadAndLaunchAsync(
+                var automaticDownload = await UpdateService.DownloadAndLaunchAsync(
                     result.DownloadUrl,
                     result.ChecksumUrl,
                     silent: true);
 
-                if (download.IsSuccess)
+                if (automaticDownload.IsSuccess)
                 {
                     CloseApp();
                     return result;
@@ -56,7 +56,7 @@ public partial class MainWindow
 
                 ToastService.Show(
                     "Automatisches Update fehlgeschlagen",
-                    download.Message,
+                    automaticDownload.Message,
                     ToastUrgency.Warning);
             }
 
