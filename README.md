@@ -21,17 +21,11 @@
 <p align="center">
   <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><strong>⬇️ Download</strong></a>
   ·
-  <a href="#-schnellstart">Schnellstart</a>
+  <a href="#-funktionen">Features</a>
   ·
-  <a href="#-funktionen">Funktionen</a>
+  <a href="#-14-tage-verlauf">Verlauf</a>
   ·
-  <a href="#-statuslogik">Statuslogik</a>
-  ·
-  <a href="#-bedienung">Bedienung</a>
-  ·
-  <a href="#-14-tage-verlauf">14-Tage-Verlauf</a>
-  ·
-  <a href="#-daten--datenschutz">Daten</a>
+  <a href="#-schnellstart">Start</a>
   ·
   <a href="#-für-entwickler">Entwickler</a>
 </p>
@@ -45,7 +39,37 @@
 |:---:|:---:|
 | ![Hauptfenster Hellmodus](docs/assets/screenshot-light.png) | ![Hauptfenster Dunkelmodus](docs/assets/screenshot-dark.png) |
 
-Hero-Karte, Status-Pills je Dienst, aktuelle Meldungen darunter. **X** und **Minimieren** legen das Fenster nur in den Tray — Monitoring läuft weiter. Nur **Beenden** beendet die App.
+TI-Lage Monitor zeigt den aktuellen Status von **7 TI-Diensten** als Tray-Ampel und im Fluent-Hauptfenster — inkl. Meldungen, Toasts und einem ruhigen **14-Tage-Verlauf**. Alles läuft **lokal** auf Windows, ohne Login und ohne Cloud. **X** / Minimieren → Tray (Monitoring weiter); nur **Beenden** beendet die App.
+
+## 💡 Warum TI-Lage Monitor?
+
+- **Lokal & privat** — öffentliche gematik-APIs, kein Account, keine Sync-Cloud
+- **Immer im Blick** — Tray-Ampel und Toasts, ohne einen Portal-Tab offen zu lassen
+- **14-Tage-Verlauf** — Übersicht, Stunden und Ereignisse auf einer Datenbasis
+- **Aktuell bleiben** — GitHub-Releases mit SHA-256-Prüfung und optionaler Auto-Installation
+
+## ✨ Funktionen
+
+| | Funktion | Nutzen |
+| :--: | --- | --- |
+| 🛡️ | **Tray-Ampel** | Grün / Amber / Rot / Keine Daten im Infobereich |
+| 🔎 | **7 TI-Dienste** | eRezept, ePA, KIM, WANDA, OGD, VSDM, TI-Anschluss |
+| 🔔 | **Windows-Toasts** | Klickbare Benachrichtigungen mit Kontextsprung |
+| 📈 | **14-Tage-Verlauf** | Übersicht · Stunden · Ereignisse — KPI, Fokus-Chips, Timeline |
+| ⬇️ | **GitHub-Updates** | Releases prüfen, SHA-256 verifizieren, optional still installieren |
+| 🎨 | **Fluent UI** | Hell-/Dunkelmodus, Autostart, Start direkt in den Tray |
+| ⚙️ | **Notify-Filter** | Pro Dienst und global aus dem Tray steuerbar |
+
+**Statusfarben**
+
+| Status | Bedeutung |
+| --- | --- |
+| 🟢 **Grün** | Überwachte Dienste verfügbar |
+| 🟠 **Amber** | Einschränkung oder Teilausfall |
+| 🔴 **Rot** | Vollausfall oder kritische Störung |
+| ⚪ **Keine Daten** | API nicht erreichbar oder noch kein Abruf |
+
+Lage (tilage **v2**), Incidents (**v1**) und Outages (**v1**) von `ti-lage.prod.ccs.gematik.solutions` — Abrufe im gematik-Rhythmus mit Offset (`:01`, `:06`, `:11`, …). Nach **drei aufeinanderfolgenden** API-Fehlern: dauerhaft **API down**.
 
 ## 🚀 Schnellstart
 
@@ -58,31 +82,6 @@ Hero-Karte, Status-Pills je Dienst, aktuelle Meldungen darunter. **X** und **Min
 
 > [!WARNING]
 > Die EXE ist derzeit **unsigniert**. Windows SmartScreen kann warnen. Details und Signatur-Plan: [SIGNING.md](SIGNING.md).
-
-## ✨ Funktionen
-
-| | Funktion | Nutzen |
-| :--: | --- | --- |
-| 🛡️ | **Tray-Ampel** | Grün / Amber / Rot / Keine Daten direkt im Infobereich |
-| 🔎 | **7 TI-Dienste** | eRezept, ePA, KIM, WANDA, OGD, VSDM, TI-Anschluss |
-| 🔔 | **Windows-Toasts** | Klickbare Benachrichtigungen mit Kontextsprung |
-| 📈 | **14-Tage-Verlauf** | Übersicht · Stunden · Ereignisse — KPI, Fokus-Chips, Timeline |
-| ⬇️ | **GitHub-Updates** | Releases prüfen, SHA-256 verifizieren, optional still installieren |
-| 🎨 | **Fluent UI** | Hell-/Dunkelmodus, Autostart, Start direkt in den Tray |
-| ⚙️ | **Notify-Filter** | Pro Dienst und global aus dem Tray steuerbar |
-
-v2.x behandelt den **14-Tage-Verlauf als First-Class-Feature** — ruhige KPI, Fokus-Layout und klare Timelines statt einer überladenen Heatmap.
-
-## 🟢 Statuslogik
-
-| Status | Bedeutung |
-| --- | --- |
-| 🟢 **Grün** | Überwachte Dienste verfügbar |
-| 🟠 **Amber** | Einschränkung oder Teilausfall |
-| 🔴 **Rot** | Vollausfall oder kritische Störung |
-| ⚪ **Keine Daten** | API nicht erreichbar oder noch kein Abruf |
-
-Lage (tilage **v2**), Incidents (**v1**) und Outages (**v1**) werden parallel von `ti-lage.prod.ccs.gematik.solutions` geladen. Abrufe folgen dem gematik-Rhythmus mit Offset (`:01`, `:06`, `:11`, …). Nach **drei aufeinanderfolgenden** API-Fehlern gilt dauerhaft **API down**.
 
 ## 🖱️ Bedienung
 
@@ -99,25 +98,20 @@ Lage (tilage **v2**), Incidents (**v1**) und Outages (**v1**) werden parallel vo
 
 ## 📈 14-Tage-Verlauf
 
-Drei Segmente auf derselben Datenbasis: **Übersicht | Stunden | Ereignisse**.
+Drei Segmente auf derselben Datenbasis: **Übersicht | Stunden | Ereignisse**. v2.x behandelt den Verlauf als First-Class-Feature — ruhige KPI, Fokus-Layout und klare Timelines.
 
 | Baustein | Inhalt |
 | --- | --- |
 | **KPI** | **Heute** · **14 Tage** (auffällige Tage) · **Verfügbarkeit %** |
-| **Fokus-Chips** | Alle Dienste oder ein Dienst — kompakte Zeilen bzw. große Tages-Kacheln |
+| **Fokus-Chips** | Alle Dienste oder ein Dienst — Zeilen bzw. große Tages-Kacheln |
 | **Timeline** | Karten mit Status-Balken; Klick zoomt in Stunden / markiert Ereignisse |
-| **Leer/OK** | Beruhigende „Alles ruhig“-Zustände statt leerer Listen |
-| **Theme** | Hell/Dunkel aktualisiert Farben, Schatten und Chips live |
-
-| Quelle | Lieferumfang |
-| --- | --- |
-| **gematik-API** (Incidents / Outages) | Gemeldete Einschränkungen der letzten 14 Tage — auch bei ausgeschaltetem PC |
-| **Lokale Snapshots** (`history.json`) | Ergänzen grüne Online-Stunden, solange die App läuft |
+| **Quellen** | gematik Incidents/Outages (auch bei ausgeschaltetem PC) + lokale Snapshots (`history.json`) für Online-Stunden |
+| **Leer/OK** | „Alles ruhig“ statt leerer Listen; Hell/Dunkel aktualisiert live |
 
 > [!NOTE]
 > Graue Kacheln/Stunden = weder lokaler Snapshot noch API-Meldung (zukünftige Stunden bleiben grau). Bei erreichbarer Incident-API gelten begonnene Stunden ohne Störung als verfügbar (grün).
 
-| Aktion im Verlauf | Wirkung |
+| Tipps | Wirkung |
 | --- | --- |
 | Filter-Chip | Zeilen und Ereignisse eingrenzen |
 | Tages-Kachel | Stunden-Zoom |
@@ -129,6 +123,7 @@ Drei Segmente auf derselben Datenbasis: **Übersicht | Stunden | Ereignisse**.
 - Nur öffentliche gematik-APIs — **kein Login, kein API-Key**
 - Keine Cloud-Synchronisation
 - Lokal unter `%AppData%\TILageMonitor\`
+- Updates nur von allowlisted GitHub-Hosts (`github.com`, `*.githubusercontent.com`)
 
 | Datei | Inhalt |
 | --- | --- |
@@ -136,13 +131,14 @@ Drei Segmente auf derselben Datenbasis: **Übersicht | Stunden | Ereignisse**.
 | `last-lage.json` | Offline-Cache des letzten Stands |
 | `history.json` | Stündliche lokale Ergänzung zum Verlauf |
 
-**Endpunkte**
+<details>
+<summary><strong>API-Endpunkte</strong></summary>
 
 - `https://ti-lage.prod.ccs.gematik.solutions/lageapi/v2/tilage`
 - `https://ti-lage.prod.ccs.gematik.solutions/lageapi/v1/tistatus/incident`
 - `https://ti-lage.prod.ccs.gematik.solutions/lageapi/v1/tistatus/outage`
 
-Updates laden ausschließlich von allowlisted GitHub-Hosts (`github.com`, `*.githubusercontent.com`).
+</details>
 
 ## ⚠️ Bekannte Grenzen
 
@@ -166,11 +162,10 @@ cd TILageMonitor
 | --- | --- |
 | UI & Tray | `MainWindow.*`, `App.xaml(.cs)` |
 | API & Modelle | `ApiClient.cs`, `Models.cs`, `TiStatusClassifier.cs` |
-| Persistenz | `SettingsStore.cs`, `CacheStore.cs`, `HistoryStore.cs`, `AtomicJsonStore.cs` |
+| Persistenz | `*Store.cs`, `AtomicJsonStore.cs` |
 | Verlauf | `HistoryWindow.*`, `HistoryTimelineBuilder.cs` |
-| Fenster | `SettingsWindow.*`, `AboutWindow.*` |
-| System | `ToastService.cs`, `ThemeService.cs`, `AutostartService.cs`, `UpdateService.cs`, `LocalizationService.cs` |
-| Build / Release | `Build.ps1`, `Install.ps1`, `installer/TILageMonitor.iss`, `.github/workflows/` |
+| Fenster / System | `SettingsWindow.*`, `AboutWindow.*`, `ToastService.cs`, `ThemeService.cs`, `AutostartService.cs`, `UpdateService.cs`, `LocalizationService.cs` |
+| Build / Release | `Build.ps1`, `Install.ps1`, `installer/`, `.github/workflows/` |
 
 **Stack:** WPF + WinForms-Tray · `net10.0-windows` · Windows App SDK Toasts · Inno Setup · MIT
 
