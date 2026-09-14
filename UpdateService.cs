@@ -178,17 +178,17 @@ public static class UpdateService
     {
         var helperPath = Path.Combine(
             Path.GetTempPath(),
-            $"TILageMonitor-Update-${Guid.NewGuid():N}.cmd");
+            $"TILageMonitor-Update-{Guid.NewGuid():N}.cmd");
         var processId = Environment.ProcessId;
         var script = $"""
             @echo off
             :waitforapp
-            tasklist /FI "PID eq ${processId}" /NH | findstr /C:" ${processId} " >nul
+            tasklist /FI "PID eq {processId}" /NH | findstr /C:" {processId} " >nul
             if not errorlevel 1 (
               timeout /t 1 /nobreak >nul
               goto waitforapp
             )
-            start "" "${installerPath}" /SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS
+            start "" "{installerPath}" /SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS
             del "%~f0"
             """;
 
