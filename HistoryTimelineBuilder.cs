@@ -75,7 +75,7 @@ public sealed class HistoryTimelineEvent
         var endWeekday = culture.DateTimeFormat.AbbreviatedDayNames[(int)end.DayOfWeek].TrimEnd('.');
         if (endWeekday.Length > 0)
             endWeekday = char.ToUpper(endWeekday[0], culture) + endWeekday[1..];
-        return $"{weekday} {start:dd.MM. HH:mm} – {endWeekday} {end:dd.MM. HH:mm}";
+        return $"{weekday} {start.ToString("d", culture)} {start:HH:mm} – {endWeekday} {end.ToString("d", culture)} {end:HH:mm}";
     }
 }
 
