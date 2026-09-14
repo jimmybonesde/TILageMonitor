@@ -11,7 +11,7 @@ namespace TILageMonitor;
 public sealed class HistoryHourSnapshot
 {
     [JsonPropertyName("hourKey")]
-    public string HourKey { get; set; } = ""; // yyyy-MM-dd-HH lokal
+    public string HourKey { get; set; } = ""; // yyyy-MM-dd-HHzzz (offset-aware); legacy yyyy-MM-dd-HH is accepted
 
     [JsonPropertyName("services")]
     public Dictionary<string, string> Services { get; set; } = new(StringComparer.OrdinalIgnoreCase);
@@ -137,8 +137,8 @@ public static class HistoryStore
         var file = Load();
         file.Hours ??= new List<HistoryHourSnapshot>();
         lage.AppStatus ??= new(StringComparer.OrdinalIgnoreCase);
-        var now = DateTime.Now;
-        var hourKey = now.ToString("yyyy-MM-dd-HH");
+        var now = DateTimeOffset.Now;
+        var hourKey = GetHourKey(now);
 
         var hour = file.Hours.FirstOrDefault(h => h.HourKey == hourKey);
         if (hour is null)
@@ -147,47 +147,41 @@ public static class HistoryStore
             file.Hours.Add(hour);
         }
 
+        ApplySnapshot(hour, lage);
+
+        Prune(file, now.LocalDateTime.Date);
+        Save(file);
+        return file;
+    }
+
+    /// <summary>
+    /// Merges one successful API snapshot into an hour. A missing service is deliberately
+    /// left unknown: absence from a partial API response must never become a green cell.
+    /// </summary>
+    public static void ApplySnapshot(HistoryHourSnapshot hour, LageV2 lage)
+    {
         hour.Services ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        lage.AppStatus ??= new Dictionary<string, AppStatus>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var key in AppSettings.ServiceKeys)
         {
-            AppStatus? status = null;
-            if (lage.AppStatus.TryGetValue(key, out var direct))
-            {
-                status = direct;
-            }
-            else
-            {
-                foreach (var kv in lage.AppStatus)
-                {
-                    if (string.Equals(kv.Key, key, StringComparison.OrdinalIgnoreCase))
-                    {
-                        status = kv.Value;
-                        break;
-                    }
-                }
-            }
-
+            var status = lage.AppStatus.FirstOrDefault(kv =>
+                string.Equals(kv.Key, key, StringComparison.OrdinalIgnoreCase)).Value;
             if (status is null)
-            {
-                if (!hour.Services.ContainsKey(key))
-                    hour.Services[key] = "none";
                 continue;
-            }
 
             var current = RankStatus(GetStatusCode(status));
-
             if (!hour.Services.TryGetValue(key, out var previous) ||
                 StatusSeverity(current) > StatusSeverity(previous))
             {
                 hour.Services[key] = current;
             }
         }
-
-        Prune(file, now.Date);
-        Save(file);
-        return file;
     }
+
+    /// <summary>Creates an offset-aware key so both repeated local DST hours remain distinct.</summary>
+    public static string GetHourKey(DateTimeOffset value) =>
+        value.ToString("yyyy-MM-dd-HHzzz", System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>Alias for callers still using the old name.</summary>
     public static HistoryFile UpsertToday(LageV2 lage) => UpsertNow(lage);
@@ -197,21 +191,31 @@ public static class HistoryStore
         file.Hours ??= new List<HistoryHourSnapshot>();
         var cutoff = todayLocal.AddDays(-(KeepDays - 1)); // start of (Today - 13 days)
         file.Hours = file.Hours
-            .Where(h => TryParseHourKey(h.HourKey, out var dt) && dt.Date >= cutoff)
+            .Where(h => TryParseHourKey(h.HourKey, out var time) && time.LocalDateTime.Date >= cutoff)
             .OrderBy(h => h.HourKey)
             .ToList();
     }
 
-    private static bool TryParseHourKey(string? key, out DateTime dt)
+    private static bool TryParseHourKey(string? key, out DateTimeOffset time)
     {
-        dt = default;
+        time = default;
         if (string.IsNullOrWhiteSpace(key))
             return false;
-        // yyyy-MM-dd-HH
+
+        if (DateTimeOffset.TryParseExact(key, "yyyy-MM-dd-HHzzz",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out time))
+            return true;
+
+        // Legacy files did not include an offset. Preserve them as local wall-clock time.
         if (DateTime.TryParseExact(key, "yyyy-MM-dd-HH",
                 System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.None, out dt))
+                System.Globalization.DateTimeStyles.None, out var legacy))
+        {
+            time = new DateTimeOffset(DateTime.SpecifyKind(legacy, DateTimeKind.Local));
             return true;
+        }
+
         return false;
     }
 
@@ -255,12 +259,16 @@ public static class HistoryStore
         var known = 0;
         var ok = 0;
 
+        var seenHours = new HashSet<long>();
         foreach (var hour in file.Hours)
         {
-            if (!TryParseHourKey(hour.HourKey, out var hourStart) || hourStart.Date < cutoff)
+            if (!TryParseHourKey(hour.HourKey, out var hourStart) ||
+                hourStart.LocalDateTime.Date < cutoff ||
+                hourStart.LocalDateTime > now ||
+                !seenHours.Add(hourStart.UtcDateTime.Ticks))
+            {
                 continue;
-            if (hourStart > now)
-                continue;
+            }
 
             hour.Services ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             IEnumerable<KeyValuePair<string, string>> entries = hour.Services;
@@ -298,12 +306,23 @@ public static class HistoryStore
         var cutoff = DateTime.Today.AddDays(-(KeepDays - 1));
         return file.Hours
             .Select(h => h.HourKey)
-            .Where(k => !string.IsNullOrWhiteSpace(k))
-            .Distinct(StringComparer.Ordinal)
-            .Count(k => TryParseHourKey(k, out var dt) && dt.Date >= cutoff);
+            .Where(k => TryParseHourKey(k, out var time) && time.LocalDateTime.Date >= cutoff)
+            .Select(k => { TryParseHourKey(k, out var time); return time.UtcDateTime.Ticks; })
+            .Distinct()
+            .Count();
     }
 
-    public static int ExpectedHoursInWindow => KeepDays * HoursPerDay;
+    /// <summary>Actual physical hours in the local 14-day window (335/337 around DST).</summary>
+    public static int ExpectedHoursInWindow => GetExpectedHoursInWindow(DateTime.Today);
+
+    public static int GetExpectedHoursInWindow(DateTime todayLocal)
+    {
+        var startLocal = DateTime.SpecifyKind(todayLocal.Date.AddDays(-(KeepDays - 1)), DateTimeKind.Local);
+        var endLocal = DateTime.SpecifyKind(todayLocal.Date.AddDays(1), DateTimeKind.Local);
+        var startUtc = startLocal.ToUniversalTime();
+        var endUtc = endLocal.ToUniversalTime();
+        return (int)(endUtc - startUtc).TotalHours;
+    }
 
     /// <summary>
     /// Worst known status across a day's hour cells. Null hours are ignored;
@@ -336,10 +355,14 @@ public static class HistoryStore
             .Select(i => today.AddDays(-(KeepDays - 1 - i)))
             .ToList();
 
-        var byHour = file.Hours
-            .Where(h => !string.IsNullOrWhiteSpace(h.HourKey))
-            .GroupBy(h => h.HourKey)
-            .ToDictionary(g => g.Key, g => g.Last(), StringComparer.Ordinal);
+        var byWallHour = file.Hours
+            .Where(h => TryParseHourKey(h.HourKey, out _))
+            .GroupBy(h =>
+            {
+                TryParseHourKey(h.HourKey, out var time);
+                return time.LocalDateTime.ToString("yyyy-MM-dd-HH", System.Globalization.CultureInfo.InvariantCulture);
+            })
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
 
         // A successful incident response covers the full official 14-day window:
         // intervals without a reported restriction are shown as available (green).
@@ -363,10 +386,14 @@ public static class HistoryStore
                     var hourKey = $"{date:yyyy-MM-dd}-{h:D2}";
                     string? status = null;
 
-                    if (byHour.TryGetValue(hourKey, out var snap) &&
-                        snap.Services is not null)
+                    if (byWallHour.TryGetValue(hourKey, out var snapshots))
                     {
-                        status = LookupService(snap.Services, key);
+                        status = snapshots
+                            .Where(snap => snap.Services is not null)
+                            .Select(snap => LookupService(snap.Services, key))
+                            .Where(value => value is not null)
+                            .OrderByDescending(value => StatusSeverity(value!))
+                            .FirstOrDefault();
                     }
 
                     // Green-fill only for hours that have already started locally — future stays grey.

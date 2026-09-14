@@ -80,6 +80,48 @@ public sealed class StatusAndScheduleTests
     }
 
     [Fact]
+    public void Silent_update_helper_waits_and_reopens_app_when_installer_fails()
+    {
+        var script = UpdateInstallerLauncher.BuildScript(
+            4242,
+            @"C:\Temp\TILageMonitor-2.0.9-Setup.exe",
+            @"C:\Users\Randy\AppData\Local\Programs\TILageMonitor\TILageMonitor.exe",
+            @"C:\Users\Randy\AppData\Roaming\TILageMonitor\update-install.log");
+
+        Assert.Contains("start \"\" /wait", script, StringComparison.Ordinal);
+        Assert.Contains("/VERYSILENT", script, StringComparison.Ordinal);
+        Assert.Contains("/LOG=", script, StringComparison.Ordinal);
+        Assert.Contains("--update-failed", script, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void History_missing_service_in_partial_api_response_stays_unknown()
+    {
+        var hour = new HistoryHourSnapshot();
+        var lage = new LageV2
+        {
+            AppStatus = new Dictionary<string, AppStatus>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["erezept"] = new AppStatus { Outage = "none" }
+            }
+        };
+
+        HistoryStore.ApplySnapshot(hour, lage);
+
+        Assert.Equal("none", hour.Services["erezept"]);
+        Assert.False(hour.Services.ContainsKey("epa"));
+    }
+
+    [Fact]
+    public void History_hour_keys_keep_both_dst_fallback_hours_distinct()
+    {
+        var summerHour = new DateTimeOffset(2026, 10, 25, 2, 0, 0, TimeSpan.FromHours(2));
+        var winterHour = new DateTimeOffset(2026, 10, 25, 2, 0, 0, TimeSpan.FromHours(1));
+
+        Assert.NotEqual(HistoryStore.GetHourKey(summerHour), HistoryStore.GetHourKey(winterHour));
+    }
+
+    [Fact]
     public void History_uses_incident_timeline_when_no_local_snapshot_exists()
     {
         var now = DateTime.Now;

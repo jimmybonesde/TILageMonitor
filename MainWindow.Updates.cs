@@ -6,11 +6,13 @@ public partial class MainWindow
 {
     private string? _availableUpdateDownloadUrl;
     private string? _availableUpdateChecksumUrl;
-    private string? _lastAutoInstallFailureVersion;
-    private DateTime _autoInstallRetryAfterUtc;
+    private readonly SemaphoreSlim _updateCheckGate = new(1, 1);
 
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(bool userInitiated)
     {
+        await _updateCheckGate.WaitAsync();
+        try
+        {
         var result = await UpdateService.CheckAsync();
 
         if (!result.IsSuccess)
@@ -30,6 +32,7 @@ public partial class MainWindow
         if (!result.IsUpdateAvailable)
         {
             HideUpdateFooter();
+            ClearAutomaticUpdateRetry();
 
             if (userInitiated)
             {
@@ -73,8 +76,8 @@ public partial class MainWindow
             if (_settings.AutoInstallUpdates &&
                 AutoUpdateRetryPolicy.ShouldAttempt(
                     result.LatestVersion,
-                    _lastAutoInstallFailureVersion,
-                    _autoInstallRetryAfterUtc,
+                    _settings.LastAutoInstallFailureVersion,
+                    _settings.AutoInstallRetryAfterUtc ?? DateTime.MinValue,
                     DateTime.UtcNow))
             {
                 var automaticDownload = await UpdateService.DownloadAndLaunchAsync(
@@ -88,8 +91,9 @@ public partial class MainWindow
                     return result;
                 }
 
-                _lastAutoInstallFailureVersion = result.LatestVersion;
-                _autoInstallRetryAfterUtc = AutoUpdateRetryPolicy.GetNextRetryUtc(DateTime.UtcNow);
+                _settings.LastAutoInstallFailureVersion = result.LatestVersion;
+                _settings.AutoInstallRetryAfterUtc = AutoUpdateRetryPolicy.GetNextRetryUtc(DateTime.UtcNow);
+                SettingsStore.Save(_settings);
                 ToastService.Show(
                     "Automatisches Update fehlgeschlagen",
                     $"{automaticDownload.Message}\nNächster Versuch frühestens in 6 Stunden.",
@@ -133,6 +137,34 @@ public partial class MainWindow
         }
 
         return result;
+        }
+        finally
+        {
+            _updateCheckGate.Release();
+        }
+    }
+
+    private void ClearAutomaticUpdateRetry()
+    {
+        if (_settings.LastAutoInstallFailureVersion is null &&
+            _settings.AutoInstallRetryAfterUtc is null)
+        {
+            return;
+        }
+
+        _settings.LastAutoInstallFailureVersion = null;
+        _settings.AutoInstallRetryAfterUtc = null;
+        SettingsStore.Save(_settings);
+    }
+
+    public void ShowUpdateFailureAfterRestart()
+    {
+        ShowWindow();
+        System.Windows.MessageBox.Show(
+            "Das automatische Update konnte nicht abgeschlossen werden. Die bisherige Version wurde wieder gestartet. Details stehen in %AppData%\\TILageMonitor\\update-install.log.",
+            "Update fehlgeschlagen",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
     }
 
     private void ShowAvailableUpdateNotification(UpdateCheckResult result, string message)
