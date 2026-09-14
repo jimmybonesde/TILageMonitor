@@ -265,7 +265,7 @@ public static class HistoryStore
             if (!TryParseHourKey(hour.HourKey, out var hourStart) ||
                 hourStart.LocalDateTime.Date < cutoff ||
                 hourStart.LocalDateTime > now ||
-                !seenHours.Add(hourStart.UtcTicks))
+                !seenHours.Add(hourStart.UtcDateTime.Ticks))
             {
                 continue;
             }
@@ -307,7 +307,7 @@ public static class HistoryStore
         return file.Hours
             .Select(h => h.HourKey)
             .Where(k => TryParseHourKey(k, out var time) && time.LocalDateTime.Date >= cutoff)
-            .Select(k => { TryParseHourKey(k, out var time); return time.UtcTicks; })
+            .Select(k => { TryParseHourKey(k, out var time); return time.UtcDateTime.Ticks; })
             .Distinct()
             .Count();
     }
