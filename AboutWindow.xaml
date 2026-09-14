@@ -8,7 +8,7 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="{DynamicResource WindowBackground}"
-        ShowInTaskbar="False">
+        ShowInTaskbar="True">
 
     <Window.Resources>
         <Style x:Key="AboutCardStyle" TargetType="Border">

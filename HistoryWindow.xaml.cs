@@ -301,9 +301,9 @@ public partial class HistoryWindow : Window
             StableOkBorder.Visibility = Visibility.Visible;
             var name = FocusDisplayName();
             StableOkTitle.Text = LocalizationService.Translate("Stabil · Alles ruhig");
-            StableOkSubtitle.Text = LocalizationService.Translate(focusRows.Count == 1
-                ? $"In den letzten 14 Tagen blieb {name} ohne Einschränkung oder Störung — ein ruhiges Bild."
-                : "In den letzten 14 Tagen waren alle bekannten Tage über die Dienste hinweg ohne Einschränkung oder Störung.");
+            StableOkSubtitle.Text = focusRows.Count == 1
+                ? $"{LocalizationService.Translate("In den letzten 14 Tagen blieb")} {name} {LocalizationService.Translate("ohne Einschränkung oder Störung — ein ruhiges Bild.")}"
+                : LocalizationService.Translate("In den letzten 14 Tagen waren alle bekannten Tage über die Dienste hinweg ohne Einschränkung oder Störung.");
         }
         else
         {
@@ -420,15 +420,15 @@ public partial class HistoryWindow : Window
             _ => _hasAnyData ? "Keine Daten" : "Alles OK"
         };
         KpiTodayValue.Text = LocalizationService.Translate(todayLabel);
-        KpiTodayHint.Text = LocalizationService.Translate(_selectedServiceKey is null
-            ? "Schlechtester Status heute (alle Dienste)"
-            : $"Schlechtester Status heute · {FocusDisplayName()}");
+        KpiTodayHint.Text = _selectedServiceKey is null
+            ? LocalizationService.Translate("Schlechtester Status heute (alle Dienste)")
+            : $"{LocalizationService.Translate("Schlechtester Status heute")} · {FocusDisplayName()}";
 
         ApplyKpiTodaySurface(todayWorst);
 
-        KpiDaysValue.Text = LocalizationService.Translate(degradedDays == 1
-            ? "1 auffälliger Tag"
-            : $"{degradedDays} auffällige Tage");
+        KpiDaysValue.Text = degradedDays == 1
+            ? LocalizationService.Translate("1 auffälliger Tag")
+            : $"{degradedDays} {LocalizationService.Translate("auffällige Tage")}";
         KpiDaysHint.Text = LocalizationService.Translate("Tage mit Einschränkung, Störung oder Wartung");
 
         // Prefer availability from local snapshots when present; else row cells (API-fill).
@@ -438,7 +438,8 @@ public partial class HistoryWindow : Window
         {
             var pct = Math.Round(100.0 * localOk / localKnown, 1);
             KpiAvailValue.Text = pct.ToString("0.#", UiCulture) + " %";
-            KpiAvailHint.Text = LocalizationService.Translate($"OK-Stunden: {localOk} von {localKnown} · nur lokal erfasste Stunden");
+            KpiAvailHint.Text =
+                $"{LocalizationService.Translate("OK-Stunden:")} {localOk} {LocalizationService.Translate("von")} {localKnown} · {LocalizationService.Translate("nur lokal erfasste Stunden")}";
         }
         else if (knownHours == 0)
         {
@@ -449,7 +450,8 @@ public partial class HistoryWindow : Window
         {
             var pct = Math.Round(100.0 * okHours / knownHours, 1);
             KpiAvailValue.Text = pct.ToString("0.#", UiCulture) + " %";
-            KpiAvailHint.Text = LocalizationService.Translate($"OK-Stunden: {okHours} von {knownHours} · inkl. API-gefüllte (ohne Zukunft)");
+            KpiAvailHint.Text =
+                $"{LocalizationService.Translate("OK-Stunden:")} {okHours} {LocalizationService.Translate("von")} {knownHours} · {LocalizationService.Translate("inkl. API-gefüllte (ohne Zukunft)")}";
         }
     }
 
@@ -497,8 +499,8 @@ public partial class HistoryWindow : Window
         }
         else if (!string.IsNullOrWhiteSpace(_selectedServiceKey))
         {
-            HeaderHint.Text = LocalizationService.Translate(
-                $"Fokus: {FocusDisplayName()} — große Tageskacheln. Tag öffnet Stunden; Ereignisse über den Segment-Umschalter.");
+            HeaderHint.Text =
+                $"{LocalizationService.Translate("Fokus:")} {FocusDisplayName()} — {LocalizationService.Translate("große Tageskacheln. Tag öffnet Stunden; Ereignisse über den Segment-Umschalter.")}";
         }
         else
         {
@@ -837,7 +839,7 @@ public partial class HistoryWindow : Window
         {
             // Subtle feedback: brief title pulse
             var original = ZoomTitle.Text;
-            ZoomTitle.Text = original + LocalizationService.Translate("  ·  kein Ereignis für diese Stunde");
+            ZoomTitle.Text = original + "  ·  " + LocalizationService.Translate("kein Ereignis für diese Stunde");
             var timer = new System.Windows.Threading.DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1.6)

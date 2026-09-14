@@ -95,6 +95,39 @@ public sealed class StatusAndScheduleTests
     }
 
     [Fact]
+    public void Incident_seed_gate_survives_first_api_fail_without_cache_then_toasts_only_new()
+    {
+        // Mirrors MainWindow: _incidentSeedDone stays false when Refresh catch runs
+        // without Render (no cache). Next successful Sync must still seedWithoutToast.
+        var known = new HashSet<string>(StringComparer.Ordinal);
+        var incidentSeedDone = false;
+
+        // First API fail path: no Sync / no seed — only _firstLoad would flip in catch.
+        // Seed readiness must remain false so recover does not toast pre-existing IDs.
+
+        var afterRecover = ActiveIncidentTracker.Sync(
+            known,
+            ["10", "20"],
+            seedWithoutToast: !incidentSeedDone);
+        Assert.Empty(afterRecover);
+        Assert.Equal(new HashSet<string> { "10", "20" }, known);
+        incidentSeedDone = true;
+
+        var sameSet = ActiveIncidentTracker.Sync(
+            known,
+            ["10", "20"],
+            seedWithoutToast: !incidentSeedDone);
+        Assert.Empty(sameSet);
+
+        var withNew = ActiveIncidentTracker.Sync(
+            known,
+            ["10", "20", "30"],
+            seedWithoutToast: !incidentSeedDone);
+        Assert.Equal(new[] { "30" }, withNew);
+        Assert.Equal(new HashSet<string> { "10", "20", "30" }, known);
+    }
+
+    [Fact]
     public void Automatic_update_retry_waits_for_same_failed_release()
     {
         var now = new DateTime(2026, 9, 14, 10, 0, 0, DateTimeKind.Utc);

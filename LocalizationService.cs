@@ -191,11 +191,11 @@ public static class LocalizationService
         ["In den letzten 14 Tagen waren alle bekannten Tage über die Dienste hinweg ohne Einschränkung oder Störung."] = "Across all services, every known day in the last 14 days had no restriction or outage.",
         ["Schlechtester Status heute (alle Dienste)"] = "Worst status today (all services)",
         ["1 auffälliger Tag"] = "1 affected day",
-        ["auffällige Tage"] = "affected days",
         ["Noch keine bekannten Stunden für die Berechnung"] = "No known hours for the calculation yet",
         ["OK-Stunden:"] = "OK hours:",
         ["von"] = "of",
         ["inkl. API-gefüllte (ohne Zukunft)"] = "including API-filled hours (excluding the future)",
+        ["nur lokal erfasste Stunden"] = "locally recorded hours only",
         ["Stundenansicht (0–23) — Klick auf auffällige Stunden öffnet das Ereignis; Esc zurück zur Übersicht."] = "Hourly view (0–23) — click an affected hour to open its event; Esc returns to the overview.",
         ["Ereignisse als Timeline — Esc kehrt zur Übersicht; Klick öffnet die Stundenansicht für den Starttag."] = "Events as a timeline — Esc returns to the overview; click to open the hourly view for the start day.",
         ["Fokus:"] = "Focus:",
@@ -203,7 +203,6 @@ public static class LocalizationService
         ["Alle Dienste in kompakten Zeilen. Ein Dienst-Chip fokussiert die Tageskacheln; Ereignisse separat."] = "All services in compact rows. A service chip focuses the daily tiles; events are shown separately.",
         ["Kein Tag gewählt"] = "No day selected",
         ["kein Ereignis für diese Stunde"] = "no event for this hour",
-        ["physische Stunden mit Daten"] = "physical hours with data",
         ["Einschr."] = "Restr.",
         ["Vollständige Störung im TI-Status — Stundenansicht für Details."] = "Full TI status outage — open the hourly view for details.",
         ["Einschränkung / Teilausfall — Zeitraum lokal dargestellt."] = "Restriction / partial outage — period shown locally.",
@@ -212,6 +211,10 @@ public static class LocalizationService
         ["Stundenansicht öffnen"] = "Open hourly view",
         ["Die Versionsnummer des Releases konnte nicht gelesen werden."] = "The release version could not be read.",
         ["Update-Prüfung fehlgeschlagen:"] = "Update check failed:",
+        ["Download oder Start fehlgeschlagen:"] = "Download or launch failed:",
+        ["Authenticode-Prüfung fehlgeschlagen:"] = "Authenticode check failed:",
+        ["Starte Setup …"] = "Starting setup …",
+        ["Setup gestartet"] = "Setup started",
         ["Keine Download-URL vorhanden."] = "No download URL is available.",
         ["Die Update-URL verweist nicht auf eine Setup.exe. Bitte die Release-Seite manuell öffnen."] = "The update URL does not point to a setup executable. Please open the release page manually.",
         ["Lade Setup herunter …"] = "Downloading setup …",
@@ -251,19 +254,47 @@ public static class LocalizationService
         ["Update-Prüfung fehlgeschlagen."] = "Update check failed."
     };
 
+    /// <summary>
+    /// Exact catalog lookup only for UI chrome. Never substring-replaces free-form or
+    /// API text (avoids corrupting words like <c>davon</c> via key <c>von</c>).
+    /// </summary>
     public static string Translate(string? value, CultureInfo? culture = null)
     {
         if (string.IsNullOrEmpty(value) || (culture is null ? IsGerman : IsGermanCulture(culture)))
             return value ?? string.Empty;
-        if (English.TryGetValue(value, out var translated))
-            return translated;
+        return English.TryGetValue(value, out var translated) ? translated : value;
+    }
 
-        // Dynamic status and tooltip texts are composed at runtime. Translate known
-        // phrases inside those strings while preserving values, dates and numbers.
-        var result = value;
-        foreach (var pair in English.OrderByDescending(x => x.Key.Length))
-            result = result.Replace(pair.Key, pair.Value, StringComparison.Ordinal);
-        return result;
+    /// <summary>
+    /// Known update/error prefixes that may be followed by a dynamic exception suffix.
+    /// Leading-prefix only — never mid-string replace.
+    /// </summary>
+    private static readonly string[] DynamicMessagePrefixes =
+    [
+        "Update-Prüfung fehlgeschlagen:",
+        "Prüfsumme konnte nicht geprüft werden:",
+        "Download oder Start fehlgeschlagen:",
+        "Authenticode-Prüfung fehlgeschlagen:"
+    ];
+
+    /// <summary>
+    /// Exact match, or translate a known leading update/error prefix and keep the suffix.
+    /// Use for updater messages — not for API/incident prose.
+    /// </summary>
+    public static string TranslateMessage(string? value, CultureInfo? culture = null)
+    {
+        if (string.IsNullOrEmpty(value) || (culture is null ? IsGerman : IsGermanCulture(culture)))
+            return value ?? string.Empty;
+        if (English.TryGetValue(value, out var exact))
+            return exact;
+
+        foreach (var prefix in DynamicMessagePrefixes.OrderByDescending(p => p.Length))
+        {
+            if (value.StartsWith(prefix, StringComparison.Ordinal))
+                return Translate(prefix, culture) + value[prefix.Length..];
+        }
+
+        return value;
     }
 
     public static void Apply(Window window)

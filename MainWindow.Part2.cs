@@ -161,14 +161,17 @@ public partial class MainWindow
                     incidentFocus));
         }
 
-        // Seed silently on first load (like _knownServiceStatus); toast only new IDs later.
+        // Seed silently until first Sync of the active set (_incidentSeedDone), independent
+        // of _firstLoad — so first-API-fail without cache does not toast-storm on recover.
         // Prune resolved IDs so a later reopen can toast again.
+        var seedIncidentsWithoutToast = !_incidentSeedDone;
         var newlyAppearedIncidentIds = ActiveIncidentTracker.Sync(
             _knownActiveIncidents,
             activeIncidentIds,
-            seedWithoutToast: _firstLoad);
+            seedWithoutToast: seedIncidentsWithoutToast);
+        _incidentSeedDone = true;
 
-        if (!_firstLoad)
+        if (!seedIncidentsWithoutToast)
         {
             // Toast any newly appeared active ID (not limited to UI Take(10)).
             foreach (var incident in incidents.Data.Where(x => x.Status is 1 or 4))
@@ -332,22 +335,23 @@ public partial class MainWindow
         // ZEITSTEMPEL
         // =========================================================
 
-        TimestampText.Text = LocalizationService.Translate(
-            $"Datenstand gematik: {lage.Timestamp.ToLocalTime().ToString("g", LocalizationService.DisplayCulture)}");
+        TimestampText.Text =
+            $"{LocalizationService.Translate("Datenstand gematik:")} {lage.Timestamp.ToLocalTime().ToString("g", LocalizationService.DisplayCulture)}";
 
         if (fromCache)
         {
             ConnectionText.Text = LocalizationService.Translate("● Offline · letzter Stand");
             ConnectionText.Foreground = ThemeBrush("StatusPartial");
             FooterText.Text = cacheTime.HasValue
-                ? LocalizationService.Translate($"Offline · Cache vom {cacheTime.Value.ToString("g", LocalizationService.DisplayCulture)}")
+                ? $"{LocalizationService.Translate("Offline · Cache vom")} {cacheTime.Value.ToString("g", LocalizationService.DisplayCulture)}"
                 : LocalizationService.Translate("Offline · Cache");
         }
         else
         {
             ConnectionText.Text = LocalizationService.Translate("● API erreichbar");
             ConnectionText.Foreground = ThemeBrush("StatusOk");
-            FooterText.Text = LocalizationService.Translate($"Letzte Abfrage: {DateTime.Now.ToString("g", LocalizationService.DisplayCulture)}");
+            FooterText.Text =
+                $"{LocalizationService.Translate("Letzte Abfrage:")} {DateTime.Now.ToString("g", LocalizationService.DisplayCulture)}";
         }
 
         var empty = _messages.Count == 0;

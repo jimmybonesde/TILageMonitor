@@ -29,6 +29,12 @@ public partial class MainWindow : Window
         new(StringComparer.OrdinalIgnoreCase);
 
     private bool _firstLoad = true;
+    /// <summary>
+    /// Incident toast seed gate (independent of <see cref="_firstLoad"/>).
+    /// Stays false until the first Sync of the active incident set runs, so a
+    /// first-API-fail without cache does not cause a toast storm on recover.
+    /// </summary>
+    private bool _incidentSeedDone;
     private bool _hadTiProblem;
     private int _consecutiveApiFailures;
     private bool _apiDownBalloonShown;

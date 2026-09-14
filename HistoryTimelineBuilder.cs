@@ -41,7 +41,7 @@ public sealed class HistoryTimelineEvent
         StartLocal = startLocal;
         EndLocal = endLocal;
         StatusCode = StatusCodeFromKind(kindLabel);
-        Title = LocalizationService.Translate($"{serviceName} · {kindLabel}");
+        Title = $"{serviceName} · {LocalizationService.Translate(kindLabel)}";
         TimeRangeText = FormatRange(startLocal, endLocal);
         Body = LocalizationService.Translate(kindLabel switch
         {
@@ -50,7 +50,8 @@ public sealed class HistoryTimelineEvent
             "Wartung" => "Geplante oder laufende Wartung im erfassten Fenster.",
             _ => "Ereignis aus dem TI-Status (lokal dargestellt)."
         });
-        ClickHint = LocalizationService.Translate($"Stundenansicht öffnen · {startLocal.ToString("d", LocalizationService.DisplayCulture)}");
+        ClickHint =
+            $"{LocalizationService.Translate("Stundenansicht öffnen")} · {startLocal.ToString("d", LocalizationService.DisplayCulture)}";
         DisplayLine = $"{Title} · {TimeRangeText}";
     }
 

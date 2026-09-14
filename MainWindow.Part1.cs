@@ -96,9 +96,11 @@ public partial class MainWindow
 
     private void ShowAbout()
     {
+        // Match Settings: stay findable when opened from tray with main hidden.
         var about = new AboutWindow
         {
-            Owner = IsVisible ? this : null
+            Owner = IsVisible ? this : null,
+            ShowInTaskbar = true
         };
         about.ShowDialog();
     }
@@ -278,8 +280,9 @@ public partial class MainWindow
 
                 var cacheStamp = cache.SavedAt.ToLocalTime()
                     .ToString("G", LocalizationService.DisplayCulture);
-                FooterText.Text = LocalizationService.Translate(
-                    $"Offline · Cache vom {cacheStamp} · {ex.Message}");
+                // Do not Translate ex.Message (API/exception prose) — exact chrome only.
+                FooterText.Text =
+                    $"{LocalizationService.Translate("Offline · Cache vom")} {cacheStamp} · {ex.Message}";
             }
             else
             {

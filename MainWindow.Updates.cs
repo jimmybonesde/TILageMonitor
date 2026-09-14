@@ -21,7 +21,7 @@ public partial class MainWindow
             if (userInitiated)
             {
                 System.Windows.MessageBox.Show(
-                    LocalizationService.Translate(result.ErrorMessage ?? "Die Update-Prüfung ist fehlgeschlagen."),
+                    LocalizationService.TranslateMessage(result.ErrorMessage ?? "Die Update-Prüfung ist fehlgeschlagen."),
                     LocalizationService.Translate("Updates prüfen"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -59,7 +59,7 @@ public partial class MainWindow
             if (userInitiated)
             {
                 System.Windows.MessageBox.Show(
-                    LocalizationService.Translate($"{message}\n\nDer Installer wird gerade noch erstellt. Bitte in wenigen Minuten erneut prüfen."),
+                    $"{message}\n\n{LocalizationService.Translate("Der Installer wird gerade noch erstellt. Bitte in wenigen Minuten erneut prüfen.")}",
                     LocalizationService.Translate("Update wird vorbereitet"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -110,7 +110,7 @@ public partial class MainWindow
         ShowUpdateFooter(result);
 
         var openDownload = System.Windows.MessageBox.Show(
-            LocalizationService.Translate($"{message}\n\nJetzt den Setup-Installer herunterladen und starten?"),
+            $"{message}\n\n{LocalizationService.Translate("Jetzt den Setup-Installer herunterladen und starten?")}",
             LocalizationService.Translate("Update verfügbar"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Information);
@@ -124,7 +124,7 @@ public partial class MainWindow
         if (download.IsSuccess)
         {
             System.Windows.MessageBox.Show(
-                LocalizationService.Translate(download.Message),
+                LocalizationService.TranslateMessage(download.Message),
                 LocalizationService.Translate("Update"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
@@ -132,8 +132,8 @@ public partial class MainWindow
         else
         {
             System.Windows.MessageBox.Show(
-                download.Message,
-                "Update",
+                LocalizationService.TranslateMessage(download.Message),
+                LocalizationService.Translate("Update"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
         }
@@ -226,12 +226,18 @@ public partial class MainWindow
 
         if (string.IsNullOrWhiteSpace(result.DownloadUrl))
         {
-            UpdateFooterText.Text = LocalizationService.Translate($"Update {result.LatestVersion} wird vorbereitet");
+            UpdateFooterText.Text =
+                LocalizationService.IsGerman
+                    ? $"Update {result.LatestVersion} wird vorbereitet"
+                    : $"Update {result.LatestVersion} is being prepared";
             InstallUpdateButton.Visibility = Visibility.Collapsed;
             return;
         }
 
-        UpdateFooterText.Text = LocalizationService.Translate($"Update {result.LatestVersion} verfügbar");
+        UpdateFooterText.Text =
+            LocalizationService.IsGerman
+                ? $"Update {result.LatestVersion} verfügbar"
+                : $"Update {result.LatestVersion} available";
         InstallUpdateButton.Visibility = Visibility.Visible;
         InstallUpdateButton.IsEnabled = true;
         InstallUpdateButton.Content = LocalizationService.Translate("Update installieren");
@@ -271,7 +277,7 @@ public partial class MainWindow
         InstallUpdateButton.IsEnabled = true;
         InstallUpdateButton.Content = LocalizationService.Translate("Erneut versuchen");
         System.Windows.MessageBox.Show(
-            LocalizationService.Translate(download.Message),
+            LocalizationService.TranslateMessage(download.Message),
             LocalizationService.Translate("Update"),
             MessageBoxButton.OK,
             MessageBoxImage.Warning);
