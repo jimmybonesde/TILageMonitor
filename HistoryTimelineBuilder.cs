@@ -50,7 +50,7 @@ public sealed class HistoryTimelineEvent
             "Wartung" => "Geplante oder laufende Wartung im erfassten Fenster.",
             _ => "Ereignis aus dem TI-Status (lokal dargestellt)."
         });
-        ClickHint = LocalizationService.Translate($"Stundenansicht öffnen · {startLocal:dd.MM.yyyy}");
+        ClickHint = LocalizationService.Translate($"Stundenansicht öffnen · {startLocal.ToString("d", LocalizationService.DisplayCulture)}");
         DisplayLine = $"{Title} · {TimeRangeText}";
     }
 
@@ -64,7 +64,7 @@ public sealed class HistoryTimelineEvent
 
     private static string FormatRange(DateTime start, DateTime end)
     {
-        var culture = CultureInfo.GetCultureInfo("de-DE");
+        var culture = LocalizationService.DisplayCulture;
         var weekday = culture.DateTimeFormat.AbbreviatedDayNames[(int)start.DayOfWeek].TrimEnd('.');
         if (weekday.Length > 0)
             weekday = char.ToUpper(weekday[0], culture) + weekday[1..];
@@ -81,7 +81,7 @@ public sealed class HistoryTimelineEvent
 
 public static class HistoryTimelineBuilder
 {
-    private static readonly CultureInfo De = CultureInfo.GetCultureInfo("de-DE");
+    private static CultureInfo UiCulture => LocalizationService.DisplayCulture;
 
     /// <summary>
     /// Builds recent timeline events from official incident steps and outage slots,
@@ -195,7 +195,7 @@ public static class HistoryTimelineBuilder
 
         return MergeAdjacentSameKind(DedupeOverlapping(events))
             .OrderByDescending(e => e.StartLocal)
-            .ThenBy(e => e.ServiceName, StringComparer.Create(De, ignoreCase: true))
+            .ThenBy(e => e.ServiceName, StringComparer.Create(UiCulture, ignoreCase: true))
             .Take(Math.Max(1, maxEvents))
             .ToList();
     }
