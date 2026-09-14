@@ -21,7 +21,7 @@ public partial class HistoryWindow : Window
         Events
     }
 
-    private static readonly CultureInfo DeCulture = CultureInfo.GetCultureInfo("de-DE");
+    private static CultureInfo UiCulture => LocalizationService.DisplayCulture;
 
     /// <summary>In-session remembered filter; default = Alle (null). Sticky after chip pick.</summary>
     private static string? s_sessionFilterKey = null;
@@ -300,10 +300,10 @@ public partial class HistoryWindow : Window
         {
             StableOkBorder.Visibility = Visibility.Visible;
             var name = FocusDisplayName();
-            StableOkTitle.Text = "Stabil · Alles ruhig";
-            StableOkSubtitle.Text = focusRows.Count == 1
+            StableOkTitle.Text = LocalizationService.Translate("Stabil · Alles ruhig");
+            StableOkSubtitle.Text = LocalizationService.Translate(focusRows.Count == 1
                 ? $"In den letzten 14 Tagen blieb {name} ohne Einschränkung oder Störung — ein ruhiges Bild."
-                : "In den letzten 14 Tagen waren alle bekannten Tage über die Dienste hinweg ohne Einschränkung oder Störung.";
+                : "In den letzten 14 Tagen waren alle bekannten Tage über die Dienste hinweg ohne Einschränkung oder Störung.");
         }
         else
         {
@@ -328,7 +328,7 @@ public partial class HistoryWindow : Window
         if (!string.IsNullOrWhiteSpace(_selectedServiceKey) &&
             AppSettings.ServiceDisplayNames.TryGetValue(_selectedServiceKey, out var n))
             return n;
-        return "alle Dienste";
+        return LocalizationService.Translate("alle Dienste");
     }
 
     private void RefreshTimeline()
@@ -419,17 +419,17 @@ public partial class HistoryWindow : Window
             "none" => "Alles OK",
             _ => _hasAnyData ? "Keine Daten" : "Alles OK"
         };
-        KpiTodayValue.Text = todayLabel;
-        KpiTodayHint.Text = _selectedServiceKey is null
+        KpiTodayValue.Text = LocalizationService.Translate(todayLabel);
+        KpiTodayHint.Text = LocalizationService.Translate(_selectedServiceKey is null
             ? "Schlechtester Status heute (alle Dienste)"
-            : $"Schlechtester Status heute · {FocusDisplayName()}";
+            : $"Schlechtester Status heute · {FocusDisplayName()}");
 
         ApplyKpiTodaySurface(todayWorst);
 
-        KpiDaysValue.Text = degradedDays == 1
+        KpiDaysValue.Text = LocalizationService.Translate(degradedDays == 1
             ? "1 auffälliger Tag"
-            : $"{degradedDays} auffällige Tage";
-        KpiDaysHint.Text = "Tage mit Einschränkung, Störung oder Wartung";
+            : $"{degradedDays} auffällige Tage");
+        KpiDaysHint.Text = LocalizationService.Translate("Tage mit Einschränkung, Störung oder Wartung");
 
         // Prefer availability from local snapshots when present; else row cells (API-fill).
         // Future hours are null from BuildRows and already skipped above.
@@ -437,19 +437,19 @@ public partial class HistoryWindow : Window
         if (localKnown > 0)
         {
             var pct = Math.Round(100.0 * localOk / localKnown, 1);
-            KpiAvailValue.Text = pct.ToString("0.#", DeCulture) + " %";
-            KpiAvailHint.Text = $"OK-Stunden: {localOk} von {localKnown} · nur lokal erfasste Stunden";
+            KpiAvailValue.Text = pct.ToString("0.#", UiCulture) + " %";
+            KpiAvailHint.Text = LocalizationService.Translate($"OK-Stunden: {localOk} von {localKnown} · nur lokal erfasste Stunden");
         }
         else if (knownHours == 0)
         {
             KpiAvailValue.Text = "—";
-            KpiAvailHint.Text = "Noch keine bekannten Stunden für die Berechnung";
+            KpiAvailHint.Text = LocalizationService.Translate("Noch keine bekannten Stunden für die Berechnung");
         }
         else
         {
             var pct = Math.Round(100.0 * okHours / knownHours, 1);
-            KpiAvailValue.Text = pct.ToString("0.#", DeCulture) + " %";
-            KpiAvailHint.Text = $"OK-Stunden: {okHours} von {knownHours} · inkl. API-gefüllte (ohne Zukunft)";
+            KpiAvailValue.Text = pct.ToString("0.#", UiCulture) + " %";
+            KpiAvailHint.Text = LocalizationService.Translate($"OK-Stunden: {okHours} von {knownHours} · inkl. API-gefüllte (ohne Zukunft)");
         }
     }
 
@@ -722,15 +722,15 @@ public partial class HistoryWindow : Window
         if (_zoomedDate is not DateTime date)
         {
             ZoomHintBorder.Visibility = Visibility.Visible;
-            ZoomTitle.Text = "Kein Tag gewählt";
+            ZoomTitle.Text = LocalizationService.Translate("Kein Tag gewählt");
             _zoomRows.Clear();
             return;
         }
 
         ZoomHintBorder.Visibility = Visibility.Collapsed;
-        ZoomTitle.Text = date.ToString("dddd, dd.MM.yyyy", DeCulture);
+        ZoomTitle.Text = date.ToString("dddd, dd.MM.yyyy", UiCulture);
         if (ZoomTitle.Text.Length > 0)
-            ZoomTitle.Text = char.ToUpper(ZoomTitle.Text[0], DeCulture) + ZoomTitle.Text[1..];
+            ZoomTitle.Text = char.ToUpper(ZoomTitle.Text[0], UiCulture) + ZoomTitle.Text[1..];
 
         _zoomRows.Clear();
         var source = !string.IsNullOrWhiteSpace(_selectedServiceKey) ? _focusHistory : _history;
@@ -837,7 +837,7 @@ public partial class HistoryWindow : Window
         {
             // Subtle feedback: brief title pulse
             var original = ZoomTitle.Text;
-            ZoomTitle.Text = original + "  ·  kein Ereignis für diese Stunde";
+            ZoomTitle.Text = original + LocalizationService.Translate("  ·  kein Ereignis für diese Stunde");
             var timer = new System.Windows.Threading.DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1.6)
