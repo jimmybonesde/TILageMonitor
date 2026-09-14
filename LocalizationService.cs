@@ -225,7 +225,17 @@ public static class LocalizationService
         ["Die Prüfsumme des Updates fehlt."] = "The update checksum is missing.",
         ["Für den Installer wurde keine passende Prüfsumme gefunden."] = "No matching checksum was found for the installer.",
         ["Die Prüfsumme des Updates stimmt nicht überein."] = "The update checksum does not match.",
-        ["Prüfsumme konnte nicht geprüft werden:"] = "Checksum could not be checked:"
+        ["Prüfsumme konnte nicht geprüft werden:"] = "Checksum could not be checked:",
+        ["Datenstand gematik:"] = "gematik data as of:",
+        ["● Offline · letzter Stand"] = "● Offline · last known status",
+        ["Offline · Cache vom"] = "Offline · cache from",
+        ["Offline · Cache"] = "Offline · cache",
+        ["● API erreichbar"] = "● API available",
+        ["Letzte Abfrage:"] = "Last checked:",
+        ["Ursache ·"] = "Cause ·",
+        ["Komplettausfall"] = "Full outage",
+        ["Jetzt den Setup-Installer herunterladen und starten?"] = "Download and start the setup installer now?",
+        ["Im Footer kannst du es installieren."] = "You can install it from the footer."
     };
 
     public static string Translate(string? value, CultureInfo? culture = null)
