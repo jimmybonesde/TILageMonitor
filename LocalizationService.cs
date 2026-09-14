@@ -109,14 +109,36 @@ public static class LocalizationService
         ["Wartung"] = "Maintenance",
         ["Störung"] = "Outage",
         ["keine Daten"] = "no data",
-        ["TI-Status: wird geladen…"] = "TI status: loading…",\n        ["Die Update-Prüfung ist fehlgeschlagen."] = "The update check failed."
+        ["TI-Status: wird geladen…"] = "TI status: loading…",\n        ["Die Update-Prüfung ist fehlgeschlagen."] = "The update check failed.",
+        ["Störung"] = "Outage",
+        ["Teilausfall"] = "Partial outage",
+        ["Einschränkung"] = "Restriction",
+        ["Wartung"] = "Maintenance",
+        ["Alles OK"] = "All OK",
+        ["Verfügbar"] = "Available",
+        ["Keine Daten"] = "No data",
+        ["keine Daten"] = "no data",
+        ["Heute"] = "Today",
+        ["auffällige Tage"] = "affected days",
+        ["Schlechtester Status heute"] = "Worst status today",
+        ["physische Stunden mit Daten"] = "physical hours with data",
+        ["Klick öffnet die Stundenansicht."] = "Click to open the hourly view.",
+        ["wieder verfügbar"] = "available again"
     };
 
     public static string Translate(string? value, CultureInfo? culture = null)
     {
         if (string.IsNullOrEmpty(value) || IsGermanCulture(culture))
             return value ?? string.Empty;
-        return English.TryGetValue(value, out var translated) ? translated : value;
+        if (English.TryGetValue(value, out var translated))
+            return translated;
+
+        // Dynamic status and tooltip texts are composed at runtime. Translate known
+        // phrases inside those strings while preserving values, dates and numbers.
+        var result = value;
+        foreach (var pair in English.OrderByDescending(x => x.Key.Length))
+            result = result.Replace(pair.Key, pair.Value, StringComparison.Ordinal);
+        return result;
     }
 
     public static void Apply(Window window)
