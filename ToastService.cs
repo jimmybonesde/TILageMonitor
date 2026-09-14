@@ -52,6 +52,9 @@ public static class ToastService
         if (!AreNotificationsEnabled)
             return;
 
+        title = LocalizationService.Translate(title);
+        body = LocalizationService.Translate(body);
+
         _lastFocusKey = string.IsNullOrWhiteSpace(focusKey) ? null : focusKey;
 
         var notificationShown = ToastRegistration.IsRegistered &&

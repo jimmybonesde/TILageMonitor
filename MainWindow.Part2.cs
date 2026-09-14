@@ -303,22 +303,22 @@ public partial class MainWindow
         // ZEITSTEMPEL
         // =========================================================
 
-        TimestampText.Text =
-            $"Datenstand gematik: {lage.Timestamp.ToLocalTime():dd.MM.yyyy HH:mm:ss}";
+        TimestampText.Text = LocalizationService.Translate(
+            $"Datenstand gematik: {lage.Timestamp.ToLocalTime().ToString("g", LocalizationService.DisplayCulture)}");
 
         if (fromCache)
         {
-            ConnectionText.Text = "● Offline · letzter Stand";
+            ConnectionText.Text = LocalizationService.Translate("● Offline · letzter Stand");
             ConnectionText.Foreground = ThemeBrush("StatusPartial");
             FooterText.Text = cacheTime.HasValue
-                ? $"Offline · Cache vom {cacheTime.Value:dd.MM.yyyy HH:mm:ss}"
-                : "Offline · Cache";
+                ? LocalizationService.Translate($"Offline · Cache vom {cacheTime.Value.ToString("g", LocalizationService.DisplayCulture)}")
+                : LocalizationService.Translate("Offline · Cache");
         }
         else
         {
-            ConnectionText.Text = "● API erreichbar";
+            ConnectionText.Text = LocalizationService.Translate("● API erreichbar");
             ConnectionText.Foreground = ThemeBrush("StatusOk");
-            FooterText.Text = $"Letzte Abfrage: {DateTime.Now:dd.MM.yyyy HH:mm:ss}";
+            FooterText.Text = LocalizationService.Translate($"Letzte Abfrage: {DateTime.Now.ToString("g", LocalizationService.DisplayCulture)}");
         }
 
         var empty = _messages.Count == 0;

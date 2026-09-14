@@ -142,14 +142,14 @@ public partial class MainWindow
     }
 
     private static string FormatStatusShort(string status) =>
-        status switch
+        LocalizationService.Translate(status switch
         {
             "full" => "Komplettausfall",
             "partial" => "Teilausfall",
             "maintenance" => "Wartung",
             "none" => "wieder verfügbar",
             _ => status
-        };
+        });
 
     private static string Truncate(string text, int max)
     {
@@ -250,6 +250,6 @@ public partial class MainWindow
         _tray.Icon = icon;
         if (text.Length > 63)
             text = text[..63];
-        _tray.Text = text;
+        _tray.Text = LocalizationService.Translate(text);
     }
 }

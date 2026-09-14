@@ -21,8 +21,8 @@ public partial class MainWindow
             if (userInitiated)
             {
                 System.Windows.MessageBox.Show(
-                    result.ErrorMessage ?? LocalizationService.Translate("Die Update-Prüfung ist fehlgeschlagen."),
-                    "Updates prüfen",
+                    LocalizationService.Translate(result.ErrorMessage ?? "Die Update-Prüfung ist fehlgeschlagen."),
+                    LocalizationService.Translate("Updates prüfen"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
             }
@@ -39,7 +39,7 @@ public partial class MainWindow
             {
                 System.Windows.MessageBox.Show(
                     LocalizationService.IsGerman ? $"TI-Lage Monitor ist aktuell (Version {result.CurrentVersion})." : $"TI-Lage Monitor is up to date (version {result.CurrentVersion}).",
-                    "Updates prüfen",
+                    LocalizationService.Translate("Updates prüfen"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
             }
@@ -59,8 +59,8 @@ public partial class MainWindow
             if (userInitiated)
             {
                 System.Windows.MessageBox.Show(
-                    $"{message}\n\nDer Installer wird gerade noch erstellt. Bitte in wenigen Minuten erneut prüfen.",
-                    "Update wird vorbereitet",
+                    LocalizationService.Translate($"{message}\n\nDer Installer wird gerade noch erstellt. Bitte in wenigen Minuten erneut prüfen."),
+                    LocalizationService.Translate("Update wird vorbereitet"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
             }
@@ -109,8 +109,8 @@ public partial class MainWindow
         ShowUpdateFooter(result);
 
         var openDownload = System.Windows.MessageBox.Show(
-            $"{message}\n\nJetzt den Setup-Installer herunterladen und starten?",
-            "Update verfügbar",
+            LocalizationService.Translate($"{message}\n\nJetzt den Setup-Installer herunterladen und starten?"),
+            LocalizationService.Translate("Update verfügbar"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Information);
 
@@ -123,8 +123,8 @@ public partial class MainWindow
         if (download.IsSuccess)
         {
             System.Windows.MessageBox.Show(
-                download.Message,
-                "Update",
+                LocalizationService.Translate(download.Message),
+                LocalizationService.Translate("Update"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
         }
@@ -178,8 +178,8 @@ public partial class MainWindow
     {
         ShowWindow();
         System.Windows.MessageBox.Show(
-            "Das automatische Update konnte nicht abgeschlossen werden. Die bisherige Version wurde wieder gestartet. Details stehen in %AppData%\\TILageMonitor\\update-install.log.",
-            "Update fehlgeschlagen",
+            LocalizationService.Translate("Das automatische Update konnte nicht abgeschlossen werden. Die bisherige Version wurde wieder gestartet. Details stehen in %AppData%\\TILageMonitor\\update-install.log."),
+            LocalizationService.Translate("Update fehlgeschlagen"),
             MessageBoxButton.OK,
             MessageBoxImage.Warning);
     }
@@ -224,15 +224,15 @@ public partial class MainWindow
 
         if (string.IsNullOrWhiteSpace(result.DownloadUrl))
         {
-            UpdateFooterText.Text = $"Update {result.LatestVersion} wird vorbereitet";
+            UpdateFooterText.Text = LocalizationService.Translate($"Update {result.LatestVersion} wird vorbereitet");
             InstallUpdateButton.Visibility = Visibility.Collapsed;
             return;
         }
 
-        UpdateFooterText.Text = $"Update {result.LatestVersion} verfügbar";
+        UpdateFooterText.Text = LocalizationService.Translate($"Update {result.LatestVersion} verfügbar");
         InstallUpdateButton.Visibility = Visibility.Visible;
         InstallUpdateButton.IsEnabled = true;
-        InstallUpdateButton.Content = "Update installieren";
+        InstallUpdateButton.Content = LocalizationService.Translate("Update installieren");
     }
 
     private void HideUpdateFooter()
@@ -249,7 +249,7 @@ public partial class MainWindow
             return;
 
         InstallUpdateButton.IsEnabled = false;
-        InstallUpdateButton.Content = "Lade Update …";
+        InstallUpdateButton.Content = LocalizationService.Translate("Lade Update …");
 
         var download = await DownloadAndLaunchSerializedAsync(
             _availableUpdateDownloadUrl,
@@ -257,7 +257,7 @@ public partial class MainWindow
 
         if (download.IsSuccess)
         {
-            InstallUpdateButton.Content = "Setup gestartet";
+            InstallUpdateButton.Content = LocalizationService.Translate("Setup gestartet");
             System.Windows.MessageBox.Show(
                 download.Message,
                 "Update",
@@ -267,10 +267,10 @@ public partial class MainWindow
         }
 
         InstallUpdateButton.IsEnabled = true;
-        InstallUpdateButton.Content = "Erneut versuchen";
+        InstallUpdateButton.Content = LocalizationService.Translate("Erneut versuchen");
         System.Windows.MessageBox.Show(
-            download.Message,
-            "Update",
+            LocalizationService.Translate(download.Message),
+            LocalizationService.Translate("Update"),
             MessageBoxButton.OK,
             MessageBoxImage.Warning);
     }
