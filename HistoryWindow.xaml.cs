@@ -52,8 +52,6 @@ public partial class HistoryWindow : Window
         HistoryList.ItemsSource = _history;
         FocusHistoryList.ItemsSource = _focusHistory;
         ZoomList.ItemsSource = _zoomRows;
-        FocusTimelineList.ItemsSource = Array.Empty<HistoryTimelineEvent>();
-        MultiTimelineList.ItemsSource = Array.Empty<HistoryTimelineEvent>();
         EventsTimelineList.ItemsSource = Array.Empty<HistoryTimelineEvent>();
         ZoomHourAxis.ItemsSource = Enumerable.Range(0, 24).Select(h => h.ToString()).ToList();
         UpdateLegendColors();
@@ -337,26 +335,15 @@ public partial class HistoryWindow : Window
         if (!_hasAnyData)
         {
             _timelineEventsCache = new List<HistoryTimelineEvent>();
-            FocusTimelineList.ItemsSource = _timelineEventsCache;
-            MultiTimelineList.ItemsSource = new List<HistoryTimelineEvent>();
             EventsTimelineList.ItemsSource = new List<HistoryTimelineEvent>();
-            FocusTimelineEmpty.Visibility = Visibility.Collapsed;
-            MultiTimelineEmpty.Visibility = Visibility.Collapsed;
             EventsEmptyCard.Visibility = Visibility.Collapsed;
             return;
         }
 
         _timelineEventsCache = HistoryTimelineBuilder.Build(_incidents, _outages, _selectedServiceKey);
-        // Separate list instances so each ItemsControl has its own binding source
-        FocusTimelineList.ItemsSource = _timelineEventsCache.ToList();
-        MultiTimelineList.ItemsSource = _timelineEventsCache.ToList();
         EventsTimelineList.ItemsSource = _timelineEventsCache.ToList();
 
         var empty = _timelineEventsCache.Count == 0;
-        FocusTimelineEmpty.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
-        MultiTimelineEmpty.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
-        FocusTimelineList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
-        MultiTimelineList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
         EventsTimelineList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
         EventsEmptyCard.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -500,7 +487,7 @@ public partial class HistoryWindow : Window
         if (_viewMode == ViewMode.Hours)
         {
             HeaderHint.Text =
-                "Stundenansicht (0–23) — Esc oder „Zurück zur Übersicht“ kehrt zur Übersicht.";
+                "Stundenansicht (0–23) — Klick auf auffällige Stunden öffnet das Ereignis; Esc zurück zur Übersicht.";
         }
         else if (_viewMode == ViewMode.Events)
         {
@@ -510,12 +497,12 @@ public partial class HistoryWindow : Window
         else if (!string.IsNullOrWhiteSpace(_selectedServiceKey))
         {
             HeaderHint.Text =
-                $"Fokus: {FocusDisplayName()} — große Tageskacheln links, Ereignisse rechts. Tag oder Ereignis öffnet Stunden.";
+                $"Fokus: {FocusDisplayName()} — große Tageskacheln. Tag öffnet Stunden; Ereignisse über den Segment-Umschalter.";
         }
         else
         {
             HeaderHint.Text =
-                "Alle Dienste in kompakten Zeilen. Ein Dienst-Chip fokussiert die Detailansicht mit Timeline.";
+                "Alle Dienste in kompakten Zeilen. Ein Dienst-Chip fokussiert die Tageskacheln; Ereignisse separat.";
         }
     }
 
@@ -756,7 +743,7 @@ public partial class HistoryWindow : Window
                 .FirstOrDefault(d => d.Date.Date == date.Date);
             if (day is null)
                 continue;
-            _zoomRows.Add(new ZoomServiceRow(row.ServiceName, day.Hours ?? new List<HistoryDayCell>()));
+            _zoomRows.Add(new ZoomServiceRow(row.ServiceKey, row.ServiceName, day.Hours ?? new List<HistoryDayCell>()));
         }
     }
 
@@ -809,17 +796,198 @@ public partial class HistoryWindow : Window
             ApplyShadowOpacityWalk(VisualTreeHelper.GetChild(root, i), opacity);
     }
 
+
+    private void ZoomHourCell_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: HistoryDayCell cell })
+            return;
+
+        // Only navigate for partial / full / maintenance cells
+        if (cell.Status is null ||
+            string.Equals(cell.Status, "none", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var row = FindAncestorDataContext<ZoomServiceRow>(sender as DependencyObject);
+        if (row is null)
+            return;
+
+        var hourStart = cell.Date.Date.AddHours(cell.Hour);
+        var hourEnd = hourStart.AddHours(1);
+
+        // Prefer cache covering current filter; fall back to unfiltered build if needed
+        var candidates = _timelineEventsCache;
+        if (candidates.Count == 0 ||
+            (!string.IsNullOrWhiteSpace(_selectedServiceKey) &&
+             !candidates.Any(ev => string.Equals(ev.ServiceKey, row.ServiceKey, StringComparison.OrdinalIgnoreCase))))
+        {
+            candidates = HistoryTimelineBuilder.Build(_incidents, _outages, row.ServiceKey);
+        }
+
+        var match = candidates
+            .Where(ev =>
+                string.Equals(ev.ServiceKey, row.ServiceKey, StringComparison.OrdinalIgnoreCase) &&
+                ev.StartLocal < hourEnd &&
+                hourStart < ev.EndLocal)
+            .OrderByDescending(ev => HistoryStore.StatusSeverity(ev.StatusCode ?? "none"))
+            .ThenByDescending(ev => ev.StartLocal)
+            .FirstOrDefault();
+
+        if (match is null)
+        {
+            // Subtle feedback: brief title pulse
+            var original = ZoomTitle.Text;
+            ZoomTitle.Text = original + "  ·  kein Ereignis für diese Stunde";
+            var timer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1.6)
+            };
+            timer.Tick += (_, _) =>
+            {
+                timer.Stop();
+                if (ZoomTitle.Text.StartsWith(original, StringComparison.Ordinal))
+                    ZoomTitle.Text = original;
+            };
+            timer.Start();
+            e.Handled = true;
+            return;
+        }
+
+        NavigateToTimelineEvent(match);
+        e.Handled = true;
+    }
+
+    private void NavigateToTimelineEvent(HistoryTimelineEvent target)
+    {
+        foreach (var ev in _timelineEventsCache)
+            ev.IsHighlighted = false;
+
+        // Ensure target is in the events list shown for current filter
+        var shown = _timelineEventsCache;
+        var inCache = shown.FirstOrDefault(ev =>
+            string.Equals(ev.ServiceKey, target.ServiceKey, StringComparison.OrdinalIgnoreCase) &&
+            ev.StartLocal == target.StartLocal &&
+            ev.EndLocal == target.EndLocal &&
+            string.Equals(ev.KindLabel, target.KindLabel, StringComparison.Ordinal));
+
+        if (inCache is null)
+        {
+            // Rebuild without filter so the event is visible, keep service chip as-is
+            _timelineEventsCache = HistoryTimelineBuilder.Build(_incidents, _outages, _selectedServiceKey);
+            inCache = _timelineEventsCache.FirstOrDefault(ev =>
+                string.Equals(ev.ServiceKey, target.ServiceKey, StringComparison.OrdinalIgnoreCase) &&
+                ev.StartLocal == target.StartLocal &&
+                ev.EndLocal == target.EndLocal &&
+                string.Equals(ev.KindLabel, target.KindLabel, StringComparison.Ordinal))
+                ?? _timelineEventsCache.FirstOrDefault(ev =>
+                    string.Equals(ev.ServiceKey, target.ServiceKey, StringComparison.OrdinalIgnoreCase) &&
+                    ev.StartLocal < target.EndLocal &&
+                    target.StartLocal < ev.EndLocal);
+        }
+
+        if (inCache is null)
+            return;
+
+        inCache.IsHighlighted = true;
+        EventsTimelineList.ItemsSource = _timelineEventsCache.ToList();
+        EventsTimelineList.Visibility = _timelineEventsCache.Count == 0
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        EventsEmptyCard.Visibility = _timelineEventsCache.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        _viewMode = ViewMode.Events;
+        ApplyViewMode(animated: true);
+        UpdateHeaderHint();
+        UpdateSegmentStyles();
+
+        var highlight = inCache;
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            EventsTimelineList.UpdateLayout();
+            var element = FindTimelineEventElement(EventsTimelineList, highlight);
+            element?.BringIntoView();
+        }), System.Windows.Threading.DispatcherPriority.Loaded);
+    }
+
+    private static FrameworkElement? FindTimelineEventElement(
+        ItemsControl items,
+        HistoryTimelineEvent target)
+    {
+        items.UpdateLayout();
+        for (var i = 0; i < items.Items.Count; i++)
+        {
+            if (items.Items[i] is not HistoryTimelineEvent ev)
+                continue;
+            if (!ReferenceEquals(ev, target) &&
+                !(string.Equals(ev.ServiceKey, target.ServiceKey, StringComparison.OrdinalIgnoreCase) &&
+                  ev.StartLocal == target.StartLocal &&
+                  ev.EndLocal == target.EndLocal &&
+                  string.Equals(ev.KindLabel, target.KindLabel, StringComparison.Ordinal)))
+                continue;
+
+            var container = items.ItemContainerGenerator.ContainerFromIndex(i) as FrameworkElement
+                            ?? items.ItemContainerGenerator.ContainerFromItem(items.Items[i]) as FrameworkElement;
+            if (container is not null)
+                return container;
+        }
+
+        // Fallback: walk visual tree for matching DataContext
+        return FindVisualChildByDataContext(items, target);
+    }
+
+    private static FrameworkElement? FindVisualChildByDataContext(
+        DependencyObject parent,
+        HistoryTimelineEvent target)
+    {
+        var count = VisualTreeHelper.GetChildrenCount(parent);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is FrameworkElement fe &&
+                fe.DataContext is HistoryTimelineEvent ev &&
+                (ReferenceEquals(ev, target) ||
+                 (string.Equals(ev.ServiceKey, target.ServiceKey, StringComparison.OrdinalIgnoreCase) &&
+                  ev.StartLocal == target.StartLocal &&
+                  ev.EndLocal == target.EndLocal)))
+            {
+                return fe;
+            }
+
+            var nested = FindVisualChildByDataContext(child, target);
+            if (nested is not null)
+                return nested;
+        }
+
+        return null;
+    }
+
+    private static T? FindAncestorDataContext<T>(DependencyObject? start) where T : class
+    {
+        var current = start;
+        while (current is not null)
+        {
+            if (current is FrameworkElement fe && fe.DataContext is T match)
+                return match;
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return null;
+    }
+
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 }
 
 /// <summary>One service row in day-zoom mode (24 hour cells).</summary>
 public sealed class ZoomServiceRow
 {
+    public string ServiceKey { get; }
     public string ServiceName { get; }
     public List<HistoryDayCell> Hours { get; }
 
-    public ZoomServiceRow(string serviceName, List<HistoryDayCell> hours)
+    public ZoomServiceRow(string serviceKey, string serviceName, List<HistoryDayCell> hours)
     {
+        ServiceKey = serviceKey;
         ServiceName = serviceName;
         Hours = hours;
     }

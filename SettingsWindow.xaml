@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Einstellungen"
         Width="643"
-        Height="756"
+        Height="908"
         MinWidth="555"
-        MinHeight="630"
+        MinHeight="756"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
         Background="{DynamicResource WindowBackground}"
@@ -69,7 +69,7 @@
                                    Style="{StaticResource SectionHintStyle}"/>
                         <CheckBox x:Name="DarkModeToggle"
                                   Content="Dunkelmodus"
-                                  Style="{DynamicResource ToggleSwitchStyle}"
+                                  Style="{DynamicResource ThemeAwareCheckBoxStyle}"
                                   Checked="DarkModeToggle_Changed"
                                   Unchecked="DarkModeToggle_Changed"/>
                     </StackPanel>
@@ -86,7 +86,7 @@
                                    Style="{StaticResource SectionHintStyle}"/>
                         <CheckBox x:Name="AutoStartToggle"
                                   Content="Autostart"
-                                  Style="{DynamicResource ToggleSwitchStyle}"
+                                  Style="{DynamicResource ThemeAwareCheckBoxStyle}"
                                   Checked="AutoStartToggle_Changed"
                                   Unchecked="AutoStartToggle_Changed"/>
                     </StackPanel>

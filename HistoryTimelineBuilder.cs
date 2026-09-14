@@ -22,6 +22,9 @@ public sealed class HistoryTimelineEvent
     public string? StatusCode { get; }
     public string DisplayLine { get; }
 
+    /// <summary>True when this event is selected/highlighted (e.g. from Stunden click).</summary>
+    public bool IsHighlighted { get; set; }
+
     public System.Windows.Media.Brush AccentBarBrush =>
         HistoryDayCell.BrushForStatus(StatusCode);
 

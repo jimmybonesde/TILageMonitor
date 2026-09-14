@@ -99,9 +99,18 @@
     </Style>
 
     <DataTemplate x:Key="TimelineEventTemplate">
-      <Border Style="{StaticResource TimelineItemStyle}"
-              MouseLeftButtonUp="TimelineEvent_MouseLeftButtonUp"
+      <Border MouseLeftButtonUp="TimelineEvent_MouseLeftButtonUp"
               ToolTip="{Binding ClickHint}">
+        <Border.Style>
+          <Style TargetType="Border" BasedOn="{StaticResource TimelineItemStyle}">
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBackground}"/>
+                <Setter Property="BorderThickness" Value="2"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </Border.Style>
         <Border.Effect>
           <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08" Direction="270" Color="#000000"/>
         </Border.Effect>
@@ -167,7 +176,7 @@
                    Foreground="{DynamicResource TextMain}"/>
       </DockPanel>
       <TextBlock x:Name="HeaderHint"
-                 Text="Fokus auf einen Dienst, Tageskacheln und Ereignisse — klar und ruhig."
+                 Text="Tageskacheln in der Übersicht, Stunden-Zoom und Ereignisse als eigene Ansichten."
                  FontSize="13"
                  Foreground="{DynamicResource TextMuted}"
                  Margin="0,4,0,0"
@@ -303,14 +312,9 @@
               </StackPanel>
             </Border>
 
-            <!-- Focus: tiles LEFT + timeline RIGHT -->
+            <!-- Focus: day tiles only (Ereignisse live in the Events segment) -->
             <Grid x:Name="FocusOverviewGrid" Visibility="Collapsed">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MinWidth="420"/>
-                <ColumnDefinition Width="16"/>
-                <ColumnDefinition Width="360" MinWidth="300"/>
-              </Grid.ColumnDefinitions>
-              <Border Grid.Column="0" Style="{StaticResource HistoryCardStyle}" Margin="0">
+              <Border Style="{StaticResource HistoryCardStyle}" Margin="0">
                 <Border.Effect>
                   <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.10" Direction="270" Color="#000000"/>
                 </Border.Effect>
@@ -358,36 +362,13 @@
                   </ItemsControl>
                 </StackPanel>
               </Border>
-
-              <Border Grid.Column="2" Style="{StaticResource HistoryCardStyle}" Margin="0"
-                      x:Name="FocusTimelineCard">
-                <Border.Effect>
-                  <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.10" Direction="270" Color="#000000"/>
-                </Border.Effect>
-                <DockPanel LastChildFill="True">
-                  <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Ereignisse" Margin="0,0,0,2"/>
-                    <TextBlock Style="{StaticResource SectionHintStyle}" Margin="0,0,0,0"
-                               Text="Timeline für den Fokus. Klick öffnet die Stundenansicht."/>
-                  </StackPanel>
-                  <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="420">
-                    <StackPanel>
-                      <ItemsControl x:Name="FocusTimelineList" ItemTemplate="{StaticResource TimelineEventTemplate}"/>
-                      <TextBlock x:Name="FocusTimelineEmpty"
-                                 Text="Keine Ereignisse — alles ruhig."
-                                 FontSize="13" Foreground="{DynamicResource TextMuted}"
-                                 Visibility="Collapsed" Margin="0,8,0,0"/>
-                    </StackPanel>
-                  </ScrollViewer>
-                </DockPanel>
-              </Border>
             </Grid>
 
             <!-- Alle: stacked compact rows + timeline below -->
             <StackPanel x:Name="MultiOverviewPanel" Visibility="Collapsed">
               <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Alle Dienste"/>
               <TextBlock Style="{StaticResource SectionHintStyle}"
-                         Text="Kompakte Zeilen je Dienst. Ein Dienst-Chip oben fokussiert die Detailansicht."/>
+                         Text="Kompakte Zeilen je Dienst. Ein Dienst-Chip oben fokussiert die Tageskacheln; Ereignisse über den Segment-Umschalter."/>
               <ItemsControl x:Name="HistoryList" Margin="0,0,0,8">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
@@ -445,18 +426,6 @@
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
 
-              <Border x:Name="MultiTimelineCard" Style="{StaticResource HistoryCardStyle}" Margin="0,4,0,0">
-                <StackPanel>
-                  <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Ereignisse" Margin="0,0,0,4"/>
-                  <TextBlock Style="{StaticResource SectionHintStyle}"
-                             Text="Ereignisse über alle Dienste. Klick zoomt auf den Starttag."/>
-                  <ItemsControl x:Name="MultiTimelineList" ItemTemplate="{StaticResource TimelineEventTemplate}"/>
-                  <TextBlock x:Name="MultiTimelineEmpty"
-                             Text="Keine Ereignisse im Zeitraum."
-                             FontSize="13" Foreground="{DynamicResource TextMuted}"
-                             Visibility="Collapsed" Margin="0,4,0,0"/>
-                </StackPanel>
-              </Border>
             </StackPanel>
 
             <!-- No data empty -->
@@ -530,7 +499,7 @@
             </StackPanel>
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Stundenansicht (0–23)"/>
             <TextBlock Style="{StaticResource SectionHintStyle}"
-                       Text="Esc oder Zurück kehrt zur Übersicht. Ausgewählter Tag ist in der Übersicht umrandet."/>
+                       Text="Klick auf eine auffällige Stunde öffnet das passende Ereignis. Esc oder Zurück kehrt zur Übersicht."/>
 
             <Border Style="{StaticResource HistoryCardStyle}" Padding="14,10" Margin="0,0,0,6">
               <Grid>
@@ -588,7 +557,9 @@
                           <DataTemplate>
                             <Border Style="{StaticResource ZoomHourCellStyle}"
                                     Background="{Binding CellBrush}"
-                                    ToolTip="{Binding Tooltip}"/>
+                                    ToolTip="{Binding Tooltip}"
+                                    Cursor="Hand"
+                                    MouseLeftButtonUp="ZoomHourCell_MouseLeftButtonUp"/>
                           </DataTemplate>
                         </ItemsControl.ItemTemplate>
                       </ItemsControl>
@@ -603,7 +574,7 @@
 
       <!-- EREIGNISSE full-width -->
       <Grid x:Name="EventsPanel" Visibility="Collapsed" Opacity="0">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer x:Name="EventsScrollViewer" VerticalScrollBarVisibility="Auto">
           <Border Style="{StaticResource HistoryCardStyle}" Margin="0">
             <Border.Effect>
               <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.10" Direction="270" Color="#000000"/>

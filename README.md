@@ -99,10 +99,10 @@ Der 14-Tage-Verlauf ist in **2.0** fest integriert (gereift über 1.0.15–1.0.1
    Umschalter **Übersicht | Stunden | Ereignisse** — dieselbe Datenbasis, drei Lesarten.
 
 3. **Fokus-Layout (Standard)**  
-   Standardfilter ist **Alle Dienste** (kompakte Zeilen + Timeline). Ein Dienst-Chip fokussiert links große **Tages-Kacheln** und rechts die **Ereignisse-Timeline**.
+   Standardfilter ist **Alle Dienste** (kompakte Zeilen). Ein Dienst-Chip fokussiert große **Tages-Kacheln**. Die **Ereignisse-Timeline** liegt im Segment **Ereignisse**.
 
 4. **Timeline-Karten**  
-   Einträge mit farbigem linken Status-Balken (z. B. `eRezept · Teilausfall · Di 10:00–12:00`). Klick springt in den **Stunden-Zoom** des betreffenden Tages.
+   Einträge mit farbigem linken Status-Balken (z. B. `eRezept · Teilausfall · Di 10:00–12:00`). Klick springt in den **Stunden-Zoom** des betreffenden Tages. In der Stundenansicht öffnet ein Klick auf eine auffällige Stunde das passende Ereignis.
 
 5. **Stabil / Alles ruhig**  
    Wenn für den Fokus keine Auffälligkeiten vorliegen, erscheint ein beruhigender Leer-/OK-Zustand statt einer leeren Liste.
@@ -128,6 +128,7 @@ Der Verlauf kombiniert zwei Quellen:
 | Filter-Chip (eRezept, ePA, … / Alle) | Zeilen und Ereignisse eingrenzen |
 | Tages-Kachel anklicken | Stunden-Zoom für diesen Tag |
 | Ereignis anklicken | Zoom auf den Starttag des Ereignisses |
+| Auffällige Stunde anklicken | Wechselt zu **Ereignisse** und markiert das passende Ereignis |
 | Esc / Zurück | Zurück zur Tages-Übersicht |
 
 ## 🔐 Daten & Datenschutz

@@ -67,7 +67,8 @@ public partial class SettingsWindow : Window
                 Tag = key,
                 Cursor = System.Windows.Input.Cursors.Hand,
                 FontSize = 13,
-                VerticalContentAlignment = System.Windows.VerticalAlignment.Center
+                VerticalContentAlignment = System.Windows.VerticalAlignment.Center,
+                Style = TryFindResource("ThemeAwareCheckBoxStyle") as Style
             };
 
             var chip = new System.Windows.Controls.Border
