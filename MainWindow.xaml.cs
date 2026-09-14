@@ -94,7 +94,7 @@ public partial class MainWindow : Window
         _tray = new Forms.NotifyIcon
         {
             Visible = true,
-            Text = "TI-Status: wird geladen…",
+            Text = LocalizationService.Translate("TI-Status: wird geladen…"),
             Icon = _trayIconOk
         };
 
@@ -114,20 +114,20 @@ public partial class MainWindow : Window
 
         var menu = new Forms.ContextMenuStrip();
 
-        menu.Items.Add("TI-Lage anzeigen", null, (_, _) => ShowWindow());
-        menu.Items.Add("Jetzt aktualisieren", null, (_, _) => _ = RefreshAsync(false));
+        menu.Items.Add(LocalizationService.Translate("TI-Lage anzeigen"), null, (_, _) => ShowWindow());
+        menu.Items.Add(LocalizationService.Translate("Jetzt aktualisieren"), null, (_, _) => _ = RefreshAsync(false));
         menu.Items.Add(
-            "gematik TI-Status öffnen",
+            LocalizationService.Translate("gematik TI-Status öffnen"),
             null,
             (_, _) => OpenUrl("https://fachportal.gematik.de/ti-status#TI-Anschluss"));
 
         menu.Items.Add(new Forms.ToolStripSeparator());
 
-        menu.Items.Add("Über TI-Lage Monitor…", null, (_, _) => ShowAbout());
-        menu.Items.Add("TI-Status · 14 Tage…", null, (_, _) => Dispatcher.Invoke(OpenHistoryWindow));
-        menu.Items.Add("Einstellungen…", null, (_, _) => Dispatcher.Invoke(OpenSettingsWindow));
+        menu.Items.Add(LocalizationService.Translate("Über TI-Lage Monitor…"), null, (_, _) => ShowAbout());
+        menu.Items.Add(LocalizationService.Translate("TI-Status · 14 Tage…"), null, (_, _) => Dispatcher.Invoke(OpenHistoryWindow));
+        menu.Items.Add(LocalizationService.Translate("Einstellungen…"), null, (_, _) => Dispatcher.Invoke(OpenSettingsWindow));
 
-        _autostartMenuItem = new Forms.ToolStripMenuItem("Autostart: aus")
+        _autostartMenuItem = new Forms.ToolStripMenuItem(LocalizationService.Translate("Autostart: aus"))
         {
             CheckOnClick = false
         };
@@ -135,7 +135,7 @@ public partial class MainWindow : Window
         SyncAutostartMenuItem();
         menu.Items.Add(_autostartMenuItem);
 
-        _notificationsMenuItem = new Forms.ToolStripMenuItem("Benachrichtigungen: an")
+        _notificationsMenuItem = new Forms.ToolStripMenuItem(LocalizationService.Translate("Benachrichtigungen: an"))
         {
             CheckOnClick = false
         };
@@ -144,7 +144,7 @@ public partial class MainWindow : Window
         menu.Items.Add(_notificationsMenuItem);
 
         menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add("Beenden", null, (_, _) => CloseApp());
+        menu.Items.Add(LocalizationService.Translate("Beenden"), null, (_, _) => CloseApp());
 
         _tray.ContextMenuStrip = menu;
 
