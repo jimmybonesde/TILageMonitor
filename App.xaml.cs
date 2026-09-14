@@ -46,6 +46,7 @@ public partial class App : System.Windows.Application
         }
 
         var settings = SettingsStore.Load();
+        LocalizationService.Configure(settings.Language);
         ThemeService.ApplyTheme(settings.DarkMode);
 
         if (!SettingsStore.Exists)
