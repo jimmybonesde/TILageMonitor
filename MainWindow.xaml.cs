@@ -70,6 +70,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        LocalizationService.Apply(this);
         VersionFooterText.Text = $"© 2026 R.C. · TI-Lage Monitor · Version {GetDisplayVersion()}";
 
         AppsList.ItemsSource = _apps;
