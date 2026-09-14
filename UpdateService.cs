@@ -282,7 +282,11 @@ public static class UpdateService
             if (!string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase))
                 return new UpdateDownloadResult(false, "Die Prüfsumme des Updates stimmt nicht überein.");
 
-            return new UpdateDownloadResult(true, "Prüfsumme bestätigt.");
+            var authenticode = AuthenticodeVerifier.Check(localPath);
+            if (!authenticode.IsValid)
+                return new UpdateDownloadResult(false, authenticode.Message);
+
+            return new UpdateDownloadResult(true, authenticode.Message);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
