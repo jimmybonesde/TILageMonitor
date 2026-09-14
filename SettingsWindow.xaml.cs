@@ -23,6 +23,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(MainWindow owner)
     {
         InitializeComponent();
+        LocalizationService.Apply(this);
         Owner = owner;
         _ownerMain = owner;
         _settings = owner.GetSettingsSnapshot();
