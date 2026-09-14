@@ -54,7 +54,7 @@ public partial class MainWindow
 
         var on = _settings.AutoStart;
         _autostartMenuItem.Checked = on;
-        _autostartMenuItem.Text = on ? "Autostart: an" : "Autostart: aus";
+        _autostartMenuItem.Text = LocalizationService.Translate(on ? "Autostart: an" : "Autostart: aus");
     }
 
     private void ToggleNotificationsFromMenu()
@@ -72,7 +72,7 @@ public partial class MainWindow
 
         var on = _settings.NotificationsEnabled;
         _notificationsMenuItem.Checked = on;
-        _notificationsMenuItem.Text = on ? "Benachrichtigungen: an" : "Benachrichtigungen: aus";
+        _notificationsMenuItem.Text = LocalizationService.Translate(on ? "Benachrichtigungen: an" : "Benachrichtigungen: aus");
     }
 
     // =============================================================
@@ -126,7 +126,7 @@ public partial class MainWindow
 
     private static string FormatMessageTimestamp(DateTime value)
     {
-        return value.ToLocalTime().ToString("dd.MM.yyyy HH:mm", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
+        return value.ToLocalTime().ToString("g", LocalizationService.DisplayCulture);
     }
 
     // =============================================================
@@ -384,10 +384,10 @@ public partial class MainWindow
             System.Windows.Controls.Border.BackgroundProperty, accentKey);
         OverallIcon.Text = kind == "ok" ? "✓" : "!";
         OverallIcon.Foreground = System.Windows.Media.Brushes.White;
-        OverallText.Text = title;
+        OverallText.Text = LocalizationService.Translate(title);
         OverallText.SetResourceReference(
             System.Windows.Controls.TextBlock.ForegroundProperty, accentKey);
-        OverallSubtitle.Text = subtitle;
+        OverallSubtitle.Text = LocalizationService.Translate(subtitle);
     }
 
     private static System.Windows.Media.Brush ThemeBrush(string key) =>
