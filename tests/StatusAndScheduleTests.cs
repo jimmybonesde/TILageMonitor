@@ -109,7 +109,7 @@ public sealed class StatusAndScheduleTests
         HistoryStore.ApplySnapshot(hour, lage);
 
         Assert.Equal("none", hour.Services["erezept"]);
-        Assert.DoesNotContain("epa", hour.Services.Keys, StringComparer.OrdinalIgnoreCase);
+        Assert.False(hour.Services.ContainsKey("epa"));
     }
 
     [Fact]
