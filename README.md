@@ -188,3 +188,10 @@ Technik: WPF + WinForms-Tray · `net10.0-windows10.0.17763.0` · Windows App SDK
 <p align="center">
   <sub>Für Praxen & IT, die den TI-Status im Blick behalten wollen — ohne einen Portal-Tab offen zu lassen.</sub>
 </p>
+
+
+## Sprache / Language
+
+Die App richtet sich automatisch nach der Windows-Anzeigesprache: Deutsch wird auf Deutsch angezeigt, Englisch (und andere nicht-deutsche Systeme) auf Englisch. Ein manueller Sprachschalter ist nicht erforderlich.
+
+The app automatically follows the Windows display language: German systems use German, English (and other non-German systems) use English. No manual language switch is required.
