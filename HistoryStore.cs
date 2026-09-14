@@ -695,7 +695,7 @@ public sealed class HistoryDayGroup
         var partial = hours.Count(h => string.Equals(h.Status, "partial", StringComparison.OrdinalIgnoreCase));
         var full = hours.Count(h => string.Equals(h.Status, "full", StringComparison.OrdinalIgnoreCase));
         var maint = hours.Count(h => string.Equals(h.Status, "maintenance", StringComparison.OrdinalIgnoreCase));
-        return $"{label}: {summary}\n{known}/{physicalHourCount} physische Stunden mit Daten · OK {ok} · Einschr. {partial} · Störung {full} · Wartung {maint}\nKlick öffnet die Stundenansicht.";
+        return LocalizationService.Translate($"{label}: {summary}\n{known}/{physicalHourCount} physische Stunden mit Daten · OK {ok} · Einschr. {partial} · Störung {full} · Wartung {maint}\nKlick öffnet die Stundenansicht.");
     }
 }
 
