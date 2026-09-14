@@ -19,6 +19,14 @@ public sealed class AppSettings
     [JsonPropertyName("autoInstallUpdates")]
     public bool AutoInstallUpdates { get; set; }
 
+    /// <summary>Last release whose automatic installer could not be started successfully.</summary>
+    [JsonPropertyName("lastAutoInstallFailureVersion")]
+    public string? LastAutoInstallFailureVersion { get; set; }
+
+    /// <summary>UTC time before which the same failed automatic update is not retried.</summary>
+    [JsonPropertyName("autoInstallRetryAfterUtc")]
+    public DateTime? AutoInstallRetryAfterUtc { get; set; }
+
     /// <summary>
     /// Globale Benachrichtigungen (Toasts/Balloons). Default: true.
     /// Tray-Menü kann dies umschalten; pro-Dienst Filter gilt nur wenn aktiv.
