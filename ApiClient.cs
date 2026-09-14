@@ -39,7 +39,7 @@ public sealed class ApiClient
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, url);
-                request.Headers.UserAgent.ParseAdd("TILageMonitor/2.0.4");
+                request.Headers.UserAgent.ParseAdd($"TILageMonitor/{UpdateService.CurrentVersion}");
                 using var response = await _http.SendAsync(request, ct);
 
                 if (IsTransient(response.StatusCode) && attempt < RetryDelays.Length)
