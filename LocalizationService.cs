@@ -139,6 +139,7 @@ public static class LocalizationService
         ["Wartung"] = "Maintenance",
         ["Störung"] = "Outage",
         ["keine Daten"] = "no data",
+        ["kein Datenpunkt"] = "no data point",
         ["TI-Status: wird geladen…"] = "TI status: loading…",
         ["Die Update-Prüfung ist fehlgeschlagen."] = "The update check failed.",
         ["Teilausfall"] = "Partial outage",
