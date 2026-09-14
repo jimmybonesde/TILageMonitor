@@ -46,8 +46,9 @@ public static class UpdateService
             var root = release.RootElement;
             var tag = root.GetProperty("tag_name").GetString();
             var latest = NormalizeVersion(tag);
-            var downloadUrl = FindSetupDownload(root) ??
-                              root.GetProperty("html_url").GetString();
+            // A release can be public before the build has attached its installer.
+            // Do not mistake the HTML release page for an installable update.
+            var downloadUrl = FindSetupDownload(root);
             var checksumUrl = FindChecksumDownload(root);
 
             if (!Version.TryParse(current, out var currentVersion) ||
@@ -93,7 +94,7 @@ public static class UpdateService
         if (string.IsNullOrWhiteSpace(downloadUrl))
             return new UpdateDownloadResult(false, "Keine Download-URL vorhanden.");
 
-        if (!downloadUrl.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+        if (!IsSetupDownloadUrl(downloadUrl))
         {
             return new UpdateDownloadResult(
                 false,
@@ -244,6 +245,11 @@ public static class UpdateService
             // Best effort cleanup of a failed update download.
         }
     }
+
+    /// <summary>True only for a direct installer asset, never for a GitHub release page.</summary>
+    public static bool IsSetupDownloadUrl(string? url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
+        uri.AbsolutePath.EndsWith("-Setup.exe", StringComparison.OrdinalIgnoreCase);
 
     private static string? FindSetupDownload(JsonElement release)
     {
