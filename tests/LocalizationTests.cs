@@ -22,6 +22,6 @@ public sealed class LocalizationTests
     public void NonGermanCulturesUseEnglishFallback()
     {
         Assert.False(LocalizationService.IsGermanCulture(CultureInfo.GetCultureInfo("fr-FR")));
-        Assert.Equal("Refresh", LocalizationService.Translate("↻  Aktualisieren", CultureInfo.GetCultureInfo("en-GB")));
+        Assert.Equal("↻  Refresh", LocalizationService.Translate("↻  Aktualisieren", CultureInfo.GetCultureInfo("en-GB")));
     }
 }
