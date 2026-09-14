@@ -650,6 +650,7 @@ public sealed class HistoryDayGroup
     public List<HistoryDayCell> Hours { get; }
     public string? DayStatus { get; }
     public string DayTooltip { get; }
+    public int PhysicalHourCount { get; }
     public System.Windows.Media.Brush DayBrush { get; }
     public System.Windows.Media.Brush DayForeground { get; }
     /// <summary>True when this day is the selected / zoomed day in HistoryWindow.</summary>
@@ -672,10 +673,13 @@ public sealed class HistoryDayGroup
             ? (System.Windows.Application.Current?.TryFindResource("TextMain") as System.Windows.Media.Brush
                ?? HistoryDayCell.BrushFromHex("#0F172A"))
             : HistoryDayCell.BrushFromHex("#FFFFFF");
-        DayTooltip = BuildDayTooltip(Label, DayStatus, hours);
+        var startUtc = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(Date, DateTimeKind.Local));
+        var endUtc = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(Date.AddDays(1), DateTimeKind.Local));
+        PhysicalHourCount = Math.Max(0, (int)(endUtc - startUtc).TotalHours);
+        DayTooltip = BuildDayTooltip(Label, DayStatus, hours, PhysicalHourCount);
     }
 
-    private static string BuildDayTooltip(string label, string? dayStatus, List<HistoryDayCell> hours)
+    private static string BuildDayTooltip(string label, string? dayStatus, List<HistoryDayCell> hours, int physicalHourCount)
     {
         var summary = dayStatus switch
         {
@@ -691,7 +695,7 @@ public sealed class HistoryDayGroup
         var partial = hours.Count(h => string.Equals(h.Status, "partial", StringComparison.OrdinalIgnoreCase));
         var full = hours.Count(h => string.Equals(h.Status, "full", StringComparison.OrdinalIgnoreCase));
         var maint = hours.Count(h => string.Equals(h.Status, "maintenance", StringComparison.OrdinalIgnoreCase));
-        return $"{label}: {summary}\n{known}/24 Stunden mit Daten · OK {ok} · Einschr. {partial} · Störung {full} · Wartung {maint}\nKlick öffnet die Stundenansicht.";
+        return $"{label}: {summary}\n{known}/{physicalHourCount} physische Stunden mit Daten · OK {ok} · Einschr. {partial} · Störung {full} · Wartung {maint}\nKlick öffnet die Stundenansicht.";
     }
 }
 
