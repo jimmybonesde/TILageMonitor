@@ -92,6 +92,31 @@ public sealed class StatusAndScheduleTests
         Assert.Contains("/VERYSILENT", script, StringComparison.Ordinal);
         Assert.Contains("/LOG=", script, StringComparison.Ordinal);
         Assert.Contains("--update-failed", script, StringComparison.Ordinal);
+        Assert.Contains("robocopy", script, StringComparison.Ordinal);
+    }
+
+
+    [Fact]
+    public void Unsigned_update_artifact_uses_checksum_fallback()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"tilage-monitor-test-{Guid.NewGuid():N}.bin");
+        File.WriteAllBytes(path, [1, 2, 3]);
+        try
+        {
+            var result = AuthenticodeVerifier.Check(path);
+            Assert.True(result.IsValid);
+            Assert.False(result.IsSigned);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Installer_download_limit_is_bounded()
+    {
+        Assert.Equal(500L * 1024 * 1024, UpdateService.MaxInstallerBytes);
     }
 
     [Fact]

@@ -7,6 +7,7 @@ public partial class MainWindow
     private string? _availableUpdateDownloadUrl;
     private string? _availableUpdateChecksumUrl;
     private readonly SemaphoreSlim _updateCheckGate = new(1, 1);
+    private readonly SemaphoreSlim _updateInstallGate = new(1, 1);
 
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(bool userInitiated)
     {
@@ -80,7 +81,7 @@ public partial class MainWindow
                     _settings.AutoInstallRetryAfterUtc ?? DateTime.MinValue,
                     DateTime.UtcNow))
             {
-                var automaticDownload = await UpdateService.DownloadAndLaunchAsync(
+                var automaticDownload = await DownloadAndLaunchSerializedAsync(
                     result.DownloadUrl!,
                     result.ChecksumUrl,
                     silent: true);
@@ -116,7 +117,7 @@ public partial class MainWindow
         if (openDownload != MessageBoxResult.Yes)
             return result;
 
-        var download = await UpdateService.DownloadAndLaunchAsync(
+        var download = await DownloadAndLaunchSerializedAsync(
             result.DownloadUrl!,
             result.ChecksumUrl);
         if (download.IsSuccess)
@@ -141,6 +142,22 @@ public partial class MainWindow
         finally
         {
             _updateCheckGate.Release();
+        }
+    }
+
+    private async Task<UpdateDownloadResult> DownloadAndLaunchSerializedAsync(
+        string downloadUrl,
+        string? checksumUrl,
+        bool silent = false)
+    {
+        await _updateInstallGate.WaitAsync();
+        try
+        {
+            return await UpdateService.DownloadAndLaunchAsync(downloadUrl, checksumUrl, silent);
+        }
+        finally
+        {
+            _updateInstallGate.Release();
         }
     }
 
@@ -234,7 +251,7 @@ public partial class MainWindow
         InstallUpdateButton.IsEnabled = false;
         InstallUpdateButton.Content = "Lade Update …";
 
-        var download = await UpdateService.DownloadAndLaunchAsync(
+        var download = await DownloadAndLaunchSerializedAsync(
             _availableUpdateDownloadUrl,
             _availableUpdateChecksumUrl);
 
