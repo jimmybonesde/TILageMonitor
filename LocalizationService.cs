@@ -236,7 +236,19 @@ public static class LocalizationService
         ["Ursache ·"] = "Cause ·",
         ["Komplettausfall"] = "Full outage",
         ["Jetzt den Setup-Installer herunterladen und starten?"] = "Download and start the setup installer now?",
-        ["Im Footer kannst du es installieren."] = "You can install it from the footer."
+        ["Im Footer kannst du es installieren."] = "You can install it from the footer.",
+        ["API wieder erreichbar"] = "API reachable again",
+        ["API nicht erreichbar."] = "API unavailable.",
+        ["TI-Status: Störung"] = "TI status: outage",
+        ["TI-Status: OK"] = "TI status: OK",
+        ["Prüfe GitHub-Release …"] = "Checking GitHub release …",
+        ["gematik meldet Ausfall"] = "gematik reports an outage",
+        ["gematik meldet Teilausfall"] = "gematik reports a partial outage",
+        ["Dienste geändert"] = "services changed",
+        ["neue Meldungen"] = "new messages",
+        ["TI-Komponente"] = "TI component",
+        ["Die Prüfsummen-URL ist nicht erlaubt."] = "The checksum URL is not allowed.",
+        ["Update-Prüfung fehlgeschlagen."] = "Update check failed."
     };
 
     public static string Translate(string? value, CultureInfo? culture = null)

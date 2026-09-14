@@ -243,7 +243,7 @@ public partial class MainWindow
             {
                 ToastService.Show(
                     "TI-Lage Monitor",
-                    "API wieder erreichbar",
+                    LocalizationService.Translate("API wieder erreichbar"),
                     ToastUrgency.Info);
             }
 
@@ -273,11 +273,13 @@ public partial class MainWindow
                     suppressTrayUpdate: _consecutiveApiFailures >= 3);
                 RenderHistory(HistoryStore.Load(), cache.Incidents, cache.Outages);
 
-                ConnectionText.Text = "● Offline · letzter Stand";
+                ConnectionText.Text = LocalizationService.Translate("● Offline · letzter Stand");
                 ConnectionText.Foreground = ThemeBrush("StatusPartial");
 
-                FooterText.Text =
-                    $"Offline · Cache vom {cache.SavedAt:dd.MM.yyyy HH:mm:ss} · {ex.Message}";
+                var cacheStamp = cache.SavedAt.ToLocalTime()
+                    .ToString("G", LocalizationService.DisplayCulture);
+                FooterText.Text = LocalizationService.Translate(
+                    $"Offline · Cache vom {cacheStamp} · {ex.Message}");
             }
             else
             {
@@ -285,7 +287,7 @@ public partial class MainWindow
                     "outage",
                     "API nicht erreichbar",
                     "Die gematik API antwortet nicht. Bitte später erneut versuchen.");
-                ConnectionText.Text = "● Keine Verbindung";
+                ConnectionText.Text = LocalizationService.Translate("● Keine Verbindung");
                 ConnectionText.Foreground = ThemeBrush("StatusOutage");
                 FooterText.Text = ex.Message;
             }

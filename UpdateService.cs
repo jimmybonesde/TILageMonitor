@@ -265,6 +265,9 @@ public static class UpdateService
         if (string.IsNullOrWhiteSpace(checksumUrl))
             return new UpdateDownloadResult(false, "Die Prüfsumme des Updates fehlt.");
 
+        if (!IsAllowedUpdateUrl(checksumUrl))
+            return new UpdateDownloadResult(false, "Die Prüfsummen-URL ist nicht erlaubt.");
+
         try
         {
             var fileName = Path.GetFileName(localPath);
@@ -309,10 +312,34 @@ public static class UpdateService
         }
     }
 
-    /// <summary>True only for a direct installer asset, never for a GitHub release page.</summary>
+    private static readonly HashSet<string> AllowedUpdateHosts = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "github.com",
+        "www.github.com",
+        "objects.githubusercontent.com",
+        "release-assets.githubusercontent.com",
+        "github-releases.githubusercontent.com"
+    };
+
+    /// <summary>True only for a direct installer asset on an allowlisted HTTPS host (never a release page).</summary>
     public static bool IsSetupDownloadUrl(string? url) =>
+        IsAllowedUpdateUrl(url) &&
         Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
         uri.AbsolutePath.EndsWith("-Setup.exe", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>HTTPS + GitHub / GitHub release CDN hosts only (setup + checksum URLs).</summary>
+    public static bool IsAllowedUpdateUrl(string? url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return false;
+        if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            return false;
+        return IsAllowedUpdateHost(uri.Host);
+    }
+
+    private static bool IsAllowedUpdateHost(string host) =>
+        AllowedUpdateHosts.Contains(host) ||
+        host.EndsWith(".githubusercontent.com", StringComparison.OrdinalIgnoreCase);
 
     private static string? FindSetupDownload(JsonElement release)
     {

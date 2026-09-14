@@ -728,7 +728,7 @@ public partial class HistoryWindow : Window
         }
 
         ZoomHintBorder.Visibility = Visibility.Collapsed;
-        ZoomTitle.Text = date.ToString("dddd, dd.MM.yyyy", UiCulture);
+        ZoomTitle.Text = date.ToString("D", UiCulture);
         if (ZoomTitle.Text.Length > 0)
             ZoomTitle.Text = char.ToUpper(ZoomTitle.Text[0], UiCulture) + ZoomTitle.Text[1..];
 

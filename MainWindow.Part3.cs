@@ -81,14 +81,14 @@ public partial class MainWindow
             var c = changes[0];
             var statusLabel = FormatStatusShort(c.CurrentStatus);
             // Mockup-style: "eRezept · Teilausfall · …"
-            var hint = c.CurrentStatus switch
+            var hint = LocalizationService.Translate(c.CurrentStatus switch
             {
                 "full" => "gematik meldet Ausfall",
                 "partial" => "gematik meldet Teilausfall",
                 "maintenance" => "Wartung gemeldet",
                 "none" => "Dienst wieder verfügbar",
                 _ => statusLabel
-            };
+            });
             body = $"{c.ServiceName} · {statusLabel} · {hint}";
         }
         else
@@ -96,14 +96,15 @@ public partial class MainWindow
             var preview = changes
                 .Take(2)
                 .Select(c => $"{c.ServiceName}: {FormatStatusShort(c.CurrentStatus)}");
-            body = $"{changes.Count} Dienste geändert · {string.Join(", ", preview)}";
+            body = LocalizationService.Translate(
+                $"{changes.Count} Dienste geändert · {string.Join(", ", preview)}");
             if (changes.Count > 2)
                 body += " …";
         }
 
         body = Truncate(body, 110);
         var focusKey = changes[0].ServiceKey;
-        ToastService.Show(title, body, urgency, focusKey);
+        ToastService.Show(LocalizationService.Translate(title), body, urgency, focusKey);
     }
 
     private void ShowIncidentNotification(
@@ -131,14 +132,15 @@ public partial class MainWindow
             title = hasError ? "TI-Status: Störung" : "TI-Status: Änderung";
             var names = incidents.Take(2).Select(x => Truncate(x.Body, 40));
             body = Truncate(
-                $"{incidents.Count} neue Meldungen · {string.Join("; ", names)}",
+                LocalizationService.Translate(
+                    $"{incidents.Count} neue Meldungen · {string.Join("; ", names)}"),
                 110);
             urgency = hasError ? ToastUrgency.Error : ToastUrgency.Warning;
         }
 
         var focusKey = primary.ServiceKeys.FirstOrDefault()
                        ?? incidents.SelectMany(i => i.ServiceKeys).FirstOrDefault();
-        ToastService.Show(title, body, urgency, focusKey);
+        ToastService.Show(LocalizationService.Translate(title), body, urgency, focusKey);
     }
 
     private static string FormatStatusShort(string status) =>

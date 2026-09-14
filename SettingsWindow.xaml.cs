@@ -24,7 +24,9 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         LocalizationService.Apply(this);
-        Owner = owner;
+        // Match History/About tray behavior: stay usable when Main is hidden to tray.
+        Owner = owner.IsVisible ? owner : null;
+        ShowInTaskbar = true;
         _ownerMain = owner;
         _settings = owner.GetSettingsSnapshot();
 

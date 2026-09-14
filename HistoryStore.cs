@@ -664,7 +664,8 @@ public sealed class HistoryDayGroup
         if (weekday.Length > 0)
             weekday = char.ToUpper(weekday[0], culture) + weekday[1..];
         WeekdayAbbrev = weekday;
-        DateLabel = date.ToString("dd.MM", culture);
+        // Culture-aware month/day (avoid hard-coded German dd.MM).
+        DateLabel = date.ToString("m", culture);
         Label = $"{WeekdayAbbrev} {DateLabel}";
         Hours = hours;
         DayStatus = HistoryStore.WorstStatusOfDay(hours);

@@ -9,7 +9,7 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
         Background="{DynamicResource WindowBackground}"
-        ShowInTaskbar="False">
+        ShowInTaskbar="True">
 
     <Window.Resources>
         <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">

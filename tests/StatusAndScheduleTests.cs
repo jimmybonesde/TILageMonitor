@@ -57,9 +57,41 @@ public sealed class StatusAndScheduleTests
     [Theory]
     [InlineData("https://github.com/jimmybonesde/TILageMonitor/releases/tag/v2.0.7", false)]
     [InlineData("https://github.com/jimmybonesde/TILageMonitor/releases/download/v2.0.7/TILageMonitor-2.0.7-Setup.exe", true)]
+    [InlineData("https://objects.githubusercontent.com/github-production-release-asset-2e65be/123/TILageMonitor-2.0.7-Setup.exe", true)]
+    [InlineData("http://github.com/jimmybonesde/TILageMonitor/releases/download/v2.0.7/TILageMonitor-2.0.7-Setup.exe", false)]
+    [InlineData("https://evil.example/TILageMonitor-2.0.7-Setup.exe", false)]
     public void Update_service_accepts_only_direct_setup_assets(string url, bool expected)
     {
         Assert.Equal(expected, UpdateService.IsSetupDownloadUrl(url));
+    }
+
+    [Theory]
+    [InlineData("https://github.com/jimmybonesde/TILageMonitor/releases/download/v2.0.7/checksums.txt", true)]
+    [InlineData("https://objects.githubusercontent.com/github-production-release-asset-2e65be/123/checksums.txt", true)]
+    [InlineData("https://evil.example/checksums.txt", false)]
+    [InlineData("http://github.com/checksums.txt", false)]
+    public void Update_service_allows_only_https_github_checksum_hosts(string url, bool expected)
+    {
+        Assert.Equal(expected, UpdateService.IsAllowedUpdateUrl(url));
+    }
+
+    [Fact]
+    public void Active_incident_tracker_seeds_without_toast_then_toasts_new_and_prunes()
+    {
+        var known = new HashSet<string>(StringComparer.Ordinal);
+
+        var first = ActiveIncidentTracker.Sync(known, ["1", "2"], seedWithoutToast: true);
+        Assert.Empty(first);
+        Assert.Equal(new HashSet<string> { "1", "2" }, known);
+
+        var second = ActiveIncidentTracker.Sync(known, ["2", "3"], seedWithoutToast: false);
+        Assert.Equal(new[] { "3" }, second);
+        Assert.Equal(new HashSet<string> { "2", "3" }, known);
+
+        // Resolved IDs are pruned so a later reopen can toast again.
+        var third = ActiveIncidentTracker.Sync(known, ["1"], seedWithoutToast: false);
+        Assert.Equal(new[] { "1" }, third);
+        Assert.Equal(new HashSet<string> { "1" }, known);
     }
 
     [Fact]

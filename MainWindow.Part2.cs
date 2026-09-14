@@ -123,13 +123,23 @@ public partial class MainWindow
         // INCIDENTS
         // =========================================================
 
-        foreach (var incident in incidents.Data
-                     .Where(x => x.Status is 1 or 4)
-                     .OrderByDescending(x => x.CreatedAt)
-                     .Take(10))
+        // Track ALL active 1/4 IDs for seed/prune (not only the UI Take(10) slice).
+        var activeIncidentIds = incidents.Data
+            .Where(x => x.Status is 1 or 4)
+            .Select(x => x.Id.ToString())
+            .ToHashSet(StringComparer.Ordinal);
+        var activeIncidentRows = incidents.Data
+            .Where(x => x.Status is 1 or 4)
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(10)
+            .ToList();
+
+        foreach (var incident in activeIncidentRows)
         {
             incident.Steps ??= new();
             incident.App ??= new();
+            var incidentId = incident.Id.ToString();
+
             var latest = incident.Steps.OrderByDescending(x => x.Timestamp).FirstOrDefault();
             var body = StripHtml(latest?.Message ?? "Aktuelle Einschränkung.");
             var affectedServices = GetIncidentServices(incident, names);
@@ -149,9 +159,28 @@ public partial class MainWindow
                     $"{incident.Title}\n{body}",
                     FormatMessageTimestamp(incidentWhen),
                     incidentFocus));
+        }
 
-            if (!_firstLoad && _knownActiveIncidents.Add(incident.Id.ToString()))
+        // Seed silently on first load (like _knownServiceStatus); toast only new IDs later.
+        // Prune resolved IDs so a later reopen can toast again.
+        var newlyAppearedIncidentIds = ActiveIncidentTracker.Sync(
+            _knownActiveIncidents,
+            activeIncidentIds,
+            seedWithoutToast: _firstLoad);
+
+        if (!_firstLoad)
+        {
+            // Toast any newly appeared active ID (not limited to UI Take(10)).
+            foreach (var incident in incidents.Data.Where(x => x.Status is 1 or 4))
             {
+                var incidentId = incident.Id.ToString();
+                if (!newlyAppearedIncidentIds.Contains(incidentId))
+                    continue;
+
+                incident.Steps ??= new();
+                incident.App ??= new();
+                var affectedServices = GetIncidentServices(incident, names);
+                var affectedKeys = GetIncidentServiceKeys(incident);
                 var shortTitle = Truncate(
                     affectedServices.Count > 0
                         ? $"{string.Join(", ", affectedServices)}: {incident.Title}"

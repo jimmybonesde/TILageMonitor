@@ -23,6 +23,10 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
 WizardStyle=modern
+; Align with app single-instance mutex (App.xaml.cs: Local\TILageMonitor_SingleInstance).
+; Inno directive is AppMutex (not AppMutexName). Local\ matches the app mutex namespace exactly.
+AppMutex=Local\TILageMonitor_SingleInstance
+CloseApplications=yes
 
 [Files]
 Source: "..\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
