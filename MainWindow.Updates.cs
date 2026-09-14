@@ -40,6 +40,26 @@ public partial class MainWindow
 
         if (!userInitiated)
         {
+            if (_settings.AutoInstallUpdates &&
+                !string.IsNullOrWhiteSpace(result.DownloadUrl))
+            {
+                var automaticDownload = await UpdateService.DownloadAndLaunchAsync(
+                    result.DownloadUrl,
+                    result.ChecksumUrl,
+                    silent: true);
+
+                if (automaticDownload.IsSuccess)
+                {
+                    CloseApp();
+                    return result;
+                }
+
+                ToastService.Show(
+                    "Automatisches Update fehlgeschlagen",
+                    automaticDownload.Message,
+                    ToastUrgency.Warning);
+            }
+
             // Respect „Benachrichtigungen aus“ and balloon only once per latestVersion
             if (!ToastService.AreNotificationsEnabled)
                 return result;
@@ -65,7 +85,9 @@ public partial class MainWindow
         if (openDownload != MessageBoxResult.Yes || string.IsNullOrWhiteSpace(result.DownloadUrl))
             return result;
 
-        var download = await UpdateService.DownloadAndLaunchAsync(result.DownloadUrl);
+        var download = await UpdateService.DownloadAndLaunchAsync(
+            result.DownloadUrl,
+            result.ChecksumUrl);
         if (download.IsSuccess)
         {
             System.Windows.MessageBox.Show(

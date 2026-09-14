@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace TILageMonitor;
@@ -12,6 +13,7 @@ public sealed record UpdateCheckResult(
     string CurrentVersion,
     string? LatestVersion,
     string? DownloadUrl,
+    string? ChecksumUrl,
     string? ErrorMessage);
 
 public sealed record UpdateDownloadResult(
@@ -46,12 +48,13 @@ public static class UpdateService
             var latest = NormalizeVersion(tag);
             var downloadUrl = FindSetupDownload(root) ??
                               root.GetProperty("html_url").GetString();
+            var checksumUrl = FindChecksumDownload(root);
 
             if (!Version.TryParse(current, out var currentVersion) ||
                 !Version.TryParse(latest, out var latestVersion))
             {
                 return new UpdateCheckResult(
-                    false, false, current, latest, downloadUrl,
+                    false, false, current, latest, downloadUrl, checksumUrl,
                     "Die Versionsnummer des Releases konnte nicht gelesen werden.");
             }
 
@@ -61,6 +64,7 @@ public static class UpdateService
                 current,
                 latest,
                 downloadUrl,
+                checksumUrl,
                 null);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
@@ -70,7 +74,7 @@ public static class UpdateService
         catch (Exception ex)
         {
             return new UpdateCheckResult(
-                false, false, current, null, null,
+                false, false, current, null, null, null,
                 $"Update-Prüfung fehlgeschlagen: {ex.Message}");
         }
     }
@@ -81,6 +85,8 @@ public static class UpdateService
     /// </summary>
     public static async Task<UpdateDownloadResult> DownloadAndLaunchAsync(
         string downloadUrl,
+        string? checksumUrl,
+        bool silent = false,
         IProgress<string>? progress = null,
         CancellationToken ct = default)
     {
@@ -122,11 +128,22 @@ public static class UpdateService
                 await input.CopyToAsync(output, ct);
             }
 
-            progress?.Report("Starte Setup …");
+            progress?.Report("Prüfe Setup-Datei …");
+            var verification = await VerifyChecksumAsync(checksumUrl, localPath, ct);
+            if (!verification.IsSuccess)
+            {
+                TryDelete(localPath);
+                return verification;
+            }
+
+            progress?.Report(silent ? "Installiere Update …" : "Starte Setup …");
 
             Process.Start(new ProcessStartInfo(localPath)
             {
-                UseShellExecute = true
+                UseShellExecute = true,
+                Arguments = silent
+                    ? "/SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS"
+                    : string.Empty
             });
 
             return new UpdateDownloadResult(
@@ -180,6 +197,54 @@ public static class UpdateService
                "0.0.0";
     }
 
+    private static async Task<UpdateDownloadResult> VerifyChecksumAsync(
+        string? checksumUrl,
+        string localPath,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(checksumUrl))
+            return new UpdateDownloadResult(false, "Die Prüfsumme des Updates fehlt.");
+
+        try
+        {
+            var fileName = Path.GetFileName(localPath);
+            var checksumText = await DownloadClient.GetStringAsync(checksumUrl, ct);
+            var expected = checksumText
+                .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(line => line.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                .FirstOrDefault(parts => parts.Length >= 2 &&
+                    string.Equals(parts[^1], fileName, StringComparison.OrdinalIgnoreCase))?
+                .FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(expected))
+                return new UpdateDownloadResult(false, "Für den Installer wurde keine passende Prüfsumme gefunden.");
+
+            await using var stream = File.OpenRead(localPath);
+            var actual = Convert.ToHexString(await SHA256.HashDataAsync(stream, ct)).ToLowerInvariant();
+            if (!string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase))
+                return new UpdateDownloadResult(false, "Die Prüfsumme des Updates stimmt nicht überein.");
+
+            return new UpdateDownloadResult(true, "Prüfsumme bestätigt.");
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return new UpdateDownloadResult(false, $"Prüfsumme konnte nicht geprüft werden: {ex.Message}");
+        }
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+        catch
+        {
+            // Best effort cleanup of a failed update download.
+        }
+    }
+
     private static string? FindSetupDownload(JsonElement release)
     {
         if (!release.TryGetProperty("assets", out var assets))
@@ -189,6 +254,20 @@ public static class UpdateService
         {
             var name = asset.GetProperty("name").GetString();
             if (name?.EndsWith("-Setup.exe", StringComparison.OrdinalIgnoreCase) == true)
+                return asset.GetProperty("browser_download_url").GetString();
+        }
+
+        return null;
+    }
+
+    private static string? FindChecksumDownload(JsonElement release)
+    {
+        if (!release.TryGetProperty("assets", out var assets))
+            return null;
+
+        foreach (var asset in assets.EnumerateArray())
+        {
+            if (string.Equals(asset.GetProperty("name").GetString(), "checksums.txt", StringComparison.OrdinalIgnoreCase))
                 return asset.GetProperty("browser_download_url").GetString();
         }
 

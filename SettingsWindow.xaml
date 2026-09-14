@@ -101,6 +101,15 @@
                         <TextBlock Text="Updates" Style="{StaticResource SectionHeaderStyle}"/>
                         <TextBlock Text="Beim Start wird automatisch nach einer neuen Version gesucht."
                                    Style="{StaticResource SectionHintStyle}"/>
+                        <CheckBox x:Name="AutoInstallUpdatesToggle"
+                                  Content="Updates automatisch installieren"
+                                  Style="{DynamicResource ThemeAwareCheckBoxStyle}"
+                                  Margin="0,0,0,8"
+                                  Checked="AutoInstallUpdatesToggle_Changed"
+                                  Unchecked="AutoInstallUpdatesToggle_Changed"/>
+                        <TextBlock Text="Neue Releases werden heruntergeladen, per SHA-256 geprüft und nach dem Beenden der App ohne Assistent installiert."
+                                   Style="{StaticResource SectionHintStyle}"
+                                   Margin="0,0,0,10"/>
                         <TextBlock x:Name="UpdateStatusText"
                                    Text="Aktuelle Version wird beim Start automatisch geprüft."
                                    Style="{StaticResource SectionHintStyle}"

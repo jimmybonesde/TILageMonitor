@@ -45,7 +45,7 @@ Die Hero-Karte fasst die Lage zusammen, Dienste erscheinen als Status-Pills, akt
 2. **Empfohlen:** `TILageMonitor-x.y.z-Setup.exe` starten.
 3. Installation abschließen — Startmenü-Eintrag und Desktop-Verknüpfung werden auf Wunsch erstellt.
 
-> 💡 Der Setup-Installer ist vollständig offline und enthält .NET 10 sowie die Windows App SDK. Zusätzliche ZIP- oder Portable-Pakete werden nicht benötigt.
+> 💡 Der Setup-Installer ist vollständig offline und enthält .NET 10 sowie die Windows App SDK. Unter **Einstellungen → Updates** kann die automatische, stille Installation aktiviert werden; der Installer wird vorher per SHA-256 geprüft.
 
 > [!WARNING]
 > Die EXE ist derzeit **unsigniert**. Windows SmartScreen kann deshalb warnen. Details stehen in [SIGNING.md](SIGNING.md).
@@ -58,7 +58,7 @@ Die Hero-Karte fasst die Lage zusammen, Dienste erscheinen als Status-Pills, akt
 | 🔎 | **Dienste im Blick** | eRezept, ePA, KIM, WANDA, OGD, VSDM und TI-Anschluss |
 | 🔔 | **Windows-Benachrichtigungen** | Klickbare Toasts; Klick öffnet das Fenster und springt zum Kontext |
 | 🕒 | **14-Tage-Verlauf** | Tages-Kacheln, Stunden-Zoom, Ereignisse-Timeline und Dienst-Filter |
-| ⬇️ | **Selbst-Update** | Prüft GitHub Releases, lädt das Setup herunter und startet es |
+| ⬇️ | **Selbst-Update** | Prüft GitHub Releases; optional automatisch, still und mit SHA-256-Prüfung installieren |
 | 🎨 | **Desktop-tauglich** | Fluent UI, Hell-/Dunkelmodus, Autostart, Start direkt in den Tray |
 | ⚙️ | **Steuerbar** | Notify-Filter pro Dienst, globale Benachrichtigungen aus dem Tray |
 
