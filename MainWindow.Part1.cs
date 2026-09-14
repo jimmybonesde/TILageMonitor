@@ -17,6 +17,21 @@ public partial class MainWindow
     private void Settings_Click(object sender, RoutedEventArgs e) =>
         OpenSettingsWindow();
 
+    private void OpenHomepage_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://www.jimmybones.de")
+            {
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            // Opening the external homepage is best-effort.
+        }
+    }
+
     private void OpenHistoryWindow()
     {
         if (_historyWindow is not null)
