@@ -84,7 +84,8 @@ public partial class MainWindow
                 var automaticDownload = await DownloadAndLaunchSerializedAsync(
                     result.DownloadUrl!,
                     result.ChecksumUrl,
-                    silent: true);
+                    silent: true,
+                    updateVersion: result.LatestVersion);
 
                 if (automaticDownload.IsSuccess)
                 {
@@ -148,12 +149,13 @@ public partial class MainWindow
     private async Task<UpdateDownloadResult> DownloadAndLaunchSerializedAsync(
         string downloadUrl,
         string? checksumUrl,
-        bool silent = false)
+        bool silent = false,
+        string? updateVersion = null)
     {
         await _updateInstallGate.WaitAsync();
         try
         {
-            return await UpdateService.DownloadAndLaunchAsync(downloadUrl, checksumUrl, silent);
+            return await UpdateService.DownloadAndLaunchAsync(downloadUrl, checksumUrl, silent, updateVersion);
         }
         finally
         {
