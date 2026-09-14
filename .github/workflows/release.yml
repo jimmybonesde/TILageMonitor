@@ -68,6 +68,45 @@ jobs:
           $version = "${{ steps.version.outputs.number }}"
           & "${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe" "/DMyAppVersion=$version" installer/TILageMonitor.iss
 
+      - name: Sign installer when certificate secrets are configured
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CERTIFICATE_BASE64)) {
+            Write-Warning "Kein Signaturzertifikat konfiguriert – Installer bleibt unsigniert."
+            exit 0
+          }
+
+          $certificatePath = Join-Path $env:RUNNER_TEMP "TILageMonitor-signing.pfx"
+          [System.IO.File]::WriteAllBytes(
+            $certificatePath,
+            [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE_BASE64))
+
+          try {
+            $signTool = Get-ChildItem "$env:ProgramFiles(x86)\Windows Kits\10\bin\*\x64\signtool.exe" |
+              Sort-Object FullName -Descending |
+              Select-Object -First 1 -ExpandProperty FullName
+            if ([string]::IsNullOrWhiteSpace($signTool)) {
+              throw "signtool.exe wurde auf dem Build-Runner nicht gefunden."
+            }
+
+            $setup = "installer-out/TILageMonitor-${{ steps.version.outputs.number }}-Setup.exe"
+            & $signTool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /f $certificatePath /p $env:WINDOWS_CERTIFICATE_PASSWORD $setup
+            if ($LASTEXITCODE -ne 0) {
+              throw "Die Signierung des Installers ist fehlgeschlagen."
+            }
+
+            & $signTool verify /pa $setup
+            if ($LASTEXITCODE -ne 0) {
+              throw "Die Signaturprüfung des Installers ist fehlgeschlagen."
+            }
+          }
+          finally {
+            Remove-Item $certificatePath -Force -ErrorAction SilentlyContinue
+          }
+
       - name: Create installer checksum
         shell: pwsh
         run: |
