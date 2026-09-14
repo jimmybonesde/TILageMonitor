@@ -89,6 +89,7 @@ public static class UpdateService
         string downloadUrl,
         string? checksumUrl,
         bool silent = false,
+        string? updateVersion = null,
         IProgress<string>? progress = null,
         CancellationToken ct = default)
     {
@@ -154,7 +155,7 @@ public static class UpdateService
 
             if (silent)
             {
-                QueueSilentInstallAfterCurrentProcessExits(localPath);
+                QueueSilentInstallAfterCurrentProcessExits(localPath, updateVersion);
                 return new UpdateDownloadResult(
                     true,
                     "Das Update wird nach dem Beenden der App automatisch installiert und anschließend gestartet.",
@@ -188,7 +189,7 @@ public static class UpdateService
     /// If setup fails, the previous app is reopened with a visible error instead of leaving
     /// the user with a silently failed update.
     /// </summary>
-    private static void QueueSilentInstallAfterCurrentProcessExits(string installerPath)
+    private static void QueueSilentInstallAfterCurrentProcessExits(string installerPath, string? updateVersion)
     {
         var applicationPath = Environment.ProcessPath;
         if (string.IsNullOrWhiteSpace(applicationPath))
@@ -203,7 +204,8 @@ public static class UpdateService
             installerPath,
             applicationPath,
             logPath,
-            Path.Combine(Path.GetTempPath(), $"TILageMonitor-Update-Backup-{Guid.NewGuid():N}"));
+            Path.Combine(Path.GetTempPath(), $"TILageMonitor-Update-Backup-{Guid.NewGuid():N}"),
+            updateVersion);
 
         File.WriteAllText(helperPath, script);
 

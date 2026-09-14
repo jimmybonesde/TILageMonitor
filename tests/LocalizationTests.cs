@@ -16,6 +16,7 @@ public sealed class LocalizationTests
     {
         Assert.Equal("Settings", LocalizationService.Translate("Einstellungen", CultureInfo.GetCultureInfo("en-US")));
         Assert.Equal("Outage · ePA", LocalizationService.Translate("Störung · ePA", CultureInfo.GetCultureInfo("en-US")));
+        Assert.Equal("no data point", LocalizationService.Translate("kein Datenpunkt", CultureInfo.GetCultureInfo("en-US")));
     }
 
     [Fact]

@@ -659,7 +659,7 @@ public sealed class HistoryDayGroup
     public HistoryDayGroup(DateTime date, List<HistoryDayCell> hours)
     {
         Date = date.Date;
-        var culture = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
+        var culture = LocalizationService.DisplayCulture;
         var weekday = culture.DateTimeFormat.AbbreviatedDayNames[(int)date.DayOfWeek].TrimEnd('.');
         if (weekday.Length > 0)
             weekday = char.ToUpper(weekday[0], culture) + weekday[1..];
@@ -718,7 +718,7 @@ public sealed class HistoryDayCell
 
     public static HistoryDayCell From(DateTime date, int hour, string? status)
     {
-        var tipPrefix = $"{date:dd.MM.yyyy} {hour:D2}:00";
+        var tipPrefix = $"{date.ToString("d", LocalizationService.DisplayCulture)} {hour:D2}:00";
 
         if (status is null)
         {
@@ -726,7 +726,7 @@ public sealed class HistoryDayCell
                 date,
                 hour,
                 null,
-                $"{tipPrefix}: kein Datenpunkt",
+                LocalizationService.Translate($"{tipPrefix}: kein Datenpunkt"),
                 BrushForStatus(null));
         }
 
@@ -739,7 +739,7 @@ public sealed class HistoryDayCell
             _ => status
         };
 
-        return new HistoryDayCell(date, hour, status, $"{tipPrefix}: {label}", BrushForStatus(status));
+        return new HistoryDayCell(date, hour, status, LocalizationService.Translate($"{tipPrefix}: {label}"), BrushForStatus(status));
     }
 
     /// <summary>Legend / status swatch colors matching <see cref="From"/>.</summary>

@@ -487,23 +487,23 @@ public partial class HistoryWindow : Window
     {
         if (_viewMode == ViewMode.Hours)
         {
-            HeaderHint.Text =
-                "Stundenansicht (0–23) — Klick auf auffällige Stunden öffnet das Ereignis; Esc zurück zur Übersicht.";
+            HeaderHint.Text = LocalizationService.Translate(
+                "Stundenansicht (0–23) — Klick auf auffällige Stunden öffnet das Ereignis; Esc zurück zur Übersicht.");
         }
         else if (_viewMode == ViewMode.Events)
         {
-            HeaderHint.Text =
-                "Ereignisse als Timeline — Esc kehrt zur Übersicht; Klick öffnet die Stundenansicht für den Starttag.";
+            HeaderHint.Text = LocalizationService.Translate(
+                "Ereignisse als Timeline — Esc kehrt zur Übersicht; Klick öffnet die Stundenansicht für den Starttag.");
         }
         else if (!string.IsNullOrWhiteSpace(_selectedServiceKey))
         {
-            HeaderHint.Text =
-                $"Fokus: {FocusDisplayName()} — große Tageskacheln. Tag öffnet Stunden; Ereignisse über den Segment-Umschalter.";
+            HeaderHint.Text = LocalizationService.Translate(
+                $"Fokus: {FocusDisplayName()} — große Tageskacheln. Tag öffnet Stunden; Ereignisse über den Segment-Umschalter.");
         }
         else
         {
-            HeaderHint.Text =
-                "Alle Dienste in kompakten Zeilen. Ein Dienst-Chip fokussiert die Tageskacheln; Ereignisse separat.";
+            HeaderHint.Text = LocalizationService.Translate(
+                "Alle Dienste in kompakten Zeilen. Ein Dienst-Chip fokussiert die Tageskacheln; Ereignisse separat.");
         }
     }
 
