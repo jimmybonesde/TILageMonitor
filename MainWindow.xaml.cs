@@ -192,7 +192,6 @@ public partial class MainWindow : Window
             await RefreshAsync(false);
             ScheduleNextRefresh();
             _ = CheckForUpdatesAsync(userInitiated: false);
-            _ = CheckForUpdatesAsync(userInitiated: false);
         };
 
         Loaded += async (_, _) =>
