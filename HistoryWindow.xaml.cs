@@ -98,7 +98,7 @@ public partial class HistoryWindow : Window
 
         var covered = HistoryStore.CountCoveredHours(history);
         var expected = HistoryStore.ExpectedHoursInWindow;
-        CoverageHint.Text = $"14 Tage API-Verlauf · {covered} / {expected} Stunden zusätzlich lokal erfasst";
+        CoverageHint.Text = LocalizationService.IsGerman ? $"14 Tage API-Verlauf · {covered} / {expected} Stunden zusätzlich lokal erfasst" : $"14-day API history · {covered} / {expected} hours recorded locally";
 
         UpdateLegendColors();
         RefreshFilterChipStyles();
@@ -234,9 +234,9 @@ public partial class HistoryWindow : Window
             MultiOverviewPanel.Visibility = Visibility.Collapsed;
             LegendPanel.Visibility = Visibility.Collapsed;
             StableOkBorder.Visibility = Visibility.Collapsed;
-            NoHistoryTitle.Text = "Noch keine Verlaufsdaten";
+            NoHistoryTitle.Text = LocalizationService.Translate("Noch keine Verlaufsdaten");
             NoHistorySubtitle.Text =
-                "Der 14-Tage-Verlauf kombiniert gematik-API-Daten mit lokal erfassten Stunden. Sobald die App aktualisiert, füllen sich die Kacheln ruhig von selbst.";
+                LocalizationService.Translate("Der 14-Tage-Verlauf kombiniert gematik-API-Daten mit lokal erfassten Stunden. Sobald die App aktualisiert, füllen sich die Kacheln ruhig von selbst.");
         }
         else if (filteredEmpty && focusMode)
         {
@@ -245,9 +245,9 @@ public partial class HistoryWindow : Window
             MultiOverviewPanel.Visibility = Visibility.Collapsed;
             LegendPanel.Visibility = Visibility.Visible;
             StableOkBorder.Visibility = Visibility.Collapsed;
-            NoHistoryTitle.Text = "Keine Daten für diesen Dienst";
+            NoHistoryTitle.Text = LocalizationService.Translate("Keine Daten für diesen Dienst");
             NoHistorySubtitle.Text =
-                "Für den gewählten Dienst gibt es in diesem Zeitraum keine Einträge. „Alle Dienste“ wählen oder einen anderen Chip tippen.";
+                LocalizationService.Translate("Für den gewählten Dienst gibt es in diesem Zeitraum keine Einträge. „Alle Dienste“ wählen oder einen anderen Chip tippen.");
         }
         else
         {
