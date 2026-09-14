@@ -13,7 +13,7 @@
   <a href="https://github.com/jimmybonesde/TILageMonitor/releases/latest"><img src="https://img.shields.io/github/v/release/jimmybonesde/TILageMonitor?style=flat&label=Download&logo=github" alt="Aktueller Download"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat&logo=windows&logoColor=white" alt="Windows 10 und 11">
   <img src="https://img.shields.io/badge/.NET-10-512BD4?style=flat&logo=dotnet&logoColor=white" alt=".NET 10">
-  <img src="https://img.shields.io/badge/Lizenz-Community-gray?style=flat" alt="Community-App">
+  <img src="https://img.shields.io/badge/Lizenz-MIT-green?style=flat" alt="Community-App">
 </p>
 
 <p align="center">
