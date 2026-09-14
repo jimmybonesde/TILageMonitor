@@ -45,6 +45,7 @@ public partial class HistoryWindow : Window
     public HistoryWindow(MainWindow owner)
     {
         InitializeComponent();
+        LocalizationService.Apply(this);
         WindowState = WindowState.Maximized;
         // Independent window: stay usable when Main is hidden to tray (no Owner).
         _ = owner;
