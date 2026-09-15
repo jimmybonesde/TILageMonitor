@@ -166,6 +166,34 @@ public partial class MainWindow
         _trayIconBeeintraechtigung.Dispose();
     }
 
+    /// <summary>
+    /// Starts a fresh main-process instance and then closes this instance. Used after a
+    /// language change so every window and the tray menu pick up the new UI culture.
+    /// </summary>
+    public bool RestartApplication()
+    {
+        try
+        {
+            var executablePath = Environment.ProcessPath;
+            if (string.IsNullOrWhiteSpace(executablePath) || !File.Exists(executablePath))
+                return false;
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = executablePath,
+                WorkingDirectory = Path.GetDirectoryName(executablePath) ?? AppContext.BaseDirectory,
+                UseShellExecute = true
+            });
+
+            CloseApp();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private void CloseApp()
     {
         _forceClose = true;
