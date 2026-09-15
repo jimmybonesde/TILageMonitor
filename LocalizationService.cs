@@ -336,7 +336,11 @@ public static class LocalizationService
 
     private static void ApplyElement(DependencyObject element)
     {
-        if (element is TextBlock textBlock) textBlock.Text = Translate(textBlock.Text);
+        // A TextBlock with inline content can contain hyperlinks or dynamic Runs (for
+        // example, the footer's clickable R.C. and version number). Assigning Text
+        // would clear those inlines, so translate only plain TextBlocks.
+        if (element is TextBlock textBlock && textBlock.Inlines.Count == 0)
+            textBlock.Text = Translate(textBlock.Text);
         if (element is System.Windows.Controls.Label label) label.Content = Translate(label.Content?.ToString());
         if (element is System.Windows.Controls.Button button) button.Content = Translate(button.Content?.ToString());
         if (element is System.Windows.Controls.CheckBox checkBox) checkBox.Content = Translate(checkBox.Content?.ToString());
