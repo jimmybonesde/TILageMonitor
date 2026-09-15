@@ -114,7 +114,7 @@ public partial class MainWindow
                 : cause.Service;
             _messages.Add(
                 new MessageRow(
-                    LocalizationService.Translate("Ursache · ") + causeFocus,
+                    LocalizationService.Translate("Ursache ·") + " " + causeFocus,
                     $"{cause.Organization} – {cause.Function} (CI: {cause.Ci})",
                     FormatMessageTimestamp(lage.Timestamp),
                     causeFocus,

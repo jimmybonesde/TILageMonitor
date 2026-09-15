@@ -77,6 +77,36 @@ public sealed class LocalizationTests
     }
 
     [Fact]
+    public void UrsacheKey_HasNoTrailingSpace_AndComposesWithSeparator()
+    {
+        var en = CultureInfo.GetCultureInfo("en-US");
+        // Catalog key is "Ursache ·" (no trailing space); call sites append " " + focus.
+        Assert.Equal("Cause ·", LocalizationService.Translate("Ursache ·", en));
+        Assert.Equal("Ursache · ", LocalizationService.Translate("Ursache · ", en)); // must NOT match
+        Assert.Equal("Cause · ePA", LocalizationService.Translate("Ursache ·", en) + " " + "ePA");
+    }
+
+    [Fact]
+    public void TranslateAppDetail_TranslatesStatusPrefix_KeepsAffectedSuffixRaw()
+    {
+        var en = CultureInfo.GetCultureInfo("en-US");
+        Assert.Equal("Full outage", LocalizationService.TranslateAppDetail("Komplettausfall", en));
+        Assert.Equal("Partial outage", LocalizationService.TranslateAppDetail("Teilausfall", en));
+        Assert.Equal(
+            "Maintenance / restriction",
+            LocalizationService.TranslateAppDetail("Wartung / Einschränkung", en));
+        Assert.Equal("Available", LocalizationService.TranslateAppDetail("Verfügbar", en));
+
+        // AffectedFunctions append " – …" — only the status label must translate.
+        Assert.Equal(
+            "Full outage – VSD: eingeschränkt",
+            LocalizationService.TranslateAppDetail("Komplettausfall – VSD: eingeschränkt", en));
+        Assert.Equal(
+            "Partial outage – ePA: limited",
+            LocalizationService.TranslateAppDetail("Teilausfall – ePA: limited", en));
+    }
+
+    [Fact]
     public void EnglishComposedFragments_MatchExactCatalogParts()
     {
         var en = CultureInfo.GetCultureInfo("en-US");

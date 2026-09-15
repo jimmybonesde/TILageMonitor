@@ -511,6 +511,24 @@ public sealed class StatusAndScheduleTests
         Assert.Equal(@"Global\TILageMonitor_SingleInstance", App.PreferredMutexName);
         Assert.Equal(@"Local\TILageMonitor_SingleInstance", App.FallbackMutexName);
         Assert.StartsWith(@"Global\", App.PreferredShowWindowEventName);
+        Assert.Equal(@"Global\TILageMonitor_ShowWindow", App.PreferredShowWindowEventName);
+        Assert.Equal(@"Local\TILageMonitor_ShowWindow", App.FallbackShowWindowEventName);
+    }
+
+    [Fact]
+    public void App_sync_namespace_choice_couples_mutex_and_event()
+    {
+        var ns = App.ChooseSyncObjectNamespace();
+        Assert.True(ns is @"Global\" or @"Local\");
+
+        var mutexName = ns + "TILageMonitor_SingleInstance";
+        var eventName = ns + "TILageMonitor_ShowWindow";
+        Assert.StartsWith(ns, mutexName);
+        Assert.StartsWith(ns, eventName);
+
+        // Preferred constants stay Global-primary for Inno AppMutex alignment.
+        Assert.StartsWith(@"Global\", App.PreferredMutexName);
+        Assert.StartsWith(@"Global\", App.PreferredShowWindowEventName);
     }
 
     [Fact]

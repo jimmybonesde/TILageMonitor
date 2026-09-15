@@ -192,7 +192,7 @@ public sealed record AppRow
     {
         Icon = icon;
         Name = name;
-        Detail = LocalizationService.Translate(detail);
+        Detail = LocalizationService.TranslateAppDetail(detail);
         StatusBrush = statusBrush;
         ServiceKey = serviceKey;
     }

@@ -274,6 +274,23 @@ public static class LocalizationService
     }
 
     /// <summary>
+    /// Translate an AppRow status label. When AffectedFunctions are appended after
+    /// " – ", only the leading status fragment is exact-matched; the API suffix stays raw.
+    /// </summary>
+    public static string TranslateAppDetail(string? value, CultureInfo? culture = null)
+    {
+        if (string.IsNullOrEmpty(value) || (culture is null ? IsGerman : IsGermanCulture(culture)))
+            return value ?? string.Empty;
+
+        const string sep = " – ";
+        var idx = value.IndexOf(sep, StringComparison.Ordinal);
+        if (idx < 0)
+            return Translate(value, culture);
+
+        return Translate(value[..idx], culture) + value[idx..];
+    }
+
+    /// <summary>
     /// Known update/error prefixes that may be followed by a dynamic exception suffix.
     /// Leading-prefix only — never mid-string replace.
     /// </summary>

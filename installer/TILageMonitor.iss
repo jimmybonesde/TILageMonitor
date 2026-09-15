@@ -23,8 +23,9 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
 WizardStyle=modern
-; Align with app single-instance mutex (App.xaml.cs: Global\TILageMonitor_SingleInstance).
-; Inno directive is AppMutex (not AppMutexName). Global\ matches the preferred app mutex namespace.
+; Align with app single-instance mutex (App.xaml.cs prefers Global\TILageMonitor_SingleInstance).
+; Inno can declare only one AppMutex — Global\ matches the common case. If the app falls back
+; to Local\ (UnauthorizedAccessException), CloseApplications still closes that instance.
 AppMutex=Global\TILageMonitor_SingleInstance
 CloseApplications=yes
 
