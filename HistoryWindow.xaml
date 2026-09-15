@@ -558,7 +558,7 @@
                             <Border Style="{StaticResource ZoomHourCellStyle}"
                                     Background="{Binding CellBrush}"
                                     ToolTip="{Binding Tooltip}"
-                                    Cursor="Hand"
+                                    Cursor="{Binding CellCursor}"
                                     MouseLeftButtonUp="ZoomHourCell_MouseLeftButtonUp"/>
                           </DataTemplate>
                         </ItemsControl.ItemTemplate>

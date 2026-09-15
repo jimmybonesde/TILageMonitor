@@ -249,7 +249,8 @@ public static class HistoryStore
 
     /// <summary>
     /// Counts known/OK hours from local snapshots only (excludes future local hours).
-    /// Used by HistoryWindow availability KPI when local data exists.
+    /// Used by HistoryWindow availability KPI only when
+    /// <see cref="IsLocalAvailabilityCoverageSufficient"/> is true.
     /// </summary>
     public static (int Known, int Ok) CountLocalAvailability(HistoryFile file, string? serviceKey = null)
     {
@@ -295,6 +296,27 @@ public static class HistoryStore
         }
 
         return (known, ok);
+    }
+
+    /// <summary>
+    /// Minimum fraction of the expected local 14-day window that must be covered before
+    /// the availability KPI prefers thin local snapshots over merged row cells.
+    /// </summary>
+    public const double MinLocalAvailabilityCoverageRatio = 0.85;
+
+    /// <summary>
+    /// True when local snapshot coverage is "full enough" to drive the availability KPI
+    /// without diverging from the visible 14-day merged tiles (API + local).
+    /// </summary>
+    public static bool IsLocalAvailabilityCoverageSufficient(int localKnown, string? serviceKey = null)
+    {
+        if (localKnown <= 0)
+            return false;
+
+        var serviceCount = string.IsNullOrWhiteSpace(serviceKey) ? AppSettings.ServiceKeys.Length : 1;
+        var expected = ExpectedHoursInWindow * Math.Max(1, serviceCount);
+        var minimum = (int)Math.Ceiling(expected * MinLocalAvailabilityCoverageRatio);
+        return localKnown >= minimum;
     }
 
     /// <summary>
@@ -677,7 +699,8 @@ public sealed class HistoryDayGroup
         var startUtc = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(Date, DateTimeKind.Local));
         var endUtc = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(Date.AddDays(1), DateTimeKind.Local));
         PhysicalHourCount = Math.Max(0, (int)(endUtc - startUtc).TotalHours);
-        DayTooltip = BuildDayTooltip(Label, DayStatus, hours, PhysicalHourCount);
+        // Tooltip uses wall-clock tiles (always 24) so DST days never show e.g. 24/23.
+        DayTooltip = BuildDayTooltip(Label, DayStatus, hours);
     }
 
     private static string FormatCompactDateLabel(DateTime date, System.Globalization.CultureInfo culture)
@@ -705,7 +728,7 @@ public sealed class HistoryDayGroup
         }
     }
 
-    private static string BuildDayTooltip(string label, string? dayStatus, List<HistoryDayCell> hours, int physicalHourCount)
+    private static string BuildDayTooltip(string label, string? dayStatus, List<HistoryDayCell> hours)
     {
         var summary = LocalizationService.Translate(dayStatus switch
         {
@@ -716,17 +739,19 @@ public sealed class HistoryDayGroup
             _ => "keine Daten"
         });
 
+        // Denominator matches visible wall-clock hour tiles (0–23), not PhysicalHourCount (23/25 on DST).
         var known = hours.Count(h => h.Status is not null);
+        var totalTiles = hours.Count;
         var ok = hours.Count(h => string.Equals(h.Status, "none", StringComparison.OrdinalIgnoreCase));
         var partial = hours.Count(h => string.Equals(h.Status, "partial", StringComparison.OrdinalIgnoreCase));
         var full = hours.Count(h => string.Equals(h.Status, "full", StringComparison.OrdinalIgnoreCase));
         var maint = hours.Count(h => string.Equals(h.Status, "maintenance", StringComparison.OrdinalIgnoreCase));
-        var hoursPhrase = LocalizationService.Translate("physische Stunden mit Daten");
+        var hoursPhrase = LocalizationService.Translate("Stundenkacheln mit Daten");
         var clickHint = LocalizationService.Translate("Klick öffnet die Stundenansicht.");
         var restr = LocalizationService.Translate("Einschr.");
         var outage = LocalizationService.Translate("Störung");
         var maintLabel = LocalizationService.Translate("Wartung");
-        return $"{label}: {summary}\n{known}/{physicalHourCount} {hoursPhrase} · OK {ok} · {restr} {partial} · {outage} {full} · {maintLabel} {maint}\n{clickHint}";
+        return $"{label}: {summary}\n{known}/{totalTiles} {hoursPhrase} · OK {ok} · {restr} {partial} · {outage} {full} · {maintLabel} {maint}\n{clickHint}";
     }
 }
 
@@ -737,6 +762,17 @@ public sealed class HistoryDayCell
     public string? Status { get; }
     public string Tooltip { get; }
     public System.Windows.Media.Brush CellBrush { get; }
+
+    /// <summary>True when the Stunden cell navigates to a matching timeline event on click.</summary>
+    public bool IsNavigable =>
+        Status is not null &&
+        !string.Equals(Status, "none", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Hand cursor only for clickable partial/full/maintenance cells.</summary>
+    public System.Windows.Input.Cursor CellCursor =>
+        IsNavigable
+            ? System.Windows.Input.Cursors.Hand
+            : System.Windows.Input.Cursors.Arrow;
 
     private HistoryDayCell(DateTime date, int hour, string? status, string tooltip, System.Windows.Media.Brush brush)
     {

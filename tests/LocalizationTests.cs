@@ -117,8 +117,23 @@ public sealed class LocalizationTests
             "Automatically detected restriction · ",
             LocalizationService.Translate("Automatisch erkannte Einschränkung · ", en));
         Assert.Equal(
-            "physical hours with data",
-            LocalizationService.Translate("physische Stunden mit Daten", en));
+            "hour tiles with data",
+            LocalizationService.Translate("Stundenkacheln mit Daten", en));
+        Assert.Equal(
+            "Compact rows per service. A service chip above focuses the daily tiles; events are available via the segment switcher.",
+            LocalizationService.Translate(
+                "Kompakte Zeilen je Dienst. Ein Dienst-Chip oben fokussiert die Tageskacheln; Ereignisse über den Segment-Umschalter.",
+                en));
+        Assert.Equal(
+            "Over the last 14 days, {0} had no restriction or outage — a quiet picture.",
+            LocalizationService.Translate(
+                "In den letzten 14 Tagen blieb {0} ohne Einschränkung oder Störung — ein ruhiges Bild.",
+                en));
+        Assert.Equal(
+            "14-day API history · {0} / {1} hours recorded locally",
+            LocalizationService.Translate(
+                "14 Tage API-Verlauf · {0} / {1} Stunden zusätzlich lokal erfasst",
+                en));
         Assert.Equal(
             "Click to open the hourly view.",
             LocalizationService.Translate("Klick öffnet die Stundenansicht.", en));

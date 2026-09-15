@@ -258,6 +258,10 @@ public static class LocalizationService
         ["Version"] = "Version",
         ["ist verfügbar. Aktuell installiert:"] = "is available. Currently installed:",
         ["wurde gefunden. Der Installer wird noch erstellt."] = "was found. The installer is still being created.",
+        ["Kompakte Zeilen je Dienst. Ein Dienst-Chip oben fokussiert die Tageskacheln; Ereignisse über den Segment-Umschalter."] = "Compact rows per service. A service chip above focuses the daily tiles; events are available via the segment switcher.",
+        ["14 Tage API-Verlauf · {0} / {1} Stunden zusätzlich lokal erfasst"] = "14-day API history · {0} / {1} hours recorded locally",
+        ["Stundenkacheln mit Daten"] = "hour tiles with data",
+        ["In den letzten 14 Tagen blieb {0} ohne Einschränkung oder Störung — ein ruhiges Bild."] = "Over the last 14 days, {0} had no restriction or outage — a quiet picture.",
         ["Störung ·"] = "Outage ·",
         ["Einschränkung ·"] = "Restriction ·"
     };

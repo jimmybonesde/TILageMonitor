@@ -551,4 +551,58 @@ public sealed class StatusAndScheduleTests
 
         LocalizationService.Configure("system");
     }
+
+    [Fact]
+    public void Local_availability_coverage_rejects_thin_sample()
+    {
+        Assert.False(HistoryStore.IsLocalAvailabilityCoverageSufficient(0, "erezept"));
+        Assert.False(HistoryStore.IsLocalAvailabilityCoverageSufficient(2, "erezept"));
+        Assert.False(HistoryStore.IsLocalAvailabilityCoverageSufficient(48, "erezept"));
+
+        var expected = HistoryStore.ExpectedHoursInWindow;
+        var barelyEnough = (int)Math.Ceiling(expected * HistoryStore.MinLocalAvailabilityCoverageRatio);
+        Assert.True(HistoryStore.IsLocalAvailabilityCoverageSufficient(barelyEnough, "erezept"));
+        Assert.False(HistoryStore.IsLocalAvailabilityCoverageSufficient(barelyEnough - 1, "erezept"));
+
+        // Alle: threshold scales by service count
+        var allExpected = expected * AppSettings.ServiceKeys.Length;
+        var allBarely = (int)Math.Ceiling(allExpected * HistoryStore.MinLocalAvailabilityCoverageRatio);
+        Assert.True(HistoryStore.IsLocalAvailabilityCoverageSufficient(allBarely, null));
+        Assert.False(HistoryStore.IsLocalAvailabilityCoverageSufficient(allBarely - 1, null));
+    }
+
+    [Fact]
+    public void DayTooltip_uses_wall_tile_count_consistent_with_hours_list()
+    {
+        var date = new DateTime(2026, 3, 29); // EU spring-forward candidate
+        var hours = Enumerable.Range(0, 24)
+            .Select(h => HistoryDayCell.From(date, h, "none"))
+            .ToList();
+        var day = new HistoryDayGroup(date, hours);
+
+        Assert.Equal(24, day.Hours.Count);
+        Assert.Contains("24/24", day.DayTooltip, StringComparison.Ordinal);
+        // When physical hours differ (DST), tooltip must not mix wall known vs physical total.
+        if (day.PhysicalHourCount != 24)
+            Assert.DoesNotContain($"24/{day.PhysicalHourCount}", day.DayTooltip, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Hour_cell_cursor_hand_only_when_navigable()
+    {
+        var ok = HistoryDayCell.From(DateTime.Today, 10, "none");
+        var unknown = HistoryDayCell.From(DateTime.Today, 11, null);
+        var partial = HistoryDayCell.From(DateTime.Today, 12, "partial");
+        var full = HistoryDayCell.From(DateTime.Today, 13, "full");
+        var maint = HistoryDayCell.From(DateTime.Today, 14, "maintenance");
+
+        Assert.False(ok.IsNavigable);
+        Assert.False(unknown.IsNavigable);
+        Assert.True(partial.IsNavigable);
+        Assert.True(full.IsNavigable);
+        Assert.True(maint.IsNavigable);
+        Assert.Equal(System.Windows.Input.Cursors.Arrow, ok.CellCursor);
+        Assert.Equal(System.Windows.Input.Cursors.Hand, partial.CellCursor);
+    }
+
 }

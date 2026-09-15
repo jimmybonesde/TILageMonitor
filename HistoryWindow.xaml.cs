@@ -31,6 +31,8 @@ public partial class HistoryWindow : Window
     private readonly ObservableCollection<ZoomServiceRow> _zoomRows = new();
     private readonly List<HistoryServiceRow> _allRows = new();
     private List<HistoryTimelineEvent> _timelineEventsCache = new();
+    /// <summary>Stable identity of the highlighted timeline event across auto-refresh rebuilds.</summary>
+    private string? _highlightedEventIdentity;
     private DateTime? _zoomedDate;
     private DateTime? _selectedDay;
     private string? _selectedServiceKey = s_sessionFilterKey;
@@ -98,7 +100,11 @@ public partial class HistoryWindow : Window
 
         var covered = HistoryStore.CountCoveredHours(history);
         var expected = HistoryStore.ExpectedHoursInWindow;
-        CoverageHint.Text = LocalizationService.IsGerman ? $"14 Tage API-Verlauf · {covered} / {expected} Stunden zusätzlich lokal erfasst" : $"14-day API history · {covered} / {expected} hours recorded locally";
+        CoverageHint.Text = string.Format(
+            LocalizationService.DisplayCulture,
+            LocalizationService.Translate("14 Tage API-Verlauf · {0} / {1} Stunden zusätzlich lokal erfasst"),
+            covered,
+            expected);
 
         UpdateLegendColors();
         RefreshFilterChipStyles();
@@ -302,7 +308,10 @@ public partial class HistoryWindow : Window
             var name = FocusDisplayName();
             StableOkTitle.Text = LocalizationService.Translate("Stabil · Alles ruhig");
             StableOkSubtitle.Text = focusRows.Count == 1
-                ? $"{LocalizationService.Translate("In den letzten 14 Tagen blieb")} {name} {LocalizationService.Translate("ohne Einschränkung oder Störung — ein ruhiges Bild.")}"
+                ? string.Format(
+                    LocalizationService.DisplayCulture,
+                    LocalizationService.Translate("In den letzten 14 Tagen blieb {0} ohne Einschränkung oder Störung — ein ruhiges Bild."),
+                    name)
                 : LocalizationService.Translate("In den letzten 14 Tagen waren alle bekannten Tage über die Dienste hinweg ohne Einschränkung oder Störung.");
         }
         else
@@ -341,12 +350,38 @@ public partial class HistoryWindow : Window
             return;
         }
 
+        // Remember highlight before rebuild — Auto-Refresh recreates event objects.
+        if (_highlightedEventIdentity is null)
+        {
+            var current = _timelineEventsCache.FirstOrDefault(ev => ev.IsHighlighted);
+            if (current is not null)
+                _highlightedEventIdentity = TimelineEventIdentity(current);
+        }
+
         _timelineEventsCache = HistoryTimelineBuilder.Build(_incidents, _outages, _selectedServiceKey);
+        ReapplyTimelineHighlight();
         EventsTimelineList.ItemsSource = _timelineEventsCache.ToList();
 
         var empty = _timelineEventsCache.Count == 0;
         EventsTimelineList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
         EventsEmptyCard.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static string TimelineEventIdentity(HistoryTimelineEvent ev) =>
+        $"{ev.ServiceKey}|{ev.StartLocal.Ticks}|{ev.EndLocal.Ticks}|{ev.KindLabel}";
+
+    private void ReapplyTimelineHighlight()
+    {
+        foreach (var ev in _timelineEventsCache)
+            ev.IsHighlighted = false;
+
+        if (string.IsNullOrEmpty(_highlightedEventIdentity))
+            return;
+
+        var match = _timelineEventsCache.FirstOrDefault(ev =>
+            string.Equals(TimelineEventIdentity(ev), _highlightedEventIdentity, StringComparison.Ordinal));
+        if (match is not null)
+            match.IsHighlighted = true;
     }
 
     private void UpdateKpis()
@@ -431,10 +466,11 @@ public partial class HistoryWindow : Window
             : $"{degradedDays} {LocalizationService.Translate("auffällige Tage")}";
         KpiDaysHint.Text = LocalizationService.Translate("Tage mit Einschränkung, Störung oder Wartung");
 
-        // Prefer availability from local snapshots when present; else row cells (API-fill).
-        // Future hours are null from BuildRows and already skipped above.
+        // Prefer merged row-cell availability (matches visible 14-day tiles) unless local
+        // snapshot coverage is full enough — avoids thin 1–2h local samples skewing the KPI.
         var (localKnown, localOk) = HistoryStore.CountLocalAvailability(_localHistory, _selectedServiceKey);
-        if (localKnown > 0)
+        var preferLocal = HistoryStore.IsLocalAvailabilityCoverageSufficient(localKnown, _selectedServiceKey);
+        if (preferLocal)
         {
             var pct = Math.Round(100.0 * localOk / localKnown, 1);
             KpiAvailValue.Text = pct.ToString("0.#", UiCulture) + " %";
@@ -891,6 +927,7 @@ public partial class HistoryWindow : Window
             return;
 
         inCache.IsHighlighted = true;
+        _highlightedEventIdentity = TimelineEventIdentity(inCache);
         EventsTimelineList.ItemsSource = _timelineEventsCache.ToList();
         EventsTimelineList.Visibility = _timelineEventsCache.Count == 0
             ? Visibility.Collapsed

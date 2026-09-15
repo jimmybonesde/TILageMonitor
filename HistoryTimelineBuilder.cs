@@ -92,7 +92,7 @@ public static class HistoryTimelineBuilder
         IncidentResponse? incidents,
         OutageResponse? outages,
         string? serviceFilterKey = null,
-        int maxEvents = 40)
+        int maxEvents = 80)
     {
         var windowStart = DateTime.Today.AddDays(-13);
         var windowEnd = DateTime.Today.AddDays(1);
