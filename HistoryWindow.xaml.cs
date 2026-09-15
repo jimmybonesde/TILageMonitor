@@ -359,12 +359,38 @@ public partial class HistoryWindow : Window
         }
 
         _timelineEventsCache = HistoryTimelineBuilder.Build(_incidents, _outages, _selectedServiceKey);
+        ApplyTimelineNavigationState();
         ReapplyTimelineHighlight();
         EventsTimelineList.ItemsSource = _timelineEventsCache.ToList();
 
         var empty = _timelineEventsCache.Count == 0;
         EventsTimelineList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
         EventsEmptyCard.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>
+    /// Marks only cells that overlap an event in the current visible timeline as navigable.
+    /// This keeps the cursor honest when a local snapshot has no matching API event yet.
+    /// </summary>
+    private void ApplyTimelineNavigationState()
+    {
+        foreach (var row in _allRows)
+        {
+            foreach (var day in row.Days ?? Enumerable.Empty<HistoryDayGroup>())
+            {
+                foreach (var cell in day.Hours ?? Enumerable.Empty<HistoryDayCell>())
+                {
+                    var hourStart = cell.Date.Date.AddHours(cell.Hour);
+                    var hourEnd = hourStart.AddHours(1);
+                    cell.IsNavigable = cell.Status is not null &&
+                        !string.Equals(cell.Status, "none", StringComparison.OrdinalIgnoreCase) &&
+                        _timelineEventsCache.Any(ev =>
+                            string.Equals(ev.ServiceKey, row.ServiceKey, StringComparison.OrdinalIgnoreCase) &&
+                            ev.StartLocal < hourEnd &&
+                            hourStart < ev.EndLocal);
+                }
+            }
+        }
     }
 
     private static string TimelineEventIdentity(HistoryTimelineEvent ev) =>
