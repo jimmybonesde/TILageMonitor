@@ -763,16 +763,16 @@ public sealed class HistoryDayCell
     public string Tooltip { get; }
     public System.Windows.Media.Brush CellBrush { get; }
 
-    /// <summary>True when the Stunden cell navigates to a matching timeline event on click.</summary>
-    public bool IsNavigable =>
-        Status is not null &&
-        !string.Equals(Status, "none", StringComparison.OrdinalIgnoreCase);
+    /// <summary>
+    /// Set by HistoryWindow after the current timeline has been built. A degraded local
+    /// snapshot alone is not enough: the cursor must promise navigation only when an
+    /// actual matching event can be opened.
+    /// </summary>
+    public bool IsNavigable { get; set; }
 
-    /// <summary>Hand cursor only for clickable partial/full/maintenance cells.</summary>
+    /// <summary>Hand cursor only when an actual timeline event is available.</summary>
     public System.Windows.Input.Cursor CellCursor =>
-        IsNavigable
-            ? System.Windows.Input.Cursors.Hand
-            : System.Windows.Input.Cursors.Arrow;
+        IsNavigable ? System.Windows.Input.Cursors.Hand : System.Windows.Input.Cursors.Arrow;
 
     private HistoryDayCell(DateTime date, int hour, string? status, string tooltip, System.Windows.Media.Brush brush)
     {

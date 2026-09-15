@@ -106,9 +106,12 @@ public static class CacheStore
         response is null ||
         (!response.Success && (response.Data is null || response.Data.Count == 0));
 
-    /// <summary>Non-null response that is not an empty soft-fail shell.</summary>
+    /// <summary>
+    /// Only a successful API response is trusted for incident seeding. A response marked
+    /// unsuccessful must never suppress later incident notifications, even when it carries data.
+    /// </summary>
     public static bool IsTrustedIncidents(IncidentResponse? response) =>
-        response is not null && !IsEmptyFailure(response);
+        response?.Success == true;
 
     public static LageCacheSnapshot? Load()
     {
