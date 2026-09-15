@@ -87,7 +87,14 @@
                         <TextBlock x:Name="LanguageRestartHint"
                                    Text="Die Auswahl wird nach einem Neustart der App übernommen."
                                    Style="{StaticResource SectionHintStyle}"
-                                   Margin="0,10,0,0"/>
+                                   Margin="0,10,0,8"/>
+                        <Button x:Name="RestartForLanguageButton"
+                                Content="Jetzt neu starten"
+                                Style="{StaticResource AccentButtonStyle}"
+                                HorizontalAlignment="Left"
+                                Padding="16,9"
+                                Visibility="Collapsed"
+                                Click="RestartForLanguage_Click"/>
                     </StackPanel>
                 </Border>
 

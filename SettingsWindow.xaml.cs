@@ -195,6 +195,19 @@ public partial class SettingsWindow : Window
         SettingsStore.Save(_settings);
         LanguageRestartHint.Text = LocalizationService.Translate(
             "Die Auswahl wurde gespeichert und wird nach einem Neustart der App übernommen.");
+        RestartForLanguageButton.Visibility = Visibility.Visible;
+    }
+
+    private void RestartForLanguage_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_ownerMain.RestartApplication())
+        {
+            System.Windows.MessageBox.Show(
+                LocalizationService.Translate("Die App konnte nicht neu gestartet werden. Bitte schließen und öffnen Sie sie manuell."),
+                LocalizationService.Translate("Neustart nicht möglich"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
