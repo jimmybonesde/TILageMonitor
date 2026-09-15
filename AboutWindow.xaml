@@ -5,7 +5,7 @@
         Width="440"
         SizeToContent="Height"
         MinWidth="400"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="{DynamicResource WindowBackground}"
         ShowInTaskbar="True">
