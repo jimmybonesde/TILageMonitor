@@ -160,6 +160,9 @@ public partial class MainWindow
         _disposed = true;
 
         try { _timer.Stop(); } catch { /* ignore */ }
+        try { _refreshCts?.Cancel(); } catch { /* ignore */ }
+        try { _refreshCts?.Dispose(); } catch { /* ignore */ }
+        _refreshCts = null;
         StopShowWindowListener();
 
         try
@@ -206,18 +209,22 @@ public partial class MainWindow
     // API AKTUALISIEREN
     // =============================================================
 
-    private async Task RefreshAsync(bool notify)
+    private async Task RefreshAsync()
     {
-        if (_loading)
+        if (_loading || _disposed)
             return;
 
         _loading = true;
-        RefreshButton.IsEnabled = false;
+        if (!_disposed)
+            RefreshButton.IsEnabled = false;
+
+        // Per-refresh CTS so exit can cancel an in-flight API round-trip.
+        _refreshCts?.Dispose();
+        _refreshCts = new CancellationTokenSource();
+        var ct = _refreshCts.Token;
 
         try
         {
-            var ct = CancellationToken.None;
-
             // Parallel: Lage kritisch; Incidents/Outages soft-fail (leere Antwort)
             var lageTask = _api.GetLageAsync(ct);
             var incidentsTask = GetIncidentsSoftAsync(ct);
@@ -226,6 +233,10 @@ public partial class MainWindow
             // WhenAny(lage) wirft nicht — Original-Exception bleibt an lageTask
             await Task.WhenAll(incidentsTask, outagesTask, Task.WhenAny(lageTask));
 
+            ct.ThrowIfCancellationRequested();
+            if (_disposed)
+                return;
+
             var incidentsFresh = await incidentsTask;
             var outagesFresh = await outagesTask;
             var lage = await lageTask;
@@ -233,6 +244,7 @@ public partial class MainWindow
             // Soft-fail: keep previous incidents/outages so History overlays & cache stay intact.
             var incidents = CacheStore.ResolveIncidents(incidentsFresh, _lastIncidents);
             var outages = CacheStore.ResolveOutages(outagesFresh, _lastOutages);
+            var incidentsTrusted = CacheStore.IsTrustedIncidents(incidentsFresh);
 
             // Last-known-good Cache speichern (Save also guards empty soft-fail halves)
             CacheStore.Save(lage, incidents, outages);
@@ -252,14 +264,24 @@ public partial class MainWindow
             _consecutiveApiFailures = 0;
             _apiDownBalloonShown = false;
 
-            Render(lage, incidents, outages, fromCache: false);
+            if (_disposed)
+                return;
+
+            Render(lage, incidents, outages, fromCache: false, incidentsTrusted: incidentsTrusted);
             // RenderHistory / NotifyHistoryUpdated stores last-good incidents & outages
             RenderHistory(history, incidents, outages);
 
             _firstLoad = false;
         }
+        catch (OperationCanceledException)
+        {
+            // Exit/dispose cancelled the refresh — ignore.
+        }
         catch (Exception ex)
         {
+            if (_disposed || ct.IsCancellationRequested)
+                return;
+
             _consecutiveApiFailures++;
 
             var cache = CacheStore.Load();
@@ -272,7 +294,8 @@ public partial class MainWindow
                     cache.Outages,
                     fromCache: true,
                     cache.SavedAt,
-                    suppressTrayUpdate: _consecutiveApiFailures >= 3);
+                    suppressTrayUpdate: _consecutiveApiFailures >= 3,
+                    incidentsTrusted: CacheStore.IsTrustedIncidents(cache.Incidents));
                 RenderHistory(HistoryStore.Load(), cache.Incidents, cache.Outages);
 
                 ConnectionText.Text = LocalizationService.Translate("● Offline · letzter Stand");
@@ -339,8 +362,12 @@ public partial class MainWindow
         }
         finally
         {
-            RefreshButton.IsEnabled = true;
             _loading = false;
+            if (!_disposed)
+            {
+                try { RefreshButton.IsEnabled = true; }
+                catch { /* window tearing down */ }
+            }
         }
     }
 

@@ -165,6 +165,17 @@
                         <TextBlock Text="Benachrichtigungen" Style="{StaticResource SectionHeaderStyle}"/>
                         <TextBlock Text="Toast-Meldungen pro Dienst (Tray-Icon-Farbe bleibt unverändert)"
                                    Style="{StaticResource SectionHintStyle}"/>
+                        <CheckBox x:Name="NotificationsMasterToggle"
+                                  Content="Benachrichtigungen aktiviert"
+                                  Style="{DynamicResource ThemeAwareCheckBoxStyle}"
+                                  Margin="0,0,0,10"
+                                  Checked="NotificationsMaster_Changed"
+                                  Unchecked="NotificationsMaster_Changed"/>
+                        <TextBlock Text="Pro Dienst"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   Margin="0,0,0,6"/>
                         <WrapPanel x:Name="NotifyServicesPanel" Orientation="Horizontal"/>
                     </StackPanel>
                 </Border>

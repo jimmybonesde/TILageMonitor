@@ -95,13 +95,20 @@ public static class CacheStore
         }
     }
 
-    private static bool IsEmptyFailure(IncidentResponse? response) =>
+    /// <summary>
+    /// True when the response is a soft-fail/null/empty failure shell (not trusted for seeding).
+    /// </summary>
+    public static bool IsEmptyFailure(IncidentResponse? response) =>
         response is null ||
         (!response.Success && (response.Data is null || response.Data.Count == 0));
 
-    private static bool IsEmptyFailure(OutageResponse? response) =>
+    public static bool IsEmptyFailure(OutageResponse? response) =>
         response is null ||
         (!response.Success && (response.Data is null || response.Data.Count == 0));
+
+    /// <summary>Non-null response that is not an empty soft-fail shell.</summary>
+    public static bool IsTrustedIncidents(IncidentResponse? response) =>
+        response is not null && !IsEmptyFailure(response);
 
     public static LageCacheSnapshot? Load()
     {

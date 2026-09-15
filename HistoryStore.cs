@@ -664,8 +664,8 @@ public sealed class HistoryDayGroup
         if (weekday.Length > 0)
             weekday = char.ToUpper(weekday[0], culture) + weekday[1..];
         WeekdayAbbrev = weekday;
-        // Culture-aware month/day (avoid hard-coded German dd.MM).
-        DateLabel = date.ToString("m", culture);
+        // Compact culture-aware month/day without year (ToString("m") is too long for tiles).
+        DateLabel = FormatCompactDateLabel(date, culture);
         Label = $"{WeekdayAbbrev} {DateLabel}";
         Hours = hours;
         DayStatus = HistoryStore.WorstStatusOfDay(hours);
@@ -680,23 +680,53 @@ public sealed class HistoryDayGroup
         DayTooltip = BuildDayTooltip(Label, DayStatus, hours, PhysicalHourCount);
     }
 
+    private static string FormatCompactDateLabel(DateTime date, System.Globalization.CultureInfo culture)
+    {
+        // de → dd.MM; en-US → M/d; other cultures → short month+day without year when possible.
+        if (string.Equals(culture.TwoLetterISOLanguageName, "de", StringComparison.OrdinalIgnoreCase))
+            return date.ToString("dd.MM", culture);
+        if (string.Equals(culture.TwoLetterISOLanguageName, "en", StringComparison.OrdinalIgnoreCase))
+            return date.ToString("M/d", culture);
+
+        var pattern = culture.DateTimeFormat.ShortDatePattern
+            .Replace("yyyy", "", StringComparison.OrdinalIgnoreCase)
+            .Replace("yy", "", StringComparison.OrdinalIgnoreCase)
+            .Trim()
+            .Trim('.', '/', '-', ' ');
+        if (string.IsNullOrWhiteSpace(pattern))
+            pattern = "M/d";
+        try
+        {
+            return date.ToString(pattern, culture);
+        }
+        catch
+        {
+            return date.ToString("M/d", culture);
+        }
+    }
+
     private static string BuildDayTooltip(string label, string? dayStatus, List<HistoryDayCell> hours, int physicalHourCount)
     {
-        var summary = dayStatus switch
+        var summary = LocalizationService.Translate(dayStatus switch
         {
             "full" => "Störung",
             "partial" => "Einschränkung",
             "maintenance" => "Wartung",
             "none" => "OK",
             _ => "keine Daten"
-        };
+        });
 
         var known = hours.Count(h => h.Status is not null);
         var ok = hours.Count(h => string.Equals(h.Status, "none", StringComparison.OrdinalIgnoreCase));
         var partial = hours.Count(h => string.Equals(h.Status, "partial", StringComparison.OrdinalIgnoreCase));
         var full = hours.Count(h => string.Equals(h.Status, "full", StringComparison.OrdinalIgnoreCase));
         var maint = hours.Count(h => string.Equals(h.Status, "maintenance", StringComparison.OrdinalIgnoreCase));
-        return LocalizationService.Translate($"{label}: {summary}\n{known}/{physicalHourCount} physische Stunden mit Daten · OK {ok} · Einschr. {partial} · Störung {full} · Wartung {maint}\nKlick öffnet die Stundenansicht.");
+        var hoursPhrase = LocalizationService.Translate("physische Stunden mit Daten");
+        var clickHint = LocalizationService.Translate("Klick öffnet die Stundenansicht.");
+        var restr = LocalizationService.Translate("Einschr.");
+        var outage = LocalizationService.Translate("Störung");
+        var maintLabel = LocalizationService.Translate("Wartung");
+        return $"{label}: {summary}\n{known}/{physicalHourCount} {hoursPhrase} · OK {ok} · {restr} {partial} · {outage} {full} · {maintLabel} {maint}\n{clickHint}";
     }
 }
 
@@ -727,20 +757,20 @@ public sealed class HistoryDayCell
                 date,
                 hour,
                 null,
-                LocalizationService.Translate($"{tipPrefix}: kein Datenpunkt"),
+                $"{tipPrefix}: {LocalizationService.Translate("kein Datenpunkt")}",
                 BrushForStatus(null));
         }
 
-        var label = status switch
+        var label = LocalizationService.Translate(status switch
         {
             "full" => "Störung",
             "partial" => "Einschränkung",
             "maintenance" => "Wartung",
             "none" => "OK",
             _ => status
-        };
+        });
 
-        return new HistoryDayCell(date, hour, status, LocalizationService.Translate($"{tipPrefix}: {label}"), BrushForStatus(status));
+        return new HistoryDayCell(date, hour, status, $"{tipPrefix}: {label}", BrushForStatus(status));
     }
 
     /// <summary>Legend / status swatch colors matching <see cref="From"/>.</summary>

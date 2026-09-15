@@ -75,4 +75,43 @@ public sealed class LocalizationTests
             "davon bleibt unverändert",
             LocalizationService.TranslateMessage("davon bleibt unverändert", en));
     }
+
+    [Fact]
+    public void EnglishComposedFragments_MatchExactCatalogParts()
+    {
+        var en = CultureInfo.GetCultureInfo("en-US");
+        Assert.Equal("Cause ·", LocalizationService.Translate("Ursache ·", en));
+        Assert.Equal("Outage", LocalizationService.Translate("Störung", en));
+        Assert.Equal("Restriction", LocalizationService.Translate("Einschränkung", en));
+        Assert.Equal(
+            "Automatically detected restriction · ",
+            LocalizationService.Translate("Automatisch erkannte Einschränkung · ", en));
+        Assert.Equal(
+            "physical hours with data",
+            LocalizationService.Translate("physische Stunden mit Daten", en));
+        Assert.Equal(
+            "Click to open the hourly view.",
+            LocalizationService.Translate("Klick öffnet die Stundenansicht.", en));
+        Assert.Equal(
+            "Author: Randy Carter / R.C.  ·  © 2026",
+            LocalizationService.Translate("Autor: Randy Carter / R.C.  ·  © 2026", en));
+        Assert.Equal(
+            "Notifications enabled",
+            LocalizationService.Translate("Benachrichtigungen aktiviert", en));
+        Assert.Equal(
+            "is available. Currently installed:",
+            LocalizationService.Translate("ist verfügbar. Aktuell installiert:", en));
+        Assert.Equal("Update", LocalizationService.Translate("Update", en));
+        Assert.Equal("services changed", LocalizationService.Translate("Dienste geändert", en));
+        Assert.Equal("new messages", LocalizationService.Translate("neue Meldungen", en));
+    }
+
+    [Fact]
+    public void DeadPlaceholderUpdateVersionKey_IsRemoved()
+    {
+        var en = CultureInfo.GetCultureInfo("en-US");
+        // Callers compose from translated parts — dead placeholder must not match.
+        var dead = "Version {result.LatestVersion} ist verfügbar. Aktuell installiert: {result.CurrentVersion}.";
+        Assert.Equal(dead, LocalizationService.Translate(dead, en));
+    }
 }

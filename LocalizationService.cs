@@ -171,7 +171,6 @@ public static class LocalizationService
         ["Wartung gemeldet"] = "Maintenance reported",
         ["Dienst wieder verfügbar"] = "Service available again",
         ["Updates prüfen"] = "Check updates",
-        ["Version {result.LatestVersion} ist verfügbar. Aktuell installiert: {result.CurrentVersion}."] = "Version {result.LatestVersion} is available. Currently installed: {result.CurrentVersion}.",
         ["Der Installer wird gerade noch erstellt. Bitte in wenigen Minuten erneut prüfen."] = "The installer is still being created. Please check again in a few minutes.",
         ["Update wird vorbereitet"] = "Preparing update",
         ["Automatisches Update fehlgeschlagen"] = "Automatic update failed",
@@ -251,7 +250,16 @@ public static class LocalizationService
         ["neue Meldungen"] = "new messages",
         ["TI-Komponente"] = "TI component",
         ["Die Prüfsummen-URL ist nicht erlaubt."] = "The checksum URL is not allowed.",
-        ["Update-Prüfung fehlgeschlagen."] = "Update check failed."
+        ["Update-Prüfung fehlgeschlagen."] = "Update check failed.",
+        ["Benachrichtigungen aktiviert"] = "Notifications enabled",
+        ["Pro Dienst"] = "Per service",
+        ["Autor: Randy Carter / R.C.  ·  © 2026"] = "Author: Randy Carter / R.C.  ·  © 2026",
+        ["Update"] = "Update",
+        ["Version"] = "Version",
+        ["ist verfügbar. Aktuell installiert:"] = "is available. Currently installed:",
+        ["wurde gefunden. Der Installer wird noch erstellt."] = "was found. The installer is still being created.",
+        ["Störung ·"] = "Outage ·",
+        ["Einschränkung ·"] = "Restriction ·"
     };
 
     /// <summary>

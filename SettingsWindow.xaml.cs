@@ -34,8 +34,10 @@ public partial class SettingsWindow : Window
         DarkModeToggle.IsChecked = _settings.DarkMode;
         AutoStartToggle.IsChecked = _settings.AutoStart;
         AutoInstallUpdatesToggle.IsChecked = _settings.AutoInstallUpdates;
+        NotificationsMasterToggle.IsChecked = _settings.NotificationsEnabled;
         SetLanguageSelection(_settings.Language);
         BuildNotifyCheckboxes();
+        ApplyNotifyChipsEnabledState();
         _initializing = false;
     }
 
@@ -47,8 +49,10 @@ public partial class SettingsWindow : Window
         DarkModeToggle.IsChecked = settings.DarkMode;
         AutoStartToggle.IsChecked = settings.AutoStart;
         AutoInstallUpdatesToggle.IsChecked = settings.AutoInstallUpdates;
+        NotificationsMasterToggle.IsChecked = settings.NotificationsEnabled;
         SetLanguageSelection(settings.Language);
         BuildNotifyCheckboxes();
+        ApplyNotifyChipsEnabledState();
         _initializing = false;
     }
 
@@ -94,6 +98,26 @@ public partial class SettingsWindow : Window
             cb.Unchecked += NotifyService_Changed;
             NotifyServicesPanel.Children.Add(chip);
         }
+
+        ApplyNotifyChipsEnabledState();
+    }
+
+    private void ApplyNotifyChipsEnabledState()
+    {
+        var masterOn = _settings.NotificationsEnabled;
+        NotifyServicesPanel.IsEnabled = masterOn;
+        NotifyServicesPanel.Opacity = masterOn ? 1.0 : 0.45;
+    }
+
+    private void NotificationsMaster_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_initializing)
+            return;
+
+        _settings.NotificationsEnabled = NotificationsMasterToggle.IsChecked == true;
+        SettingsStore.Save(_settings);
+        ApplyNotifyChipsEnabledState();
+        _ownerMain.ApplySettings(_settings);
     }
 
     private void NotifyService_Changed(object sender, RoutedEventArgs e)
@@ -123,6 +147,7 @@ public partial class SettingsWindow : Window
         // Rebuild checkboxes so TextMain brush updates
         _initializing = true;
         BuildNotifyCheckboxes();
+        ApplyNotifyChipsEnabledState();
         _initializing = false;
     }
 

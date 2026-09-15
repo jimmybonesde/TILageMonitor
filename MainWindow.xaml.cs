@@ -45,6 +45,7 @@ public partial class MainWindow : Window
 
     private EventWaitHandle? _showWindowEvent;
     private CancellationTokenSource? _showWindowCts;
+    private CancellationTokenSource? _refreshCts;
     private Forms.ToolStripMenuItem? _autostartMenuItem;
     private Forms.ToolStripMenuItem? _notificationsMenuItem;
     private SettingsWindow? _settingsWindow;
@@ -121,7 +122,7 @@ public partial class MainWindow : Window
         var menu = new Forms.ContextMenuStrip();
 
         menu.Items.Add(LocalizationService.Translate("TI-Lage anzeigen"), null, (_, _) => ShowWindow());
-        menu.Items.Add(LocalizationService.Translate("Jetzt aktualisieren"), null, (_, _) => _ = RefreshAsync(false));
+        menu.Items.Add(LocalizationService.Translate("Jetzt aktualisieren"), null, (_, _) => _ = RefreshAsync());
         menu.Items.Add(
             LocalizationService.Translate("gematik TI-Status öffnen"),
             null,
@@ -196,7 +197,7 @@ public partial class MainWindow : Window
 
         _timer.Tick += async (_, _) =>
         {
-            await RefreshAsync(false);
+            await RefreshAsync();
             ScheduleNextRefresh();
             _ = CheckForUpdatesAsync(userInitiated: false);
         };
@@ -206,43 +207,11 @@ public partial class MainWindow : Window
             // Verlauf aus lokalem Cache anzeigen (auch vor erstem API-Call)
             RenderHistory(HistoryStore.Load(), null, null);
 
-            await RefreshAsync(false);
+            await RefreshAsync();
             ScheduleNextRefresh();
             // „Beim Start“: one background update check after first refresh
             _ = CheckForUpdatesAsync(userInitiated: false);
         };
-    }
-
-    /// <summary>
-    /// Delay until the next gematik-style refresh slot (local minute % 5 == 1, second 0).
-    /// Slots: 01, 06, 11, 16, 21, 26, 31, 36, 41, 46, 51, 56.
-    /// </summary>
-    private static TimeSpan GetDelayUntilNextGematikSlot(DateTime nowLocal)
-    {
-        // Truncate to the current minute, then advance to the next slot minute.
-        var next = new DateTime(
-            nowLocal.Year, nowLocal.Month, nowLocal.Day,
-            nowLocal.Hour, nowLocal.Minute, 0, nowLocal.Kind);
-
-        int mod = next.Minute % 5;
-        if (mod == 1)
-        {
-            // Already on a slot minute — if past second 0, take the following slot (+5 min).
-            if (nowLocal > next)
-                next = next.AddMinutes(5);
-        }
-        else
-        {
-            // Minutes until next minute where Minute % 5 == 1.
-            int minutesToAdd = (1 - mod + 5) % 5;
-            next = next.AddMinutes(minutesToAdd);
-        }
-
-        var delay = next - nowLocal;
-        // Minimum 5 seconds avoids tight loops if we land exactly on a boundary.
-        if (delay < TimeSpan.FromSeconds(5))
-            delay = TimeSpan.FromSeconds(5);
-        return delay;
     }
 
     private void ScheduleNextRefresh()
@@ -260,10 +229,8 @@ public partial class MainWindow : Window
     {
         try
         {
-            _showWindowEvent = new EventWaitHandle(
-                false,
-                EventResetMode.AutoReset,
-                App.ShowWindowEventName);
+            // Prefer the event App created before mutex acquisition (race-safe for 2nd instance).
+            _showWindowEvent = OpenOrCreateShowWindowEvent(App.ShowWindowEventName);
 
             _showWindowCts = new CancellationTokenSource();
             var token = _showWindowCts.Token;
@@ -276,7 +243,8 @@ public partial class MainWindow : Window
                     {
                         if (_showWindowEvent.WaitOne(500))
                         {
-                            Dispatcher.Invoke(ShowWindow);
+                            if (!_disposed)
+                                Dispatcher.Invoke(ShowWindow);
                         }
                     }
                     catch (ObjectDisposedException)
@@ -295,6 +263,23 @@ public partial class MainWindow : Window
         {
             // optional
         }
+    }
+
+    private static EventWaitHandle OpenOrCreateShowWindowEvent(string name)
+    {
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            try
+            {
+                return EventWaitHandle.OpenExisting(name);
+            }
+            catch
+            {
+                Thread.Sleep(40);
+            }
+        }
+
+        return new EventWaitHandle(false, EventResetMode.AutoReset, name);
     }
 
     private void StopShowWindowListener()
@@ -428,17 +413,23 @@ public partial class MainWindow : Window
         }
     }
 
-    private static async void SoftHighlight(System.Windows.FrameworkElement element)
+    private async void SoftHighlight(System.Windows.FrameworkElement element)
     {
+        if (_disposed)
+            return;
+
         try
         {
             var original = element.Opacity;
             element.Opacity = 0.55;
             await System.Threading.Tasks.Task.Delay(180);
+            if (_disposed) { try { element.Opacity = original; } catch { /* ignore */ } return; }
             element.Opacity = 1.0;
             await System.Threading.Tasks.Task.Delay(180);
+            if (_disposed) { try { element.Opacity = original; } catch { /* ignore */ } return; }
             element.Opacity = 0.7;
             await System.Threading.Tasks.Task.Delay(180);
+            if (_disposed) return;
             element.Opacity = original;
         }
         catch

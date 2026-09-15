@@ -47,7 +47,8 @@ public partial class MainWindow
             return result;
         }
 
-        var message = $"Version {result.LatestVersion} ist verfügbar. Aktuell installiert: {result.CurrentVersion}.";
+        var message =
+            $"{LocalizationService.Translate("Version")} {result.LatestVersion} {LocalizationService.Translate("ist verfügbar. Aktuell installiert:")} {result.CurrentVersion}.";
         var installerAvailable = !string.IsNullOrWhiteSpace(result.DownloadUrl);
 
         // GitHub releases can be visible shortly before Actions attaches the Setup.exe.
@@ -97,8 +98,8 @@ public partial class MainWindow
                 _settings.AutoInstallRetryAfterUtc = AutoUpdateRetryPolicy.GetNextRetryUtc(DateTime.UtcNow);
                 SettingsStore.Save(_settings);
                 ToastService.Show(
-                    "Automatisches Update fehlgeschlagen",
-                    $"{automaticDownload.Message}\nNächster Versuch frühestens in 6 Stunden.",
+                    LocalizationService.Translate("Automatisches Update fehlgeschlagen"),
+                    $"{LocalizationService.TranslateMessage(automaticDownload.Message)}\n{LocalizationService.Translate("Nächster Versuch frühestens in 6 Stunden.")}",
                     ToastUrgency.Warning);
             }
 
@@ -197,8 +198,8 @@ public partial class MainWindow
 
         _lastBalloonedUpdateVersion = latest;
         ToastService.Show(
-            "Update verfügbar",
-            $"{message} Im Footer kannst du es installieren.",
+            LocalizationService.Translate("Update verfügbar"),
+            $"{message} {LocalizationService.Translate("Im Footer kannst du es installieren.")}",
             ToastUrgency.Info);
     }
 
@@ -213,8 +214,8 @@ public partial class MainWindow
 
         _lastBalloonedUpdateVersion = latest;
         ToastService.Show(
-            "Update wird vorbereitet",
-            $"Version {latest} wurde gefunden. Der Installer wird noch erstellt.",
+            LocalizationService.Translate("Update wird vorbereitet"),
+            $"{LocalizationService.Translate("Version")} {latest} {LocalizationService.Translate("wurde gefunden. Der Installer wird noch erstellt.")}",
             ToastUrgency.Info);
     }
 
@@ -267,8 +268,8 @@ public partial class MainWindow
         {
             InstallUpdateButton.Content = LocalizationService.Translate("Setup gestartet");
             System.Windows.MessageBox.Show(
-                download.Message,
-                "Update",
+                LocalizationService.TranslateMessage(download.Message),
+                LocalizationService.Translate("Update"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
             return;

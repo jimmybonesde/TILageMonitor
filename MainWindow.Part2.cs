@@ -20,7 +20,8 @@ public partial class MainWindow
         OutageResponse outages,
         bool fromCache = false,
         DateTime? cacheTime = null,
-        bool suppressTrayUpdate = false)
+        bool suppressTrayUpdate = false,
+        bool incidentsTrusted = false)
     {
         lage.AppStatus ??= new(StringComparer.OrdinalIgnoreCase);
         lage.Cause ??= new();
@@ -113,10 +114,11 @@ public partial class MainWindow
                 : cause.Service;
             _messages.Add(
                 new MessageRow(
-                    "Ursache · " + causeFocus,
+                    LocalizationService.Translate("Ursache · ") + causeFocus,
                     $"{cause.Organization} – {cause.Function} (CI: {cause.Ci})",
                     FormatMessageTimestamp(lage.Timestamp),
-                    causeFocus));
+                    causeFocus,
+                    translateChrome: false));
         }
 
         // =========================================================
@@ -153,23 +155,29 @@ public partial class MainWindow
                 incidentWhen = latest.Timestamp;
 
             var incidentFocus = affectedKeys.FirstOrDefault() ?? serviceText;
+            var incidentKind = LocalizationService.Translate(
+                incident.Status == 1 ? "Störung" : "Einschränkung");
             _messages.Add(
                 new MessageRow(
-                    $"{(incident.Status == 1 ? "Störung" : "Einschränkung")} · {serviceText}",
+                    $"{incidentKind} · {serviceText}",
                     $"{incident.Title}\n{body}",
                     FormatMessageTimestamp(incidentWhen),
-                    incidentFocus));
+                    incidentFocus,
+                    translateChrome: false));
         }
 
-        // Seed silently until first Sync of the active set (_incidentSeedDone), independent
-        // of _firstLoad — so first-API-fail without cache does not toast-storm on recover.
-        // Prune resolved IDs so a later reopen can toast again.
+        // Seed silently until first Sync of a *trusted* active set (_incidentSeedDone),
+        // independent of _firstLoad — so first-API-fail / soft-fail empty incidents do not
+        // toast-storm when real IDs arrive later. Prune resolved IDs so a later reopen can toast.
         var seedIncidentsWithoutToast = !_incidentSeedDone;
         var newlyAppearedIncidentIds = ActiveIncidentTracker.Sync(
             _knownActiveIncidents,
             activeIncidentIds,
             seedWithoutToast: seedIncidentsWithoutToast);
-        _incidentSeedDone = true;
+        // Only mark seed done on trusted (non-soft-fail) incident responses.
+        // Soft-fail/null/empty shells must leave the gate open.
+        if (incidentsTrusted)
+            _incidentSeedDone = true;
 
         if (!seedIncidentsWithoutToast)
         {
@@ -212,11 +220,12 @@ public partial class MainWindow
                 var outageWhen = activeSlots[0].StartTimestamp;
                 _messages.Add(
                     new MessageRow(
-                        "Automatisch erkannte Einschränkung · " + outage.Service,
+                        LocalizationService.Translate("Automatisch erkannte Einschränkung · ") + outage.Service,
                         $"{outage.Provider}: " +
                         $"{string.Join("; ", activeSlots.Select(s => s.Function))}",
                         FormatMessageTimestamp(outageWhen),
-                        outage.Service));
+                        outage.Service,
+                        translateChrome: false));
             }
         }
 
@@ -308,26 +317,31 @@ public partial class MainWindow
                 .Select(inc => (inc.Title, inc.Body, inc.IsError, inc.ServiceKeys))
                 .ToList();
 
-            if (filteredChanges.Count > 0)
+            if (filteredChanges.Count > 0 || filteredIncidents.Count > 0)
             {
                 // Nur Recoveries: CurrentStatus none, vorher Problem
-                var onlyRecoveries = filteredChanges.All(
+                var onlyRecoveries = filteredChanges.Count > 0 && filteredChanges.All(
                     x => x.CurrentStatus == "none" &&
                          x.PreviousStatus is "full" or "partial" or "maintenance");
 
-                // Digest bereits gezeigt → keine zweiten Recovery-Toasts
-                if (digestFired && onlyRecoveries)
+                // Digest bereits gezeigt → keine zweiten Recovery-Toasts (status-only recoveries)
+                if (digestFired && onlyRecoveries && filteredIncidents.Count == 0)
                 {
-                    // skip ShowStatusChangeNotification
+                    // skip
                 }
-                else
+                else if (filteredChanges.Count > 0 && filteredIncidents.Count > 0)
+                {
+                    // Prefer one digest covering status + incident changes (no toast storm).
+                    ShowCombinedStatusAndIncidentNotification(filteredChanges, filteredIncidents);
+                }
+                else if (filteredChanges.Count > 0)
                 {
                     ShowStatusChangeNotification(filteredChanges);
                 }
-            }
-            else if (filteredIncidents.Count > 0)
-            {
-                ShowIncidentNotification(filteredIncidents);
+                else
+                {
+                    ShowIncidentNotification(filteredIncidents);
+                }
             }
         }
 

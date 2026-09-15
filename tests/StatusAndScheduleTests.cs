@@ -444,4 +444,93 @@ public sealed class StatusAndScheduleTests
         Assert.Equal(now.Date.AddHours(hour), merged.StartLocal);
         Assert.Equal(now.Date.AddHours(hour + 3), merged.EndLocal);
     }
+
+    [Fact]
+    public void Incident_seed_stays_open_on_soft_fail_empty_then_seeds_real_ids_without_toast_storm()
+    {
+        // Mirrors MainWindow: soft-fail/null/empty ResolveIncidents must NOT flip
+        // _incidentSeedDone; a later trusted active set seeds silently (no toast storm).
+        var known = new HashSet<string>(StringComparer.Ordinal);
+        var incidentSeedDone = false;
+
+        IncidentResponse? incidentsFresh = null; // soft-fail
+        var resolved = CacheStore.ResolveIncidents(incidentsFresh, lastGood: null);
+        Assert.True(CacheStore.IsEmptyFailure(resolved));
+        Assert.False(CacheStore.IsTrustedIncidents(incidentsFresh));
+
+        var activeIds = resolved.Data
+            .Where(x => x.Status is 1 or 4)
+            .Select(x => x.Id.ToString());
+
+        var afterSoftFail = ActiveIncidentTracker.Sync(
+            known,
+            activeIds,
+            seedWithoutToast: !incidentSeedDone);
+        Assert.Empty(afterSoftFail);
+        Assert.Empty(known);
+        // Soft-fail empty → do NOT mark seed done
+        if (CacheStore.IsTrustedIncidents(incidentsFresh))
+            incidentSeedDone = true;
+        Assert.False(incidentSeedDone);
+
+        // Later trusted response with real active IDs
+        incidentsFresh = new IncidentResponse
+        {
+            Success = true,
+            Data =
+            [
+                new Incident { Id = 101, Status = 1, Title = "A" },
+                new Incident { Id = 102, Status = 4, Title = "B" }
+            ]
+        };
+        Assert.True(CacheStore.IsTrustedIncidents(incidentsFresh));
+        resolved = CacheStore.ResolveIncidents(incidentsFresh, lastGood: null);
+        activeIds = resolved.Data
+            .Where(x => x.Status is 1 or 4)
+            .Select(x => x.Id.ToString());
+
+        var afterTrusted = ActiveIncidentTracker.Sync(
+            known,
+            activeIds,
+            seedWithoutToast: !incidentSeedDone);
+        Assert.Empty(afterTrusted); // seeded, not toasted
+        Assert.Equal(new HashSet<string> { "101", "102" }, known);
+        incidentSeedDone = true;
+
+        // A brand-new ID after seed should toast
+        var withNew = ActiveIncidentTracker.Sync(
+            known,
+            ["101", "102", "103"],
+            seedWithoutToast: !incidentSeedDone);
+        Assert.Equal(new[] { "103" }, withNew);
+    }
+
+    [Fact]
+    public void App_mutex_names_prefer_global_namespace()
+    {
+        Assert.Equal(@"Global\TILageMonitor_SingleInstance", App.PreferredMutexName);
+        Assert.Equal(@"Local\TILageMonitor_SingleInstance", App.FallbackMutexName);
+        Assert.StartsWith(@"Global\", App.PreferredShowWindowEventName);
+    }
+
+    [Fact]
+    public void History_day_label_uses_compact_culture_form()
+    {
+        LocalizationService.Configure("de");
+        var deGroup = new HistoryDayGroup(
+            new DateTime(2026, 9, 15),
+            [HistoryDayCell.From(new DateTime(2026, 9, 15), 10, "none")]);
+        Assert.Equal("15.09", deGroup.DateLabel);
+
+        LocalizationService.Configure("en");
+        var enGroup = new HistoryDayGroup(
+            new DateTime(2026, 9, 15),
+            [HistoryDayCell.From(new DateTime(2026, 9, 15), 10, "none")]);
+        Assert.Equal("9/15", enGroup.DateLabel);
+
+        // Hour cell tooltip composed from fragments (not whole-string Translate)
+        Assert.Contains("no data point", HistoryDayCell.From(new DateTime(2026, 9, 15), 8, null).Tooltip);
+
+        LocalizationService.Configure("system");
+    }
 }

@@ -206,10 +206,20 @@ public sealed record AppRow
 
 public sealed record MessageRow
 {
-    public MessageRow(string header, string body, string timestampText, string? focusKey = null)
+    /// <param name="translateChrome">
+    /// When true (default), exact-match translate header/body chrome.
+    /// Callers that already composed translated fragments must pass false.
+    /// </param>
+    public MessageRow(
+        string header,
+        string body,
+        string timestampText,
+        string? focusKey = null,
+        bool translateChrome = true)
     {
-        Header = LocalizationService.Translate(header);
-        Body = LocalizationService.Translate(body);
+        Header = translateChrome ? LocalizationService.Translate(header) : header;
+        // Body is often API/incident prose — exact catalog only when translateChrome.
+        Body = translateChrome ? LocalizationService.Translate(body) : body;
         TimestampText = timestampText;
         FocusKey = focusKey;
     }

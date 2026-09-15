@@ -5,10 +5,17 @@ namespace TILageMonitor;
 
 public partial class App : System.Windows.Application
 {
-    private const string MutexName = @"Local\TILageMonitor_SingleInstance";
-    public const string ShowWindowEventName = @"Local\TILageMonitor_ShowWindow";
+    /// <summary>Preferred cross-session mutex; falls back to Local\ when Global\ is denied.</summary>
+    public const string PreferredMutexName = @"Global\TILageMonitor_SingleInstance";
+    public const string FallbackMutexName = @"Local\TILageMonitor_SingleInstance";
+    public const string PreferredShowWindowEventName = @"Global\TILageMonitor_ShowWindow";
+    public const string FallbackShowWindowEventName = @"Local\TILageMonitor_ShowWindow";
+
+    /// <summary>Actual show-window event name in use (Global or Local fallback).</summary>
+    public static string ShowWindowEventName { get; private set; } = PreferredShowWindowEventName;
 
     private Mutex? _singleInstanceMutex;
+    private EventWaitHandle? _showWindowEvent;
     private MainWindow? _window;
     private bool _ownsMutex;
 
@@ -16,21 +23,17 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
 
-        _singleInstanceMutex = new Mutex(initiallyOwned: true, MutexName, out var createdNew);
+        // Create/open the show-window event alongside mutex acquisition so a late
+        // second instance can signal even while MainWindow is still constructing.
+        _showWindowEvent = CreateShowWindowEvent(out var showEventName);
+        ShowWindowEventName = showEventName;
+
+        _singleInstanceMutex = CreateSingleInstanceMutex(out var createdNew);
         _ownsMutex = createdNew;
 
         if (!createdNew)
         {
-            try
-            {
-                using var showEvent = EventWaitHandle.OpenExisting(ShowWindowEventName);
-                showEvent.Set();
-            }
-            catch
-            {
-                // The primary instance may still be initializing.
-            }
-
+            TrySignalShowWindow();
             Shutdown();
             return;
         }
@@ -93,6 +96,67 @@ public partial class App : System.Windows.Application
         }
     }
 
+    /// <summary>
+    /// Prefer Global\ mutex (cross-session); on UnauthorizedAccessException fall back to Local\.
+    /// </summary>
+    private static Mutex CreateSingleInstanceMutex(out bool createdNew)
+    {
+        try
+        {
+            return new Mutex(initiallyOwned: true, PreferredMutexName, out createdNew);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Restricted environments may deny Global\ — Local\ still prevents same-session dupes.
+            return new Mutex(initiallyOwned: true, FallbackMutexName, out createdNew);
+        }
+        catch (WaitHandleCannotBeOpenedException)
+        {
+            return new Mutex(initiallyOwned: true, FallbackMutexName, out createdNew);
+        }
+    }
+
+    private static EventWaitHandle CreateShowWindowEvent(out string eventName)
+    {
+        try
+        {
+            eventName = PreferredShowWindowEventName;
+            return new EventWaitHandle(false, EventResetMode.AutoReset, eventName);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            eventName = FallbackShowWindowEventName;
+            return new EventWaitHandle(false, EventResetMode.AutoReset, eventName);
+        }
+        catch (WaitHandleCannotBeOpenedException)
+        {
+            eventName = FallbackShowWindowEventName;
+            return new EventWaitHandle(false, EventResetMode.AutoReset, eventName);
+        }
+    }
+
+    /// <summary>Signal primary instance with a short OpenExisting retry (startup race).</summary>
+    private static void TrySignalShowWindow()
+    {
+        var names = new[] { PreferredShowWindowEventName, FallbackShowWindowEventName };
+        foreach (var name in names)
+        {
+            for (var attempt = 0; attempt < 5; attempt++)
+            {
+                try
+                {
+                    using var showEvent = EventWaitHandle.OpenExisting(name);
+                    showEvent.Set();
+                    return;
+                }
+                catch
+                {
+                    Thread.Sleep(40);
+                }
+            }
+        }
+    }
+
     private static string? GetArgumentValue(IEnumerable<string> args, string name)
     {
         var values = args.ToArray();
@@ -109,6 +173,9 @@ public partial class App : System.Windows.Application
     {
         _window?.Dispose();
         ToastRegistration.Unregister();
+
+        try { _showWindowEvent?.Dispose(); } catch { /* ignore */ }
+        _showWindowEvent = null;
 
         if (_ownsMutex && _singleInstanceMutex is not null)
         {

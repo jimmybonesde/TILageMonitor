@@ -96,8 +96,8 @@ public partial class MainWindow
             var preview = changes
                 .Take(2)
                 .Select(c => $"{c.ServiceName}: {FormatStatusShort(c.CurrentStatus)}");
-            body = LocalizationService.Translate(
-                $"{changes.Count} Dienste geändert · {string.Join(", ", preview)}");
+            body =
+                $"{changes.Count} {LocalizationService.Translate("Dienste geändert")} · {string.Join(", ", preview)}";
             if (changes.Count > 2)
                 body += " …";
         }
@@ -132,13 +132,72 @@ public partial class MainWindow
             title = hasError ? "TI-Status: Störung" : "TI-Status: Änderung";
             var names = incidents.Take(2).Select(x => Truncate(x.Body, 40));
             body = Truncate(
-                LocalizationService.Translate(
-                    $"{incidents.Count} neue Meldungen · {string.Join("; ", names)}"),
+                $"{incidents.Count} {LocalizationService.Translate("neue Meldungen")} · {string.Join("; ", names)}",
                 110);
             urgency = hasError ? ToastUrgency.Error : ToastUrgency.Warning;
         }
 
         var focusKey = primary.ServiceKeys.FirstOrDefault()
+                       ?? incidents.SelectMany(i => i.ServiceKeys).FirstOrDefault();
+        ToastService.Show(LocalizationService.Translate(title), body, urgency, focusKey);
+    }
+
+    /// <summary>
+    /// One digest toast when status changes and new incidents arrive in the same refresh.
+    /// </summary>
+    private void ShowCombinedStatusAndIncidentNotification(
+        List<ServiceStatusChange> changes,
+        List<(string Title, string Body, bool IsError, List<string> ServiceKeys)> incidents)
+    {
+        if (changes.Count == 0 && incidents.Count == 0)
+            return;
+
+        var hasFull = changes.Any(x => x.CurrentStatus == "full") ||
+                      incidents.Any(x => x.IsError);
+        var hasPartial = changes.Any(x => x.CurrentStatus == "partial");
+        var hasMaintenance = changes.Any(x => x.CurrentStatus == "maintenance");
+
+        string title;
+        ToastUrgency urgency;
+        if (hasFull)
+        {
+            title = "TI-Status: Störung";
+            urgency = ToastUrgency.Error;
+        }
+        else if (hasPartial || incidents.Count > 0)
+        {
+            title = hasPartial ? "TI-Status: Teilausfall" : "TI-Status: Änderung";
+            urgency = ToastUrgency.Warning;
+        }
+        else if (hasMaintenance)
+        {
+            title = "TI-Status: Beeinträchtigung";
+            urgency = ToastUrgency.Warning;
+        }
+        else
+        {
+            title = "TI-Status: Änderung";
+            urgency = ToastUrgency.Info;
+        }
+
+        var parts = new List<string>();
+        if (changes.Count == 1)
+        {
+            var c = changes[0];
+            parts.Add($"{c.ServiceName}: {FormatStatusShort(c.CurrentStatus)}");
+        }
+        else if (changes.Count > 1)
+        {
+            parts.Add($"{changes.Count} {LocalizationService.Translate("Dienste geändert")}");
+        }
+
+        if (incidents.Count == 1)
+            parts.Add(Truncate(incidents[0].Body, 50));
+        else if (incidents.Count > 1)
+            parts.Add($"{incidents.Count} {LocalizationService.Translate("neue Meldungen")}");
+
+        var body = Truncate(string.Join(" · ", parts), 110);
+        var focusKey = changes.FirstOrDefault()?.ServiceKey
                        ?? incidents.SelectMany(i => i.ServiceKeys).FirstOrDefault();
         ToastService.Show(LocalizationService.Translate(title), body, urgency, focusKey);
     }
@@ -211,7 +270,7 @@ public partial class MainWindow
     // =============================================================
 
     private void Refresh_Click(object sender, RoutedEventArgs e) =>
-        _ = RefreshAsync(false);
+        _ = RefreshAsync();
 
     private void OpenGematik_Click(object sender, RoutedEventArgs e) =>
         OpenUrl("https://fachportal.gematik.de/ti-status#TI-Anschluss");
