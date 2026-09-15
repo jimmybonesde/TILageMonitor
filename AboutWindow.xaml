@@ -122,14 +122,43 @@
                            Foreground="{DynamicResource TextMuted}"
                            TextWrapping="Wrap"
                            Text="Fragen oder Feedback zur Community-App?"/>
-                <Button Content="www.jimmybones.de"
-                        Style="{StaticResource AboutLinkStyle}"
-                        Click="OpenHomepage_Click"
-                        ToolTip="Homepage öffnen"/>
-                <Button Content="Webmaster@JimmyBones.de"
-                        Style="{StaticResource AboutLinkStyle}"
-                        Click="OpenEmail_Click"
-                        ToolTip="E-Mail schreiben"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- GitHub Octocat mark -->
+                    <Path Width="16" Height="16"
+                          Margin="0,4,7,0"
+                          VerticalAlignment="Top"
+                          Stretch="Uniform"
+                          Fill="{DynamicResource TextMuted}"
+                          Data="M8,0.5C3.58,0.5,0,4.08,0,8.5C0,12.04,2.29,15.04,5.47,16.1C5.87,16.17,6.02,15.93,6.02,15.72C6.02,15.53,6.01,14.91,6.01,14.08C4,14.45,3.49,13.59,3.33,13.14C3.24,12.91,2.85,12.2,2.5,12.01C2.21,11.85,1.8,11.46,2.49,11.45C3.14,11.44,3.61,12.05,3.77,12.3C4.51,13.54,5.69,13.19,6.05,12.97C6.12,12.44,6.34,12.08,6.58,11.87C4.8,11.67,2.94,11,2.94,8.03C2.94,7.18,3.24,6.48,3.73,5.93C3.65,5.73,3.38,4.93,3.81,3.85C3.81,3.85,4.46,3.65,5.94,4.65C6.56,4.48,7.22,4.39,7.88,4.39C8.54,4.39,9.2,4.48,9.82,4.65C11.3,3.64,11.95,3.85,11.95,3.85C12.38,4.93,12.11,5.73,12.03,5.93C12.52,6.48,12.82,7.17,12.82,8.03C12.82,11.01,10.95,11.67,9.18,11.87C9.48,12.13,9.73,12.63,9.73,13.41C9.73,14.53,9.72,15.43,9.72,15.72C9.72,15.93,9.87,16.18,10.27,16.1C13.45,15.04,15.74,12.03,15.74,8.5C15.74,4.08,12.16,0.5,7.74,0.5H8Z"/>
+                    <Button Content="github.com/jimmybonesde/TILageMonitor"
+                            Style="{StaticResource AboutLinkStyle}"
+                            Click="OpenGitHubProject_Click"
+                            ToolTip="GitHub-Projekt öffnen"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Path Width="16" Height="16"
+                          Margin="0,4,7,0"
+                          VerticalAlignment="Top"
+                          Stretch="Uniform"
+                          Fill="{DynamicResource TextMuted}"
+                          Data="M2,8 L8,2 L14,8 V15 H10 V10 H6 V15 H2 Z"/>
+                    <Button Content="www.jimmybones.de"
+                            Style="{StaticResource AboutLinkStyle}"
+                            Click="OpenHomepage_Click"
+                            ToolTip="Homepage öffnen"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Path Width="16" Height="16"
+                          Margin="0,4,7,0"
+                          VerticalAlignment="Top"
+                          Stretch="Uniform"
+                          Fill="{DynamicResource TextMuted}"
+                          Data="M1,3 H15 V13 H1 Z M1.5,3.6 L8,8.6 L14.5,3.6"/>
+                    <Button Content="Webmaster@JimmyBones.de"
+                            Style="{StaticResource AboutLinkStyle}"
+                            Click="OpenEmail_Click"
+                            ToolTip="E-Mail schreiben"/>
+                </StackPanel>
             </StackPanel>
         </Border>
 
