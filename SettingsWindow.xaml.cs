@@ -202,7 +202,7 @@ public partial class SettingsWindow : Window
     {
         if (!_ownerMain.RestartApplication())
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 LocalizationService.Translate("Die App konnte nicht neu gestartet werden. Bitte schließen und öffnen Sie sie manuell."),
                 LocalizationService.Translate("Neustart nicht möglich"),
                 MessageBoxButton.OK,
