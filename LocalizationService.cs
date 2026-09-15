@@ -104,6 +104,7 @@ public static class LocalizationService
         ["Kontakt / Support"] = "Contact / Support",
         ["Fragen oder Feedback zur Community-App?"] = "Questions or feedback about this community app?",
         ["Homepage öffnen"] = "Open homepage",
+        ["GitHub-Projekt öffnen"] = "Open GitHub project",
         ["E-Mail schreiben"] = "Write email",
         ["Hinweis"] = "Notice",
         ["Kein offizielles Produkt der gematik GmbH. Datenquelle ist die öffentliche TI-Lage-API. Angaben ohne Gewähr."] = "Not an official product of gematik GmbH. Data comes from the public TI status API. No guarantee.",
