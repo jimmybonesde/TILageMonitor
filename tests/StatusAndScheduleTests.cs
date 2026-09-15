@@ -588,21 +588,38 @@ public sealed class StatusAndScheduleTests
     }
 
     [Fact]
-    public void Hour_cell_cursor_hand_only_when_navigable()
+    public void Hour_cell_cursor_hand_only_when_actual_timeline_navigation_is_available()
     {
         var ok = HistoryDayCell.From(DateTime.Today, 10, "none");
         var unknown = HistoryDayCell.From(DateTime.Today, 11, null);
         var partial = HistoryDayCell.From(DateTime.Today, 12, "partial");
-        var full = HistoryDayCell.From(DateTime.Today, 13, "full");
-        var maint = HistoryDayCell.From(DateTime.Today, 14, "maintenance");
 
+        // Status alone must not promise a clickable timeline event.
         Assert.False(ok.IsNavigable);
         Assert.False(unknown.IsNavigable);
-        Assert.True(partial.IsNavigable);
-        Assert.True(full.IsNavigable);
-        Assert.True(maint.IsNavigable);
+        Assert.False(partial.IsNavigable);
         Assert.Equal(System.Windows.Input.Cursors.Arrow, ok.CellCursor);
+        Assert.Equal(System.Windows.Input.Cursors.Arrow, partial.CellCursor);
+
+        partial.IsNavigable = true;
         Assert.Equal(System.Windows.Input.Cursors.Hand, partial.CellCursor);
+    }
+
+    [Fact]
+    public void Incident_response_with_success_false_is_not_trusted_even_with_data()
+    {
+        var failedWithData = new IncidentResponse
+        {
+            Success = false,
+            Data = [new Incident { Id = 1, Status = 1 }]
+        };
+
+        Assert.False(CacheStore.IsTrustedIncidents(failedWithData));
+        Assert.True(CacheStore.IsTrustedIncidents(new IncidentResponse
+        {
+            Success = true,
+            Data = []
+        }));
     }
 
 }
