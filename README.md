@@ -169,14 +169,6 @@ cd TILageMonitor
 
 **Stack:** WPF + WinForms-Tray · `net10.0-windows` · Windows App SDK Toasts · Inno Setup · MIT
 
-## 👤 Autor
-
-**Randy Carter** (R.C.) · © 2026 · Community-App, nicht gematik
-
-<p align="center">
-  <sub>Für Praxen &amp; IT, die den TI-Status im Blick behalten — ohne einen Portal-Tab offen zu lassen.</sub>
-</p>
-
 ---
 
 ## 🌐 Sprache / Language
@@ -184,3 +176,11 @@ cd TILageMonitor
 **DE:** Unter **Einstellungen → Sprache** wählen Sie **Automatisch (Windows)** · **Deutsch** · **Englisch**. Die Auswahl greift nach einem **Neustart** der App.
 
 **EN:** Under **Settings → Language** choose **Automatic (Windows)** · **German** · **English**. The selection takes effect after **restarting** the app.
+
+## 👤 Autor
+
+**Randy Carter** (R.C.) · © 2026 · Community-App, nicht gematik
+
+<p align="center">
+  <sub>Für Praxen &amp; IT, die den TI-Status im Blick behalten — ohne einen Portal-Tab offen zu lassen.</sub>
+</p>
