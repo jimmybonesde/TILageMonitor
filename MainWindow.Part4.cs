@@ -169,6 +169,8 @@ public partial class MainWindow
     /// <summary>
     /// Starts a fresh main-process instance and then closes this instance. Used after a
     /// language change so every window and the tray menu pick up the new UI culture.
+    /// Releases the single-instance mutex before Process.Start so the successor can create it;
+    /// starting while the mutex is still held makes the new process treat itself as a duplicate and exit.
     /// </summary>
     public bool RestartApplication()
     {
@@ -178,12 +180,25 @@ public partial class MainWindow
             if (string.IsNullOrWhiteSpace(executablePath) || !File.Exists(executablePath))
                 return false;
 
-            Process.Start(new ProcessStartInfo
+            // Drop mutex ownership before launching the successor (Release alone is not enough —
+            // the named mutex stays until the handle is disposed).
+            if (System.Windows.Application.Current is App app)
+                app.ReleaseSingleInstanceForRestart();
+
+            try
             {
-                FileName = executablePath,
-                WorkingDirectory = Path.GetDirectoryName(executablePath) ?? AppContext.BaseDirectory,
-                UseShellExecute = true
-            });
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = executablePath,
+                    WorkingDirectory = Path.GetDirectoryName(executablePath) ?? AppContext.BaseDirectory,
+                    UseShellExecute = true
+                });
+            }
+            catch
+            {
+                // Mutex already released; keep this instance running and let the caller show error UI.
+                return false;
+            }
 
             CloseApp();
             return true;

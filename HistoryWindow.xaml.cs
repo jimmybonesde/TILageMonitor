@@ -867,9 +867,8 @@ public partial class HistoryWindow : Window
         if (sender is not FrameworkElement { DataContext: HistoryDayCell cell })
             return;
 
-        // Only navigate for partial / full / maintenance cells
-        if (cell.Status is null ||
-            string.Equals(cell.Status, "none", StringComparison.OrdinalIgnoreCase))
+        // Honor IsNavigable (status + matching timeline event); skip non-clickable cells.
+        if (!cell.IsNavigable)
             return;
 
         var row = FindAncestorDataContext<ZoomServiceRow>(sender as DependencyObject);

@@ -215,6 +215,30 @@ public partial class App : System.Windows.Application
         return null;
     }
 
+    /// <summary>
+    /// Releases and disposes the single-instance mutex (and App-owned show-window event handle)
+    /// so a successor process can create the mutex during an in-place restart.
+    /// Must run before Process.Start; OnExit must not re-acquire afterward.
+    /// </summary>
+    public void ReleaseSingleInstanceForRestart()
+    {
+        try { _showWindowEvent?.Dispose(); } catch { /* ignore */ }
+        _showWindowEvent = null;
+
+        if (_singleInstanceMutex is not null)
+        {
+            if (_ownsMutex)
+            {
+                try { _singleInstanceMutex.ReleaseMutex(); } catch { /* ignore */ }
+            }
+
+            try { _singleInstanceMutex.Dispose(); } catch { /* ignore */ }
+            _singleInstanceMutex = null;
+        }
+
+        _ownsMutex = false;
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
         _window?.Dispose();

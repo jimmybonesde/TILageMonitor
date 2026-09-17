@@ -1,3 +1,4 @@
+using System.Threading;
 using Xunit;
 
 namespace TILageMonitor.Tests;
@@ -620,6 +621,32 @@ public sealed class StatusAndScheduleTests
             Success = true,
             Data = []
         }));
+    }
+
+
+    [Fact]
+    public void Single_instance_mutex_successor_needs_owner_dispose_not_only_release()
+    {
+        // Regression for language-restart: Process.Start while the primary still holds the
+        // single-instance mutex makes the successor see createdNew == false and exit.
+        // ReleaseMutex alone is insufficient — the named object lives until the handle is disposed.
+        var name = @"Local\TILageMonitor_RestartMutexRace_" + Guid.NewGuid().ToString("N");
+
+        var primary = new Mutex(initiallyOwned: true, name, out var createdPrimary);
+        Assert.True(createdPrimary);
+
+        using (var rivalWhileHeld = new Mutex(initiallyOwned: true, name, out var createdWhileHeld))
+            Assert.False(createdWhileHeld);
+
+        primary.ReleaseMutex();
+        using (var rivalAfterRelease = new Mutex(initiallyOwned: true, name, out var createdAfterReleaseOnly))
+            Assert.False(createdAfterReleaseOnly);
+
+        primary.Dispose();
+
+        using var successor = new Mutex(initiallyOwned: true, name, out var createdAfterDispose);
+        Assert.True(createdAfterDispose);
+        successor.ReleaseMutex();
     }
 
 }
