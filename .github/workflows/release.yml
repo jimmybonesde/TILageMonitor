@@ -123,7 +123,7 @@ jobs:
             installer-out/TILageMonitor-${{ steps.version.outputs.number }}-Setup.exe
             checksums.txt
 
-      - uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: TI-Lage Monitor ${{ steps.version.outputs.tag }}
