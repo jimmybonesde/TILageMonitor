@@ -45,6 +45,10 @@ public sealed class AppSettings
     /// Keys: erezept, epa, kim, wanda, ogd, vsdm, tianschluss
     /// </summary>
     /// <summary>Lokale Konnektor-Überwachung (read-only). Secrets liegen DPAPI-verschlüsselt separat.</summary>
+    /// <summary>Last opened settings tab (general, notifications, updates, konnektor).</summary>
+    [JsonPropertyName("lastSettingsTab")]
+    public string? LastSettingsTab { get; set; }
+
     [JsonPropertyName("konnektor")]
     public TILageMonitor.Konnektor.KonnektorSettings Konnektor { get; set; } = new();
 

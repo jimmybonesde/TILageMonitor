@@ -39,7 +39,40 @@ public partial class SettingsWindow : Window
         BuildNotifyCheckboxes();
         ApplyNotifyChipsEnabledState();
         LoadKonnektorFields();
+        SelectSettingsTab(_settings.LastSettingsTab);
         _initializing = false;
+    }
+
+    private void SelectSettingsTab(string? tab)
+    {
+        var nav = tab switch
+        {
+            "notifications" => NavNotifications,
+            "updates" => NavUpdates,
+            "konnektor" => NavKonnektor,
+            _ => NavGeneral
+        };
+        nav.IsChecked = true;
+        ShowSettingsPage((string)nav.Tag);
+    }
+
+    private void ShowSettingsPage(string tab)
+    {
+        PageGeneral.Visibility = tab == "general" ? Visibility.Visible : Visibility.Collapsed;
+        PageNotifications.Visibility = tab == "notifications" ? Visibility.Visible : Visibility.Collapsed;
+        PageUpdates.Visibility = tab == "updates" ? Visibility.Visible : Visibility.Collapsed;
+        PageKonnektor.Visibility = tab == "konnektor" ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void SettingsNav_Checked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.RadioButton { Tag: string tab } || PageGeneral is null)
+            return;
+        ShowSettingsPage(tab);
+        if (_initializing || _settings.LastSettingsTab == tab)
+            return;
+        _settings.LastSettingsTab = tab;
+        SettingsStore.Save(_settings);
     }
 
     /// <summary>Refresh toggles if MainWindow changed settings externally (e.g. tray Autostart).</summary>
