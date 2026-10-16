@@ -1,0 +1,88 @@
+<Window x:Class="TILageMonitor.KonnektorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Konnektor-Details"
+        Width="900"
+        Height="820"
+        MinWidth="640"
+        MinHeight="520"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackground}">
+    <Window.Resources>
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="18,16"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+        <Style x:Key="Header" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+        <DataTemplate x:Key="RowTemplate">
+            <Border Background="{DynamicResource ChipBackground}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1"
+                    CornerRadius="10" Padding="12,8" Margin="0,0,0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Ellipse Width="10" Height="10" Fill="{Binding Brush}" VerticalAlignment="Top" Margin="0,5,10,0"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextMain}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Detail}" FontSize="12" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel Margin="0,0,0,14">
+            <TextBlock Text="Konnektor-Details" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextMain}"/>
+            <TextBlock x:Name="SummaryText" FontSize="13" Foreground="{DynamicResource TextMuted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+        </StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="Status" Style="{StaticResource Header}"/>
+                        <ItemsControl x:Name="StatusList" ItemTemplate="{StaticResource RowTemplate}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="Karten" Style="{StaticResource Header}"/>
+                        <ItemsControl x:Name="CardsList" ItemTemplate="{StaticResource RowTemplate}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="Kartenterminals" Style="{StaticResource Header}"/>
+                        <ItemsControl x:Name="TerminalsList" ItemTemplate="{StaticResource RowTemplate}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="Produktinformation" Style="{StaticResource Header}"/>
+                        <TextBlock x:Name="ProductText" FontSize="13" Foreground="{DynamicResource TextMain}" TextWrapping="Wrap"/>
+                        <TextBlock Text="Dienste (connector.sds)" Style="{StaticResource Header}" Margin="0,14,0,10"/>
+                        <ItemsControl x:Name="ServicesList" ItemTemplate="{StaticResource RowTemplate}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Button x:Name="RefreshKonnektorButton" Content="↻  Aktualisieren" HorizontalAlignment="Left" Padding="16,10" Click="Refresh_Click"/>
+            <Button Content="Schließen" HorizontalAlignment="Right" MinWidth="110" Padding="16,10" Click="Close_Click"/>
+        </Grid>
+    </Grid>
+</Window>

@@ -46,7 +46,7 @@
                        FontSize="24"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextMain}"/>
-            <TextBlock Text="Darstellung, Startverhalten, Updates und Benachrichtigungen"
+            <TextBlock Text="Darstellung, Startverhalten, Updates, Konnektor und Benachrichtigungen"
                        FontSize="13"
                        Foreground="{DynamicResource TextMuted}"
                        Margin="0,4,0,0"
@@ -160,6 +160,70 @@
                                 HorizontalAlignment="Left"
                                 Padding="16,9"
                                 Click="CheckForUpdates_Click"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Konnektor (lokal, read-only) -->
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.11" Direction="270" Color="#000000"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Konnektor" Style="{StaticResource SectionHeaderStyle}"/>
+                        <TextBlock Text="Lokalen TI-Konnektor (RISE, secunet, KoCoBox) nur lesend abfragen: Erreichbarkeit, VPN, Karten, PIN-Status, Kartenterminals."
+                                   Style="{StaticResource SectionHintStyle}"/>
+                        <CheckBox x:Name="KonnektorEnabledToggle"
+                                  Content="Konnektor regelmäßig prüfen"
+                                  Style="{DynamicResource ThemeAwareCheckBoxStyle}"
+                                  Margin="0,0,0,10"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="IP / Hostname" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBox x:Name="KonnektorHostBox" Grid.Row="0" Grid.Column="1" Style="{StaticResource ThemeAwareTextBoxStyle}" Margin="0,0,0,8"/>
+                            <TextBlock Grid.Row="1" Text="Port" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBox x:Name="KonnektorPortBox" Grid.Row="1" Grid.Column="1" Width="90" HorizontalAlignment="Left" Style="{StaticResource ThemeAwareTextBoxStyle}" Margin="0,0,0,8"/>
+                            <TextBlock Grid.Row="2" Text="MandantId" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBox x:Name="KonnektorMandantBox" Grid.Row="2" Grid.Column="1" Style="{StaticResource ThemeAwareTextBoxStyle}" Margin="0,0,0,8"/>
+                            <TextBlock Grid.Row="3" Text="ClientSystemId" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBox x:Name="KonnektorClientSystemBox" Grid.Row="3" Grid.Column="1" Style="{StaticResource ThemeAwareTextBoxStyle}" Margin="0,0,0,8"/>
+                            <TextBlock Grid.Row="4" Text="WorkplaceId" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBox x:Name="KonnektorWorkplaceBox" Grid.Row="4" Grid.Column="1" Style="{StaticResource ThemeAwareTextBoxStyle}" Margin="0,0,0,8"/>
+                            <TextBlock Grid.Row="5" Text="UserId (optional)" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBox x:Name="KonnektorUserBox" Grid.Row="5" Grid.Column="1" Style="{StaticResource ThemeAwareTextBoxStyle}" Margin="0,0,0,8"/>
+                            <TextBlock Grid.Row="6" Text="Prüfintervall (Min.)" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBox x:Name="KonnektorIntervalBox" Grid.Row="6" Grid.Column="1" Width="90" HorizontalAlignment="Left" Style="{StaticResource ThemeAwareTextBoxStyle}" Margin="0,0,0,8"/>
+                            <TextBlock Grid.Row="7" Text="Clientzertifikat (.p12)" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center" Margin="0,0,0,8"/>
+                            <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
+                                <Button x:Name="KonnektorImportP12Button" Content="P12 auswählen …" Padding="12,6" Click="KonnektorImportP12_Click"/>
+                                <TextBlock x:Name="KonnektorP12StatusText" Text="Kein Zertifikat hinterlegt" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="10,0,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <TextBlock Grid.Row="8" Text="P12-Passwort" Foreground="{DynamicResource TextMain}" VerticalAlignment="Center" Margin="0,0,0,8"/>
+                            <PasswordBox x:Name="KonnektorPasswordBox" Grid.Row="8" Grid.Column="1" Style="{StaticResource ThemeAwarePasswordBoxStyle}" Margin="0,0,0,8"/>
+                        </Grid>
+                        <TextBlock Text="Zertifikat und Passwort werden nur mit Windows-DPAPI (aktueller Benutzer) verschlüsselt gespeichert."
+                                   Style="{StaticResource SectionHintStyle}" Margin="0,4,0,8"/>
+                        <TextBlock x:Name="KonnektorPinText" Style="{StaticResource SectionHintStyle}" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="KonnektorStatusText" Style="{StaticResource SectionHintStyle}" Margin="0,0,0,10"/>
+                        <WrapPanel Orientation="Horizontal">
+                            <Button x:Name="KonnektorSaveButton" Content="Speichern" Padding="14,8" Margin="0,0,8,8" Click="KonnektorSave_Click"/>
+                            <Button x:Name="KonnektorTestButton" Content="Verbindung testen" Style="{StaticResource AccentButtonStyle}" Padding="14,8" Margin="0,0,8,8" Click="KonnektorTest_Click"/>
+                            <Button Content="Vertrauen zurücksetzen" Padding="14,8" Margin="0,0,8,8" Click="KonnektorResetTrust_Click"/>
+                            <Button Content="Konnektor-Daten löschen" Padding="14,8" Margin="0,0,8,8" Click="KonnektorDelete_Click"/>
+                        </WrapPanel>
                     </StackPanel>
                 </Border>
 

@@ -38,6 +38,7 @@ public partial class SettingsWindow : Window
         SetLanguageSelection(_settings.Language);
         BuildNotifyCheckboxes();
         ApplyNotifyChipsEnabledState();
+        LoadKonnektorFields();
         _initializing = false;
     }
 

@@ -1,0 +1,71 @@
+name: Preview Build (no release)
+
+# Builds the Setup.exe for feature branches and uploads it ONLY as an Actions artifact.
+# Never creates a tag or a GitHub Release.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['feature/**']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve preview version
+        id: version
+        shell: pwsh
+        run: |
+          [xml]$proj = Get-Content TILageMonitor.csproj
+          $base = ($proj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+          $label = "$base-preview.${{ github.run_number }}"
+          "number=$base" >> $env:GITHUB_OUTPUT
+          "label=$label" >> $env:GITHUB_OUTPUT
+
+      - name: Restore
+        run: dotnet restore tests/TILageMonitor.Tests.csproj
+
+      - name: Test
+        run: dotnet test tests/TILageMonitor.Tests.csproj -c Release --no-restore
+
+      - name: Publish
+        shell: pwsh
+        run: |
+          dotnet publish TILageMonitor.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:EnableCompressionInSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:InformationalVersion="${{ steps.version.outputs.number }}+preview.${{ github.run_number }}" `
+            -o publish
+
+      - name: Create setup installer
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress --yes
+          & "${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe" "/DMyAppVersion=${{ steps.version.outputs.label }}" installer/TILageMonitor.iss
+
+      - name: Checksum
+        shell: pwsh
+        run: |
+          Get-ChildItem installer-out/*-Setup.exe | Get-FileHash -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)" } |
+            Set-Content checksums.txt
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: TILageMonitor-${{ steps.version.outputs.label }}-Setup
+          path: |
+            installer-out/*-Setup.exe
+            checksums.txt
+          retention-days: 30

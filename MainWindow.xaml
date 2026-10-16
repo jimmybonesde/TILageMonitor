@@ -82,6 +82,37 @@
 
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
+                <Border x:Name="KonnektorCard" Visibility="Collapsed" Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="16" Padding="20" Margin="0,0,0,16">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.10" Direction="270" Color="#000000"/>
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Konnektor (lokal)" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,10"/>
+                            <WrapPanel Orientation="Horizontal">
+                                <Border x:Name="KonnektorReachChip" CornerRadius="14" Padding="12,6" Margin="0,0,8,8" Background="{DynamicResource StatusEmpty}">
+                                    <TextBlock x:Name="KonnektorReachText" Text="Erreichbar" Foreground="White" FontWeight="SemiBold" FontSize="12"/>
+                                </Border>
+                                <Border x:Name="KonnektorVpnTiChip" CornerRadius="14" Padding="12,6" Margin="0,0,8,8" Background="{DynamicResource StatusEmpty}">
+                                    <TextBlock Text="VPN TI" Foreground="White" FontWeight="SemiBold" FontSize="12"/>
+                                </Border>
+                                <Border x:Name="KonnektorVpnSisChip" CornerRadius="14" Padding="12,6" Margin="0,0,8,8" Background="{DynamicResource StatusEmpty}">
+                                    <TextBlock Text="VPN SIS" Foreground="White" FontWeight="SemiBold" FontSize="12"/>
+                                </Border>
+                            </WrapPanel>
+                            <TextBlock x:Name="KonnektorClassificationText" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextMain}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                            <TextBlock x:Name="KonnektorDetailText" FontSize="12" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
+                            <Button x:Name="KonnektorRefreshButton" Content="↻  Prüfen" Click="KonnektorRefresh_Click" Margin="0,0,0,8" ToolTip="Konnektor jetzt abfragen"/>
+                            <Button Content="Details" Click="KonnektorDetails_Click" ToolTip="Karten, Terminals und Produktinformation"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
                 <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="16" Padding="20" Margin="0,0,0,16">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.10" Direction="270" Color="#000000"/>

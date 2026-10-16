@@ -211,6 +211,7 @@ public partial class MainWindow : Window
             ScheduleNextRefresh();
             // „Beim Start“: one background update check after first refresh
             _ = CheckForUpdatesAsync(userInitiated: false);
+            ConfigureKonnektorMonitoring();
         };
     }
 
@@ -307,6 +308,7 @@ public partial class MainWindow : Window
     public void ApplySettings(AppSettings settings, bool themeChanged = false)
     {
         _settings = settings;
+        ConfigureKonnektorMonitoring();
         SyncAutostartMenuItem();
         SyncNotificationsMenuItem();
         if (themeChanged)

@@ -160,6 +160,7 @@ public partial class MainWindow
         _disposed = true;
 
         try { _timer.Stop(); } catch { /* ignore */ }
+        StopKonnektorMonitoring();
         try { _refreshCts?.Cancel(); } catch { /* ignore */ }
         try { _refreshCts?.Dispose(); } catch { /* ignore */ }
         _refreshCts = null;
@@ -399,6 +400,8 @@ public partial class MainWindow
 
     private void ApplyOverallStatusVisual(string kind, string title, string subtitle)
     {
+        _lastOverallKind = kind;
+        UpdateKonnektorClassification();
         var accentKey = kind switch
         {
             "ok" => "StatusOk",

@@ -44,6 +44,10 @@ public sealed class AppSettings
     /// Pro-Dienst Benachrichtigungen. Fehlende Keys = aktiviert.
     /// Keys: erezept, epa, kim, wanda, ogd, vsdm, tianschluss
     /// </summary>
+    /// <summary>Lokale Konnektor-Überwachung (read-only). Secrets liegen DPAPI-verschlüsselt separat.</summary>
+    [JsonPropertyName("konnektor")]
+    public TILageMonitor.Konnektor.KonnektorSettings Konnektor { get; set; } = new();
+
     [JsonPropertyName("notifyServices")]
     public Dictionary<string, bool> NotifyServices { get; set; } = CreateDefaultNotifyServices();
 
@@ -93,6 +97,7 @@ public sealed class AppSettings
 
     public void EnsureNotifyDefaults()
     {
+        Konnektor ??= new TILageMonitor.Konnektor.KonnektorSettings();
         NotifyServices ??= new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         foreach (var key in ServiceKeys)
         {
