@@ -261,6 +261,8 @@ public static class LocalizationService
         ["Ein unerwarteter Fehler ist aufgetreten. Die App läuft weiter."] = "An unexpected error occurred. The app keeps running.",
         ["Fehler"] = "Error",
         ["Exportieren"] = "Export",
+        ["Aufklappen"] = "Expand",
+        ["Zuklappen"] = "Collapse",
         ["Konnektor"] = "Connector",
         ["Lokalen TI-Konnektor (RISE, secunet, KoCoBox) nur lesend abfragen: Erreichbarkeit, VPN, Karten, PIN-Status, Kartenterminals."] = "Query the local TI connector (RISE, secunet, KoCoBox) read-only: reachability, VPN, cards, PIN status, card terminals.",
         ["Konnektor regelmäßig prüfen"] = "Check connector periodically",

@@ -258,11 +258,7 @@ public partial class MainWindow
         if (string.IsNullOrWhiteSpace(text))
             return "";
 
-        return System.Text.RegularExpressions.Regex
-            .Replace(text, "<.*?>", " ")
-            .Replace("&nbsp;", " ")
-            .Replace("&amp;", "&")
-            .Trim();
+        return MessageText.Normalize(text);
     }
 
     // =============================================================

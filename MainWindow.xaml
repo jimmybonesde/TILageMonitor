@@ -145,14 +145,41 @@
                     </Border.Effect>
                     <StackPanel>
                         <TextBlock Text="Aktuelle Meldungen" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,14"/>
-                        <ItemsControl x:Name="MessagesList">
+                        <ItemsControl x:Name="MessagesList" KeyboardNavigation.TabNavigation="Continue">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{DynamicResource ChipBackground}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,10">
+                                    <ToggleButton IsChecked="{Binding IsExpanded, Mode=TwoWay}"
+                                                  Click="MessageToggle_Click"
+                                                  ToolTip="{Binding ToggleTooltip}"
+                                                  AutomationProperties.Name="{Binding Header}"
+                                                  AutomationProperties.HelpText="{Binding ToggleTooltip}"
+                                                  Cursor="Hand"
+                                                  Focusable="True"
+                                                  FocusVisualStyle="{x:Null}"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  Margin="0,0,0,10">
+                                        <ToggleButton.Template>
+                                            <ControlTemplate TargetType="ToggleButton">
+                                                <Border x:Name="Card" Background="{DynamicResource ChipBackground}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1" CornerRadius="12" Padding="14">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource ButtonBorder}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsKeyboardFocused" Value="True">
+                                                        <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource AccentButtonBackground}"/>
+                                                        <Setter TargetName="Card" Property="BorderThickness" Value="2"/>
+                                                        <Setter TargetName="Card" Property="Padding" Value="13"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </ToggleButton.Template>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <Border Width="32" Height="32" CornerRadius="16" Background="{DynamicResource MessageChipBackground}" VerticalAlignment="Top">
                                                 <TextBlock Text="!" FontWeight="Bold" FontSize="15" Foreground="{DynamicResource MessageChipForeground}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -160,10 +187,43 @@
                                             <StackPanel Grid.Column="1" Margin="14,0,0,0">
                                                 <TextBlock Text="{Binding Header}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextMain}" TextWrapping="Wrap"/>
                                                 <TextBlock Text="{Binding TimestampText}" FontSize="11" Foreground="{DynamicResource TextMuted}" Opacity="0.85" Margin="0,2,0,0"/>
-                                                <TextBlock Text="{Binding Body}" FontSize="13" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                                <TextBlock x:Name="PreviewText" Text="{Binding FirstLine}" FontSize="13" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Margin="0,4,0,0"/>
+                                                <TextBlock x:Name="FullText" Text="{Binding Body}" FontSize="13" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="Collapsed" Opacity="0"/>
                                             </StackPanel>
+                                            <TextBlock x:Name="Chevron" Grid.Column="2" Text="&#xE70D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
+                                                       Foreground="{DynamicResource TextMuted}" VerticalAlignment="Top" Margin="12,10,2,0" RenderTransformOrigin="0.5,0.5">
+                                                <TextBlock.RenderTransform>
+                                                    <RotateTransform x:Name="ChevronRotate" Angle="0"/>
+                                                </TextBlock.RenderTransform>
+                                            </TextBlock>
                                         </Grid>
-                                    </Border>
+                                    </ToggleButton>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                            <Setter TargetName="PreviewText" Property="Visibility" Value="Collapsed"/>
+                                            <Setter TargetName="FullText" Property="Visibility" Value="Visible"/>
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="FullText" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.18"/>
+                                                        <DoubleAnimation Storyboard.TargetName="ChevronRotate" Storyboard.TargetProperty="Angle" To="180" Duration="0:0:0.18">
+                                                            <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="FullText" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0"/>
+                                                        <DoubleAnimation Storyboard.TargetName="ChevronRotate" Storyboard.TargetProperty="Angle" To="0" Duration="0:0:0.18">
+                                                            <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

@@ -118,7 +118,8 @@ public partial class MainWindow
                     $"{cause.Organization} – {cause.Function} (CI: {cause.Ci})",
                     FormatMessageTimestamp(lage.Timestamp),
                     causeFocus,
-                    translateChrome: false));
+                    translateChrome: false,
+                    id: $"cause:{cause.Ci}|{cause.Service}|{cause.Function}"));
         }
 
         // =========================================================
@@ -160,10 +161,11 @@ public partial class MainWindow
             _messages.Add(
                 new MessageRow(
                     $"{incidentKind} · {serviceText}",
-                    $"{incident.Title}\n{body}",
+                    $"{MessageText.Normalize(incident.Title)}\n{body}",
                     FormatMessageTimestamp(incidentWhen),
                     incidentFocus,
-                    translateChrome: false));
+                    translateChrome: false,
+                    id: $"incident:{incidentId}"));
         }
 
         // Seed silently until first Sync of a *trusted* active set (_incidentSeedDone),
@@ -225,7 +227,8 @@ public partial class MainWindow
                         $"{string.Join("; ", activeSlots.Select(s => s.Function))}",
                         FormatMessageTimestamp(outageWhen),
                         outage.Service,
-                        translateChrome: false));
+                        translateChrome: false,
+                        id: $"outage:{outage.Ci}|{outage.Service}|{outage.Provider}"));
             }
         }
 
@@ -367,6 +370,12 @@ public partial class MainWindow
             FooterText.Text =
                 $"{LocalizationService.Translate("Letzte Abfrage:")} {DateTime.Now.ToString("g", LocalizationService.DisplayCulture)}";
         }
+
+        // Keep expanded cards expanded across refreshes (by message ID); forget vanished IDs.
+        var currentIds = _messages.Select(m => m.Id).ToHashSet(StringComparer.Ordinal);
+        _expandedMessageIds.IntersectWith(currentIds);
+        foreach (var message in _messages)
+            message.IsExpanded = _expandedMessageIds.Contains(message.Id);
 
         var empty = _messages.Count == 0;
         NoMessagesBorder.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;

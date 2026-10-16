@@ -247,8 +247,12 @@ public sealed record AppRow
     public string ServiceKey { get; }
 }
 
-public sealed record MessageRow
+public sealed class MessageRow : System.ComponentModel.INotifyPropertyChanged
 {
+    private bool _isExpanded;
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
     /// <param name="translateChrome">
     /// When true (default), exact-match translate header/body chrome.
     /// Callers that already composed translated fragments must pass false.
@@ -258,14 +262,37 @@ public sealed record MessageRow
         string body,
         string timestampText,
         string? focusKey = null,
-        bool translateChrome = true)
+        bool translateChrome = true,
+        string? id = null)
     {
-        Header = translateChrome ? LocalizationService.Translate(header) : header;
+        Header = MessageText.Normalize(translateChrome ? LocalizationService.Translate(header) : header);
         // Body is often API/incident prose — exact catalog only when translateChrome.
-        Body = translateChrome ? LocalizationService.Translate(body) : body;
+        Body = MessageText.Normalize(translateChrome ? LocalizationService.Translate(body) : body);
         TimestampText = timestampText;
         FocusKey = focusKey;
+        Id = id ?? $"{Header}|{Body}";
+        FirstLine = MessageText.FirstLine(Body);
     }
+
+    /// <summary>Stable identity for keeping the expanded state across refreshes.</summary>
+    public string Id { get; }
+
+    /// <summary>Collapsed preview (first line, trimmed with ellipsis in the UI).</summary>
+    public string FirstLine { get; }
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set
+        {
+            if (_isExpanded == value) return;
+            _isExpanded = value;
+            PropertyChanged?.Invoke(this, new(nameof(IsExpanded)));
+            PropertyChanged?.Invoke(this, new(nameof(ToggleTooltip)));
+        }
+    }
+
+    public string ToggleTooltip => LocalizationService.Translate(IsExpanded ? "Zuklappen" : "Aufklappen");
 
     public string Header { get; }
     public string Body { get; }
