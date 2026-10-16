@@ -17,7 +17,7 @@
     <Version>2.1.0</Version>
     <FileVersion>2.1.0.0</FileVersion>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
-    <InformationalVersion>2.1.0+preview.konnektor</InformationalVersion>
+    <InformationalVersion>2.1.0+preview.3</InformationalVersion>
     <ApplicationIcon>TILageMonitor.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -29,6 +29,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="TILageMonitor.ico" />

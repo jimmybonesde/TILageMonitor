@@ -89,7 +89,7 @@ public partial class MainWindow
             var snapshot = await Task.Run(async () =>
             {
                 var store = KonnektorSecretStore.CreateDefault();
-                System.Security.Cryptography.X509Certificates.X509Certificate2? clientCert = null;
+                KonnektorClientCredentials? clientCert = null;
                 try
                 {
                     var secret = store.LoadClientCertificate();
@@ -104,7 +104,6 @@ public partial class MainWindow
                     };
                 }
 
-                using (clientCert)
                 using (var client = new KonnektorClient(cfg, clientCert))
                 {
                     return await client.CollectAsync(_konnektorCts.Token);

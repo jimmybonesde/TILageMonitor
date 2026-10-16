@@ -101,7 +101,7 @@ public partial class SettingsWindow
         {
             if (_pendingP12 is not null)
             {
-                using (KonnektorClient.LoadClientCertificate(_pendingP12, password)) { }
+                _ = KonnektorClient.LoadClientCertificate(_pendingP12, password);
                 store.SaveClientCertificate(_pendingP12, password);
                 _pendingP12 = null;
                 _pendingP12Name = null;
@@ -109,14 +109,14 @@ public partial class SettingsWindow
             }
             else if (password.Length > 0 && store.LoadClientCertificate() is { } existing)
             {
-                using (KonnektorClient.LoadClientCertificate(existing.P12, password)) { }
+                _ = KonnektorClient.LoadClientCertificate(existing.P12, password);
                 store.SaveClientCertificate(existing.P12, password);
                 KonnektorPasswordBox.Clear();
             }
         }
-        catch (Exception ex) when (ex is System.Security.Cryptography.CryptographicException or InvalidOperationException)
+        catch (KonnektorCredentialException ex)
         {
-            KonnektorStatusText.Text = KL("P12 konnte nicht geöffnet werden (Passwort falsch?): ", "P12 could not be opened (wrong password?): ") + ex.Message;
+            KonnektorStatusText.Text = ex.Message;
             return false;
         }
 
@@ -166,7 +166,7 @@ public partial class SettingsWindow
             var probe = await Task.Run(async () =>
             {
                 var secret = KonnektorSecretStore.CreateDefault().LoadClientCertificate();
-                using var cert = secret is { } s ? KonnektorClient.LoadClientCertificate(s.P12, s.Password) : null;
+                var cert = secret is { } s ? KonnektorClient.LoadClientCertificate(s.P12, s.Password) : null;
                 using var client = new KonnektorClient(k, cert, TimeSpan.FromSeconds(15));
                 return await client.ProbeCertificateAsync(CancellationToken.None);
             });

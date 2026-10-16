@@ -1,70 +1,30 @@
-using System.Net.Http;
-using System.Net.Security;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace TILageMonitor.Konnektor;
 
 /// <summary>
 /// Read-only Konnektor client: connector.sds + EventService/CardService queries.
-/// TLS server trust is decided solely by the pinned SHA-256 fingerprint.
+/// Uses a BouncyCastle TLS transport (brainpool/ECDSA/RSA client auth); TLS server trust
+/// is decided solely by the pinned SHA-256 fingerprint.
 /// </summary>
 public sealed class KonnektorClient : IDisposable
 {
     public const int CertificateWarningDays = 90;
 
     private readonly KonnektorSettings _settings;
-    private readonly X509Certificate2? _clientCertificate;
-    private readonly HttpClient _http;
-    private X509Certificate2? _lastServerCertificate;
-    private PinEvaluation _lastPin = PinEvaluation.NotPinned;
+    private readonly KonnektorClientCredentials? _credentials;
+    private readonly IKonnektorHttpTransport _transport;
 
-    public KonnektorClient(KonnektorSettings settings, X509Certificate2? clientCertificate, TimeSpan? timeout = null)
+    public KonnektorClient(KonnektorSettings settings, KonnektorClientCredentials? credentials, TimeSpan? timeout = null, IKonnektorHttpTransport? transport = null)
     {
         _settings = settings;
-        _clientCertificate = clientCertificate;
-
-        var handler = new SocketsHttpHandler
-        {
-            ConnectTimeout = TimeSpan.FromSeconds(8),
-            PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-            SslOptions = new SslClientAuthenticationOptions
-            {
-                EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
-                RemoteCertificateValidationCallback = ValidateServerCertificate,
-                ClientCertificates = clientCertificate is null ? null : new X509CertificateCollection { clientCertificate },
-                LocalCertificateSelectionCallback = clientCertificate is null
-                    ? null
-                    : (_, _, _, _, _) => clientCertificate
-            }
-        };
-
-        _http = new HttpClient(handler) { Timeout = timeout ?? TimeSpan.FromSeconds(20) };
-        _http.DefaultRequestHeaders.UserAgent.ParseAdd($"TILageMonitor/{UpdateService.CurrentVersion}");
+        _credentials = credentials;
+        _transport = transport ?? new BcTlsHttpTransport(() => _settings.PinnedFingerprint, credentials, timeout ?? TimeSpan.FromSeconds(20));
     }
 
-    /// <summary>Loads the client system certificate (with private key) from PKCS#12 bytes.</summary>
-    public static X509Certificate2 LoadClientCertificate(byte[] p12, string password)
-    {
-        var collection = X509CertificateLoader.LoadPkcs12Collection(
-            p12, password, X509KeyStorageFlags.UserKeySet);
-        var withKey = collection.FirstOrDefault(c => c.HasPrivateKey)
-                      ?? throw new InvalidOperationException("Das P12 enthält kein Zertifikat mit privatem Schlüssel.");
-        foreach (var other in collection.Where(c => !ReferenceEquals(c, withKey)))
-            other.Dispose();
-        return withKey;
-    }
-
-    private bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors errors)
-    {
-        if (certificate is null)
-            return false;
-        var raw = certificate.GetRawCertData();
-        _lastServerCertificate = X509CertificateLoader.LoadCertificate(raw);
-        _lastPin = CertificatePinning.Evaluate(CertificatePinning.Fingerprint(raw), _settings.PinnedFingerprint);
-        return _lastPin == PinEvaluation.Match;
-    }
+    /// <summary>Loads the client system credentials (RSA/ECDSA incl. brainpool) from PKCS#12 bytes.</summary>
+    public static KonnektorClientCredentials LoadClientCertificate(byte[] p12, string password) =>
+        KonnektorClientCredentials.Load(p12, password);
 
     /// <summary>Runs SDS + all status calls; never throws for network/SOAP problems.</summary>
     public async Task<KonnektorSnapshot> CollectAsync(CancellationToken ct)
@@ -166,13 +126,13 @@ public sealed class KonnektorClient : IDisposable
             }
         }
 
-        KonnektorAnalysis.AddWarnings(snapshot, _clientCertificate?.NotAfter, DateTime.Now);
+        KonnektorAnalysis.AddWarnings(snapshot, _credentials?.NotAfter, DateTime.Now);
         return snapshot;
     }
 
     /// <summary>
-    /// Connects once to read the server certificate for the trust dialog (no data is sent
-    /// beyond the TLS handshake and GET /connector.sds when already trusted).
+    /// Connects once to read the server certificate for the trust dialog. When not yet trusted
+    /// the handshake is aborted right after the server certificate — no request is sent.
     /// </summary>
     public async Task<(KonnektorServerCertificate? Certificate, PinEvaluation Pin, string? Error)> ProbeCertificateAsync(CancellationToken ct)
     {
@@ -180,7 +140,7 @@ public sealed class KonnektorClient : IDisposable
         string? error = null;
         try
         {
-            using var response = await _http.GetAsync(new Uri(baseUri, "/connector.sds"), HttpCompletionOption.ResponseHeadersRead, ct);
+            await _transport.SendAsync(new KonnektorHttpRequest("GET", new Uri(baseUri, "/connector.sds")), ct);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -191,16 +151,17 @@ public sealed class KonnektorClient : IDisposable
             error = Describe(ex);
         }
 
-        var cert = _lastServerCertificate is null ? null : CertificatePinning.Describe(_lastServerCertificate);
-        return (cert, _lastPin, cert is null ? error : null);
+        var cert = _transport.LastServerCertificate;
+        return (cert, _transport.LastPin, cert is null ? error : null);
     }
 
     private void ApplyTlsState(KonnektorSnapshot snapshot)
     {
-        if (_lastServerCertificate is not null)
-            snapshot.ServerCertificate = CertificatePinning.Describe(_lastServerCertificate);
-        snapshot.TrustRequired = _lastServerCertificate is not null && _lastPin == PinEvaluation.NotPinned;
-        snapshot.PinMismatch = _lastServerCertificate is not null && _lastPin == PinEvaluation.Mismatch;
+        var cert = _transport.LastServerCertificate;
+        if (cert is not null)
+            snapshot.ServerCertificate = cert;
+        snapshot.TrustRequired = cert is not null && _transport.LastPin == PinEvaluation.NotPinned;
+        snapshot.PinMismatch = cert is not null && _transport.LastPin == PinEvaluation.Mismatch;
     }
 
     /// <summary>SDS endpoints may be absolute or relative; absolute ones are used as published.</summary>
@@ -211,42 +172,42 @@ public sealed class KonnektorClient : IDisposable
 
     private async Task<string> GetStringAsync(Uri uri, CancellationToken ct)
     {
-        using var response = await _http.GetAsync(uri, ct);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(ct);
+        var response = await _transport.SendAsync(new KonnektorHttpRequest("GET", uri), ct);
+        if (!response.IsSuccess)
+            throw new KonnektorHttpException(response.StatusCode, response.Reason);
+        return response.BodyText;
     }
 
     private async Task<string> PostSoapAsync(Uri url, string ns, string operation, string envelope, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, url)
-        {
-            Content = new StringContent(envelope, Encoding.UTF8, "text/xml")
-        };
-        request.Headers.TryAddWithoutValidation("SOAPAction", $"\"{KonnektorSoap.SoapAction(ns, operation)}\"");
-        using var response = await _http.SendAsync(request, ct);
-        var body = await response.Content.ReadAsStringAsync(ct);
+        var headers = new Dictionary<string, string> { ["SOAPAction"] = $"\"{KonnektorSoap.SoapAction(ns, operation)}\"" };
+        var response = await _transport.SendAsync(
+            new KonnektorHttpRequest("POST", url, headers, Encoding.UTF8.GetBytes(envelope), "text/xml; charset=utf-8"), ct);
+        var body = response.BodyText;
         // SOAP faults usually come with HTTP 500 — parse them for a readable message.
-        if (!response.IsSuccessStatusCode && !body.Contains("Fault", StringComparison.Ordinal))
-            response.EnsureSuccessStatusCode();
+        if (!response.IsSuccess && !body.Contains("Fault", StringComparison.Ordinal))
+            throw new KonnektorHttpException(response.StatusCode, response.Reason);
         return body;
     }
 
     private static string Describe(Exception ex) => ex switch
     {
         KonnektorSoapFaultException f => L("SOAP-Fehler: ", "SOAP fault: ") + f.Message,
-        TaskCanceledException => L("Zeitüberschreitung bei der Verbindung zum Konnektor.", "Connection to the connector timed out."),
-        HttpRequestException h when h.InnerException is AuthenticationException a => L("TLS-Fehler: ", "TLS error: ") + a.Message,
-        HttpRequestException h => L("Konnektor nicht erreichbar: ", "Connector unreachable: ") + (h.InnerException?.Message ?? h.Message),
+        KonnektorTlsException t => t.Message,
+        KonnektorCredentialException c => c.Message,
+        KonnektorHttpException h => h.Message,
+        TimeoutException or TaskCanceledException => L("Zeitüberschreitung bei der Verbindung zum Konnektor.", "Connection to the connector timed out."),
+        System.Net.Sockets.SocketException s => L("Konnektor nicht erreichbar: ", "Connector unreachable: ") + s.Message,
+        System.IO.IOException io => L("Verbindungsfehler: ", "Connection error: ") + io.Message,
         System.Xml.XmlException x => L("Ungültige XML-Antwort: ", "Invalid XML response: ") + x.Message,
         _ => ex.Message
     };
 
-    internal static string L(string de, string en) => LocalizationService.IsGerman ? de : en;
+    internal static string L(string de, string en) => KonnektorText.L(de, en);
 
     public void Dispose()
     {
-        _http.Dispose();
-        _lastServerCertificate?.Dispose();
+        (_transport as IDisposable)?.Dispose();
     }
 }
 
