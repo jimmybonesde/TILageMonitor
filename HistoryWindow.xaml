@@ -656,6 +656,13 @@
     </Border>
 
     <Grid Grid.Row="5" Margin="0,12,0,0">
+      <Button x:Name="ExportButton"
+              Content="Exportieren"
+              HorizontalAlignment="Left"
+              MinWidth="110"
+              Click="Export_Click"
+              Padding="16,10"
+              ToolTip="Störungsbericht als CSV exportieren"/>
       <Button Content="Schließen"
               HorizontalAlignment="Right"
               MinWidth="110"

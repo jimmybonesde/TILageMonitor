@@ -23,6 +23,18 @@ public sealed record UpdateDownloadResult(
 
 public static class UpdateService
 {
+    public const string CheckTimeoutMessage =
+        "Zeitüberschreitung bei der Update-Prüfung. Bitte Internetverbindung oder Proxy prüfen und später erneut versuchen.";
+    public const string DownloadTimeoutMessage =
+        "Zeitüberschreitung beim Herunterladen des Updates. Bitte Internetverbindung oder Proxy prüfen und später erneut versuchen.";
+
+    /// <summary>
+    /// True when <paramref name="ex"/> is an HttpClient timeout (cancellation that the caller
+    /// did NOT request). Real caller cancellation is never classified as timeout.
+    /// </summary>
+    public static bool IsTimeout(Exception ex, CancellationToken callerToken) =>
+        ex is OperationCanceledException && !callerToken.IsCancellationRequested;
+
     public const long MaxInstallerBytes = 500L * 1024 * 1024;
     private const string LatestReleaseUrl =
         "https://api.github.com/repos/jimmybonesde/TILageMonitor/releases/latest";
@@ -69,9 +81,15 @@ public static class UpdateService
                 checksumUrl,
                 null);
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
+        }
+        catch (Exception ex) when (IsTimeout(ex, cancellationToken))
+        {
+            return new UpdateCheckResult(
+                false, false, current, null, null, null,
+                CheckTimeoutMessage);
         }
         catch (Exception ex)
         {
@@ -172,9 +190,13 @@ public static class UpdateService
                 "Setup wurde gestartet.",
                 localPath);
         }
-        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
             throw;
+        }
+        catch (Exception ex) when (IsTimeout(ex, ct))
+        {
+            return new UpdateDownloadResult(false, DownloadTimeoutMessage);
         }
         catch (Exception ex)
         {
@@ -292,6 +314,10 @@ public static class UpdateService
                 return new UpdateDownloadResult(false, authenticode.Message);
 
             return new UpdateDownloadResult(true, authenticode.Message);
+        }
+        catch (Exception ex) when (IsTimeout(ex, ct))
+        {
+            return new UpdateDownloadResult(false, DownloadTimeoutMessage);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

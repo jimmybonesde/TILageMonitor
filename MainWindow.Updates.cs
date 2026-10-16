@@ -260,9 +260,18 @@ public partial class MainWindow
         InstallUpdateButton.IsEnabled = false;
         InstallUpdateButton.Content = LocalizationService.Translate("Lade Update …");
 
-        var download = await DownloadAndLaunchSerializedAsync(
-            _availableUpdateDownloadUrl,
-            _availableUpdateChecksumUrl);
+        UpdateDownloadResult download;
+        try
+        {
+            download = await DownloadAndLaunchSerializedAsync(
+                _availableUpdateDownloadUrl,
+                _availableUpdateChecksumUrl);
+        }
+        catch (Exception ex)
+        {
+            App.LogUnhandled("InstallUpdateFooter", ex);
+            download = new UpdateDownloadResult(false, $"Download oder Start fehlgeschlagen: {ex.Message}");
+        }
 
         if (download.IsSuccess)
         {

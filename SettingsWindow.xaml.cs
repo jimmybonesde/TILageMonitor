@@ -224,6 +224,17 @@ public partial class SettingsWindow : Window
                     : LocalizationService.IsGerman ? $"Aktuell: Version {result.CurrentVersion}." : $"Current: version {result.CurrentVersion}."
                 : LocalizationService.TranslateMessage(result.ErrorMessage ?? "Update-Prüfung fehlgeschlagen.");
         }
+        catch (Exception ex)
+        {
+            App.LogUnhandled("SettingsUpdateCheck", ex);
+            var message = LocalizationService.TranslateMessage($"Update-Prüfung fehlgeschlagen: {ex.Message}");
+            UpdateStatusText.Text = message;
+            System.Windows.MessageBox.Show(
+                message,
+                LocalizationService.Translate("Updates prüfen"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
         finally
         {
             CheckForUpdatesButton.IsEnabled = true;

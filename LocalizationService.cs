@@ -255,6 +255,17 @@ public static class LocalizationService
         ["TI-Komponente"] = "TI component",
         ["Die Prüfsummen-URL ist nicht erlaubt."] = "The checksum URL is not allowed.",
         ["Update-Prüfung fehlgeschlagen."] = "Update check failed.",
+        ["Zeitüberschreitung bei der Update-Prüfung. Bitte Internetverbindung oder Proxy prüfen und später erneut versuchen."] = "The update check timed out. Please check your internet connection or proxy and try again later.",
+        ["Zeitüberschreitung beim Herunterladen des Updates. Bitte Internetverbindung oder Proxy prüfen und später erneut versuchen."] = "Downloading the update timed out. Please check your internet connection or proxy and try again later.",
+        ["Unerwarteter Fehler:"] = "Unexpected error:",
+        ["Ein unerwarteter Fehler ist aufgetreten. Die App läuft weiter."] = "An unexpected error occurred. The app keeps running.",
+        ["Fehler"] = "Error",
+        ["Exportieren"] = "Export",
+        ["Störungsbericht als CSV exportieren"] = "Export incident report as CSV",
+        ["Störungsbericht exportieren"] = "Export incident report",
+        ["Störungsbericht gespeichert:"] = "Incident report saved:",
+        ["Export fehlgeschlagen:"] = "Export failed:",
+        ["Keine Ereignisse im angezeigten Zeitraum."] = "No events in the displayed range.",
         ["Benachrichtigungen aktiviert"] = "Notifications enabled",
         ["Pro Dienst"] = "Per service",
         ["Autor: Randy Carter / R.C.  ·  © 2026"] = "Author: Randy Carter / R.C.  ·  © 2026",
@@ -307,7 +318,10 @@ public static class LocalizationService
         "Update-Prüfung fehlgeschlagen:",
         "Prüfsumme konnte nicht geprüft werden:",
         "Download oder Start fehlgeschlagen:",
-        "Authenticode-Prüfung fehlgeschlagen:"
+        "Authenticode-Prüfung fehlgeschlagen:",
+        "Unerwarteter Fehler:",
+        "Störungsbericht gespeichert:",
+        "Export fehlgeschlagen:"
     ];
 
     /// <summary>

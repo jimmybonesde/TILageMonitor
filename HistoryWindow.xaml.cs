@@ -1041,6 +1041,72 @@ public partial class HistoryWindow : Window
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    /// <summary>
+    /// Exports the events of the current 14-day window (respecting the service filter)
+    /// as a semicolon CSV „Störungsbericht“.
+    /// </summary>
+    private void Export_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var events = _hasAnyData
+                ? HistoryTimelineBuilder.Build(_incidents, _outages, _selectedServiceKey, int.MaxValue)
+                : new List<HistoryTimelineEvent>();
+
+            if (events.Count == 0)
+            {
+                System.Windows.MessageBox.Show(
+                    this,
+                    LocalizationService.Translate("Keine Ereignisse im angezeigten Zeitraum."),
+                    LocalizationService.Translate("Störungsbericht exportieren"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = LocalizationService.Translate("Störungsbericht exportieren"),
+                FileName = IncidentReportExporter.DefaultFileName(DateTime.Today),
+                DefaultExt = ".csv",
+                Filter = LocalizationService.IsGerman
+                    ? "CSV-Datei (Semikolon) (*.csv)|*.csv"
+                    : "CSV file (semicolon) (*.csv)|*.csv",
+                AddExtension = true,
+                OverwritePrompt = true
+            };
+
+            if (dialog.ShowDialog(this) != true)
+                return;
+
+            var entries = events.Select(ev => new IncidentReportEntry(
+                ev.StartLocal,
+                ev.EndLocal,
+                ev.ServiceName,
+                LocalizationService.Translate(ev.KindLabel),
+                ev.Body));
+
+            IncidentReportExporter.WriteCsv(dialog.FileName, entries, LocalizationService.IsGerman);
+
+            System.Windows.MessageBox.Show(
+                this,
+                LocalizationService.TranslateMessage($"Störungsbericht gespeichert: {dialog.FileName}"),
+                LocalizationService.Translate("Störungsbericht exportieren"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            App.LogUnhandled("HistoryExport", ex);
+            System.Windows.MessageBox.Show(
+                this,
+                LocalizationService.TranslateMessage($"Export fehlgeschlagen: {ex.Message}"),
+                LocalizationService.Translate("Störungsbericht exportieren"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
 }
 
 /// <summary>One service row in day-zoom mode (24 hour cells).</summary>

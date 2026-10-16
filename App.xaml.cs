@@ -32,6 +32,9 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
 
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
+        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+
         // One namespace decision for mutex + event (prefer Global\; matches Inno AppMutex).
         // Local\ fallback: installer only declares Global\; CloseApplications still covers Local instances.
         _singleInstanceMutex = CreateCoupledSyncObjects(out var createdNew, out var showEvent);
@@ -220,6 +223,66 @@ public partial class App : System.Windows.Application
     /// so a successor process can create the mutex during an in-place restart.
     /// Must run before Process.Start; OnExit must not re-acquire afterward.
     /// </summary>
+    private static readonly object ErrorLogLock = new();
+    private bool _errorDialogOpen;
+
+    private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+    {
+        LogUnhandled("Dispatcher", e.Exception);
+        e.Handled = true;
+
+        if (_errorDialogOpen)
+            return;
+        _errorDialogOpen = true;
+        try
+        {
+            System.Windows.MessageBox.Show(
+                LocalizationService.Translate("Ein unerwarteter Fehler ist aufgetreten. Die App läuft weiter.") +
+                Environment.NewLine + Environment.NewLine +
+                LocalizationService.TranslateMessage($"Unerwarteter Fehler: {e.Exception.Message}"),
+                LocalizationService.Translate("Fehler"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        catch
+        {
+            // Never let the error dialog itself crash the app.
+        }
+        finally
+        {
+            _errorDialogOpen = false;
+        }
+    }
+
+    private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        LogUnhandled("Task", e.Exception);
+        e.SetObserved();
+    }
+
+    /// <summary>Best-effort append to %AppData%\…\error.log (settings directory).</summary>
+    internal static void LogUnhandled(string source, Exception exception)
+    {
+        try
+        {
+            lock (ErrorLogLock)
+            {
+                var path = System.IO.Path.Combine(SettingsStore.SettingsDirectoryPath, "error.log");
+                System.IO.Directory.CreateDirectory(SettingsStore.SettingsDirectoryPath);
+                var info = new System.IO.FileInfo(path);
+                if (info.Exists && info.Length > 512 * 1024)
+                    info.Delete();
+                System.IO.File.AppendAllText(
+                    path,
+                    $"[{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}] {source} v{UpdateService.CurrentVersion}: {exception}{Environment.NewLine}");
+            }
+        }
+        catch
+        {
+            // Logging is best-effort.
+        }
+    }
+
     public void ReleaseSingleInstanceForRestart()
     {
         try { _showWindowEvent?.Dispose(); } catch { /* ignore */ }
